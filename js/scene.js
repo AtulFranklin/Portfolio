@@ -632,7 +632,7 @@
     [M.black, M.black, M.black, M.black, new THREE.MeshBasicMaterial({ map: tickerTex, toneMapped: false }), M.black]
   );
   ticker.position.set(0.05, DESK_Y - 0.07, DESK_Z + DESK_D / 2 - 0.02);
-  scene.add(ticker);
+  // (LED ticker under the desk removed)
 
   /* ---------------- interactive objects registry ---------------- */
   const hotspots = []; // { group, label, action, lift, base }
