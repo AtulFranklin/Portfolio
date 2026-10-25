@@ -25,6 +25,11 @@
     if (!(c.getContext("webgl2") || c.getContext("webgl"))) return fail();
   } catch (_) { return fail(); }
 
+  // Phones get the flat, Sienna-style object grid instead of the 3D desk (see index.html .m-desk).
+  // ?snap=<object> is a render-only mode used to export those object images.
+  const SNAP = new URLSearchParams(location.search).get("snap");
+  if (!SNAP && window.matchMedia("(max-width: 720px)").matches) { loader.classList.add("done"); return; }
+
   let THREE, RoundedBoxGeometry, RoomEnvironment, mergeGeometries;
   try {
     THREE = await import("three");
@@ -59,7 +64,7 @@
 
   /* ---------------- renderer / scene / camera ---------------- */
   const mobile = window.matchMedia("(max-width: 720px)").matches;
-  const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+  const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance", alpha: !!SNAP, preserveDrawingBuffer: !!SNAP });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, mobile ? 1.5 : 1.75));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -645,6 +650,11 @@
   const candles = [];
   { let v = 0.5; for (let i = 0; i < 40; i++) { const o = v; v = Math.min(0.85, Math.max(0.15, v + (rnd() - 0.47) * 0.12)); candles.push([o, v]); } }
   function drawCRT(t) {
+    if (window.RETRO && typeof window.RETRO.drawScreen === "function") {
+      window.RETRO.drawScreen(crtTex.userData.ctx, 640, 480, t);
+      crtTex.needsUpdate = true;
+      return;
+    }
     const g = crtTex.userData.ctx, w = 640, h = 480;
     const bg = g.createRadialGradient(w / 2, h * 0.45, 40, w / 2, h / 2, w * 0.7);
     bg.addColorStop(0, "#10261C"); bg.addColorStop(1, "#040907");
@@ -729,7 +739,7 @@
     kb.position.set(-0.28, TOP, DESK_Z + 0.27);
     kb.rotation.y = 0.06;
   }
-  hot(kb, "Tools & AI", () => DESK.openCrate("tools"));
+  hot(kb, "Tools & AI", () => DESK.openCrate("tools", null, screenRect(kb)));
 
   /* ---- photo frame ---- */
   const frame = new THREE.Group();
@@ -778,8 +788,8 @@
     S.roles.forEach((r, i) => {
       const tex = canvasTex(512, 120, (g, w, h) => {
         g.fillStyle = "#EFE9DD"; roundRect(g, 0, 0, w, h, 14); g.fill();
-        g.fillStyle = C.ink; g.font = `600 48px ${FONT}`; g.textAlign = "center"; g.textBaseline = "middle";
-        g.fillText(r, w / 2, h / 2 + 2);
+        g.fillStyle = C.ink; g.font = `650 40px ${FONT}`; g.textAlign = "center"; g.textBaseline = "middle";
+        g.fillText(r, w / 2, 30);
       });
       const card = new THREE.Mesh(new THREE.BoxGeometry(0.31, 0.072, 0.004), [M.paper, M.paper, M.paper, M.paper, new THREE.MeshStandardMaterial({ map: tex, roughness: 0.85 }), M.paper]);
       card.position.set((i % 2 ? 0.006 : -0.006), 0.075 + (S.roles.length - 1 - i) * 0.03, -0.05 + i * 0.028);
@@ -830,7 +840,7 @@
     gearGroup.position.set(0.25, TOP, DESK_Z + 0.2);
     gearGroup.rotation.y = -0.25;
   }
-  hot(gearGroup, "Engineering", () => DESK.openCrate("engineering"));
+  hot(gearGroup, "Engineering", () => DESK.openCrate("engineering", null, screenRect(gearGroup)));
 
   /* ---- phone with app icons ---- */
   const phoneScreen = canvasTex(300, 620, () => {});
@@ -871,7 +881,7 @@
     phone.position.set(0.86, TOP, DESK_Z + 0.22);
     phone.rotation.y = -0.5;
   }
-  hot(phone, "Mobile Apps", () => DESK.openCrate("apps"));
+  hot(phone, "Mobile Apps", () => DESK.openCrate("apps", null, screenRect(phone)));
 
   /* ---- envelope ---- */
   const envelope = new THREE.Group();
@@ -991,6 +1001,8 @@
       const z = d / 2 - 0.07 - k * ((d - 0.12) / Math.max(1, ps.length));
       slip.position.set((rnd() - 0.5) * 0.03, 0.17 + 0.05 + (k === ps.length - 1 ? 0.03 : rnd() * 0.04), z);
       slip.rotation.x = -0.12 - rnd() * 0.08; slip.rotation.z = (rnd() - 0.5) * 0.05;
+      slip.userData.base = { y: slip.position.y, z: slip.position.z, rx: slip.rotation.x };
+      (g.userData.slips = g.userData.slips || []).push(slip);
       g.add(slip);
       // real cover image if we can use it (served over http/https)
       loadImage(p.image).then((im) => {
@@ -1008,9 +1020,45 @@
     g.userData.gridRot = (i % 2 ? -0.12 : 0.12);
     g.position.copy(g.userData.rowPos);
     g.rotation.y = g.userData.rowRot;
-    const entry = hot(g, `${c.title} · ${ps.length} project${ps.length === 1 ? "" : "s"}`, () => DESK.openCrate(c.id));
+    const entry = hot(g, `${c.title} · ${ps.length} project${ps.length === 1 ? "" : "s"}`, () => openFromCrate(entry, c.id));
+    entry.slipT = 0; entry.slipTarget = 0;
     crateGroups.push(entry);
   });
+
+  /* ---- crate opening: slips flip up out of the crate, then the cards fly out ---- */
+  function screenRect(obj) {
+    const box = new THREE.Box3().setFromObject(obj), r = host.getBoundingClientRect();
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (let i = 0; i < 8; i++) {
+      const v = new THREE.Vector3(i & 1 ? box.max.x : box.min.x, i & 2 ? box.max.y : box.min.y, i & 4 ? box.max.z : box.min.z).project(camera);
+      const x = r.left + ((v.x + 1) / 2) * r.width, y = r.top + ((1 - v.y) / 2) * r.height;
+      x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y);
+    }
+    return { left: x0, top: y0, width: x1 - x0, height: y1 - y0 };
+  }
+  let crateBusy = false;
+  function openFromCrate(entry, id) {
+    if (crateBusy) return;
+    if (reduce) return DESK.openCrate(id, null, screenRect(entry.group));
+    crateBusy = true;
+    entry.slipTarget = 1;
+    setTimeout(() => { crateBusy = false; DESK.openCrate(id, null, screenRect(entry.group)); }, 430);
+  }
+  window.addEventListener("desk:crateclose", () => { crateGroups.forEach((e) => (e.slipTarget = 0)); });
+  function animateSlips(dt) {
+    for (const e of crateGroups) {
+      if (Math.abs(e.slipTarget - e.slipT) < 0.001 && e.slipT === e.slipTarget) continue;
+      e.slipT += (e.slipTarget - e.slipT) * Math.min(1, dt * (e.slipTarget ? 9 : 6));
+      if (Math.abs(e.slipTarget - e.slipT) < 0.002) e.slipT = e.slipTarget;
+      const t = e.slipT, slips = e.group.userData.slips || [], n = slips.length;
+      slips.forEach((sl, k) => {
+        const b = sl.userData.base, f = n - 1 - k;     // front slip lifts highest
+        sl.position.y = b.y + t * (0.2 + f * 0.05);
+        sl.position.z = b.z + t * (0.05 - f * 0.012);
+        sl.rotation.x = b.rx + t * (0.55 - f * 0.12);
+      });
+    }
+  }
 
   /* ---------------- layout / resize ---------------- */
   let W = 1, H = 1, portrait = false;
@@ -1134,6 +1182,8 @@
       if (!h.noLift) h.group.position.y = h.baseY + h.lift * 0.035;
     }
 
+    animateSlips(dt);
+
     // gear spin (polymer gear, slow)
     if (!reduce) gear.rotation.z -= dt * (hovered && hovered.group === gearGroup ? 1.6 : 0.45);
 
@@ -1164,14 +1214,74 @@
     renderer.render(scene, camera);
   }
   function kick() {
-    if (running) return;
+    if (running || SNAP) return;
     if (visible && !modalOpen && !document.hidden) { running = true; clock.getDelta(); requestAnimationFrame(frame_); }
   }
 
   // first frame, then reveal
+  if (SNAP) return snapObject(SNAP);
+
   camera.position.copy(reduce ? camHome : camStart);
   camera.lookAt(lookHome);
   renderer.render(scene, camera);
   kick();
   setTimeout(() => loader.classList.add("done"), 150);
+
+  /* ---------------- render-only mode: one object on a transparent background ---------------- */
+  function buildNameplate() {
+    const g = new THREE.Group();
+    const tex = canvasTex(720, 300, (c, w, h) => {
+      c.fillStyle = "#F7F4EE"; c.fillRect(0, 0, w, h);
+      c.fillStyle = "#A32638"; c.fillRect(0, 0, w, 14);
+      c.textAlign = "center"; c.fillStyle = "#16130E";
+      c.font = `800 92px ${FONT}`; c.fillText("STEVENS", w / 2, 128);
+      c.fillStyle = "#A32638"; c.fillRect(w / 2 - 150, 150, 300, 5);
+      c.fillStyle = "#3A342C"; c.font = `600 30px ${FONT}`; c.fillText("INSTITUTE OF TECHNOLOGY", w / 2, 202);
+      c.fillStyle = "#6A6256"; c.font = `500 24px ${MONO}`; c.fillText("MS COMPUTER SCIENCE · HOBOKEN", w / 2, 252);
+    });
+    const face = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.8 });
+    const card = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.15, 0.006), [M.paper, M.paper, M.paper, M.paper, face, M.paper]);
+    card.position.y = 0.09; card.rotation.x = -0.32;
+    const base = new THREE.Mesh(new RoundedBoxGeometry(0.4, 0.03, 0.09, 2, 0.008), M.metal);
+    base.position.y = 0.015;
+    g.add(base, card);
+    g.position.set(0.3, TOP, DESK_Z + 0.25);
+    g.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+    scene.add(g);
+    return g;
+  }
+  async function snapObject(name) {
+    const targets = { crt, roles, frame, envelope, gear: gearGroup, phone, lamp };
+    const target = name === "nameplate" ? buildNameplate() : targets[name];
+    if (!target) { window.__snap = "unknown"; return; }
+    if (name === "crt" && window.RETRO && RETRO.drawScreen) { RETRO.drawScreen(crtTex.userData.ctx, 640, 480, 1.0); crtTex.needsUpdate = true; } else drawCRT(0.2);
+    scene.background = null; scene.fog = null;
+    renderer.setClearColor(0x000000, 0);
+    // hide everything that is not a light or the target
+    scene.children.forEach((o) => { if (!o.isLight && o !== target && o !== lampLight.target && o !== fill.target) o.visible = false; });
+    target.visible = true;
+    target.position.y = TOP;
+    if (name === "envelope") { target.rotation.x = 0.55; target.position.y = TOP + 0.04; }
+    // soft contact shadow under the object
+    const box = new THREE.Box3().setFromObject(target), size = box.getSize(new THREE.Vector3()), c = box.getCenter(new THREE.Vector3());
+    const catcher = new THREE.Mesh(new THREE.PlaneGeometry(4, 4), new THREE.ShadowMaterial({ opacity: 0.32 }));
+    catcher.rotation.x = -Math.PI / 2; catcher.position.set(c.x, TOP + 0.001, c.z); catcher.receiveShadow = true;
+    scene.add(catcher);
+    // light it evenly from the front-top so every object reads well
+    lampLight.position.set(c.x + 0.5, TOP + 1.4, c.z + 0.9); lampLight.target.position.copy(c); lampLight.intensity = 16;
+    fill.position.set(c.x - 0.8, TOP + 0.9, c.z + 1.6); fill.target.position.copy(c); fill.intensity = 5;
+    const S2 = 1100;
+    renderer.setPixelRatio(1); renderer.setSize(S2, S2, false);
+    camera.clearViewOffset(); camera.aspect = 1; camera.fov = 26; camera.updateProjectionMatrix();
+    const dir = new THREE.Vector3(0.18, 0.42, 1).normalize();
+    const r = Math.max(size.x, size.y, size.z) * 0.62;
+    const dist = r / Math.sin(THREE.MathUtils.degToRad(camera.fov / 2));
+    camera.position.copy(c).addScaledVector(dir, dist);
+    camera.lookAt(c);
+    loader.classList.add("done");
+    await new Promise((res) => setTimeout(res, 2500)); // photo / covers load
+    if (name === "crt" && window.RETRO && RETRO.drawScreen) { RETRO.drawScreen(crtTex.userData.ctx, 640, 480, 1.0); crtTex.needsUpdate = true; }
+    renderer.render(scene, camera);
+    window.__snap = renderer.domElement.toDataURL("image/png");
+  }
 })();

@@ -15,6 +15,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/books.css" />
+  <link rel="stylesheet" href="css/retro.css" />
   <script type="importmap">
     {
       "imports": {
@@ -31,7 +33,7 @@
   <header class="topbar" id="topbar">
     <a class="brand" href="#top" aria-label="Atul Abraham, back to top">
       <span class="brand-name">Atul Abraham</span>
-      <span class="brand-meta mono">Hoboken, NJ</span>
+      <span class="brand-meta mono">Hoboken, NJ, USA</span>
     </a>
     <nav class="topnav" aria-label="Main">
       <a href="#projects">Projects</a>
@@ -69,6 +71,30 @@
         </ul>
       </div>
 
+      <!-- Phones: the desk objects laid out one by one (like siennachen.com/mobile) -->
+      <div class="m-desk" aria-label="Desk objects">
+        <button type="button" class="m-obj m-obj-wide" data-open="why">
+          <img src="assets/mobile/crt.webp" alt="" width="550" height="550" loading="eager" />
+          <span>Why hire me</span>
+        </button>
+        <button type="button" class="m-obj" data-goto="experience">
+          <img src="assets/mobile/roles.webp" alt="" width="550" height="550" loading="lazy" />
+          <span>Experience</span>
+        </button>
+        <button type="button" class="m-obj" data-open="about">
+          <img src="assets/mobile/frame.webp" alt="" width="550" height="550" loading="lazy" />
+          <span>About me</span>
+        </button>
+        <button type="button" class="m-obj" data-goto="education">
+          <img src="assets/mobile/nameplate.webp" alt="" width="550" height="550" loading="lazy" />
+          <span>Education</span>
+        </button>
+        <button type="button" class="m-obj" data-open="contact">
+          <img src="assets/mobile/envelope.webp" alt="" width="550" height="550" loading="lazy" />
+          <span>Leave a message</span>
+        </button>
+      </div>
+
       <p class="hero-hint mono" id="heroHint">Click anything on the desk</p>
       <a class="scroll-cue mono" href="#projects">Scroll<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></a>
       <div class="loader mono" id="loader" role="status">Switching on the lamp…</div>
@@ -79,8 +105,8 @@
       <div class="wrap">
         <p class="num mono">01</p>
         <h2 id="projects-h">Projects.</h2>
-        <p class="section-lead">Four crates on the floor of my desk. Pull one out to flip through what is inside.</p>
-        <ul class="crates" id="crateList"></ul>
+        <p class="section-lead">Four books on the corner of my desk. Pull one out to flip through what is inside.</p>
+        <div class="crates" id="crateList"></div>
         <button type="button" class="btn btn-secondary" id="allProjectsBtn">All projects, as a list <span aria-hidden="true">→</span></button>
       </div>
     </section>
@@ -144,7 +170,7 @@
 
   <footer class="footer">
     <div class="wrap footer-row">
-      <span>Atul Abraham · Hoboken, NJ</span>
+      <span>Atul Abraham · Hoboken, NJ, USA</span>
       <a href="#top">Back to top ↑</a>
     </div>
   </footer>
@@ -180,6 +206,8 @@
   </dialog>
 
   <script src="js/content.js"></script>
+  <script src="js/books.js"></script>
+  <script src="js/retro.js"></script>
   <script src="js/app.js"></script>
   <script src="js/scene.js"></script>
 </body>

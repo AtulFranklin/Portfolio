@@ -5,7 +5,7 @@
 window.SITE = {
   name: "Atul Abraham",
   fullName: "Atul Franklin Abraham",
-  place: "Hoboken, NJ",
+  place: "Hoboken, NJ, USA",
   photo: "assets/photo.jpg",
   resume: "assets/Atul_Abraham_Resume.pdf",
 
@@ -35,21 +35,25 @@ window.SITE = {
 
   whyHire: [
     {
+      heading: "Half the maintenance, gone",
       stat: ">50%",
       label: "less time on BOM upkeep",
       text: "Automated bill-of-materials price tracking at Whirlpool with Google Apps Script, cutting monthly maintenance work by more than half.",
     },
     {
+      heading: "Comfortable on 5 operating systems",
       stat: "5 OS",
       label: "Windows · macOS · Linux · Android · iOS",
-      text: "I ship real apps end to end in Flutter for Android and iOS (an 8-module productivity suite with native notifications, charts, themes and backup/restore) and I'm experienced with Windows, macOS and Linux.",
+      text: "I ship apps end to end in Flutter for Android and iOS (an 8-module productivity suite with native notifications, charts, themes and backup/restore) and I'm experienced with Windows, macOS and Linux.",
     },
     {
+      heading: "Simulated options pricing, built into a trading simulator",
       stat: "Black-Scholes",
       label: "in a trading engine",
       text: "Built a paper-trading simulator with 5x intraday leverage, margin tracking, auto square-off, an option chain with delta, PCR and max pain, and a data fallback chain.",
     },
     {
+      heading: "Lean engineering habits",
       stat: "Lean",
       label: "engineering habits",
       text: "Quality and process work taught me root-cause thinking, validation testing and documentation. Six Sigma White Belt.",
@@ -83,7 +87,7 @@ window.SITE = {
   education: [
     {
       school: "Stevens Institute of Technology",
-      place: "Hoboken, NJ",
+      place: "Hoboken, NJ, USA",
       degree: "Master of Science in Computer Science",
       dates: "Sep 2026 - May 2028 (expected)",
     },
@@ -156,7 +160,7 @@ window.SITE = {
         "Yahoo, Stooq and NSE data fallback chain so prices keep flowing when a source fails",
         "Black-Scholes option chain with delta, PCR and max pain for NIFTY, BANKNIFTY and FINNIFTY",
         "Automated scalping engine with RSI / volume confirmation, tick-based reversal detection and daily stop limits",
-        "Google Sign-In with per-user data, Excel trade-log export, 51 commits",
+        "Google Sign-In with per-user data and Excel trade-log export",
       ],
       tags: ["Flutter", "Dart", "Firebase", "Quant"],
       links: [],
@@ -167,7 +171,7 @@ window.SITE = {
       year: "2024",
       image: "assets/projects/inva-capital.jpg",
       blurb:
-        "I designed and built the website for INVA Capital Markets: services, vision, ethics and risk pages, and an enquiry form. It also hosts the Trade on Paper terms.",
+        "I designed and built the website for INVA Capital Markets: services, vision, ethics and risk pages, and an enquiry form.",
       points: [],
       tags: ["Web", "HTML/CSS", "Responsive"],
       links: [{ label: "Visit site", href: "https://www.invacapital.cv/" }],
@@ -277,7 +281,7 @@ window.SITE = {
         "Green outline = filled, yellow = needs you. Never auto-submits",
       ],
       tags: ["JavaScript", "Chrome extension", "Web Crypto"],
-      links: [],
+      links: [{ label: "View on GitHub", href: "https://github.com/AtulFranklin/My-Job-AutoFill" }],
     },
     {
       crate: "tools",

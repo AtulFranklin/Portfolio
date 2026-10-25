@@ -30,7 +30,10 @@
       <div class="box"><span>${esc(c.title)}</span></div>
     </div>`;
   }
-  $("#crateList").innerHTML = S.crates
+  if (window.BOOKS && typeof window.BOOKS.mount === "function") {
+    // projects section: a stack of books; opening one hands over to the card stack
+    window.BOOKS.mount($("#crateList"), S.crates, S.projects, (id, rect) => openCrate(id, null, rect));
+  } else $("#crateList").innerHTML = S.crates
     .map((c) => {
       const n = projectsIn(c.id).length;
       return `<li class="reveal"><button type="button" class="crate-row" data-crate="${c.id}">
@@ -64,7 +67,9 @@
         .join("")}</div>
     </div></div>`;
   }
-  $("#whyCrt").outerHTML = crtHTML().replace('<div class="crt">', '<div class="crt reveal" id="whyCrt">');
+  // section 02: the retro word-processor window (falls back to the old CRT panel)
+  if (window.RETRO && typeof window.RETRO.sectionHTML === "function") $("#whyCrt").outerHTML = `<div id="whyCrt">${window.RETRO.sectionHTML()}</div>`;
+  else $("#whyCrt").outerHTML = crtHTML().replace('<div class="crt">', '<div class="crt reveal" id="whyCrt">');
 
   /* ---------------- 03 About + experience ---------------- */
   const rolesHTML = `<div class="roles">${S.roles.map((r) => `<span class="role">${esc(r)}</span>`).join("")}</div>`;
@@ -135,12 +140,63 @@
         if (lastFocus && document.contains(lastFocus)) lastFocus.focus({ preventScroll: true });
       }
     });
+    const shut = () => (dlg === stackDlg ? closeStack() : dlg.close());
     dlg.addEventListener("click", (e) => {
-      if (e.target.closest("[data-close]")) return dlg.close();
+      if (e.target.closest("[data-close]")) return shut();
       // click on empty backdrop area closes
-      if (e.target === dlg || e.target.classList.contains("stack") || e.target.classList.contains("panel-body") || e.target.classList.contains("overlay-head")) dlg.close();
+      if (e.target === dlg || e.target.classList.contains("stack") || e.target.classList.contains("panel-body") || e.target.classList.contains("overlay-head")) shut();
     });
+    dlg.addEventListener("cancel", (e) => { if (dlg === stackDlg) { e.preventDefault(); closeStack(); } });
   });
+
+  /* ---- cards fly out of the crate / book and flip up; reverse on close ---- */
+  let opened = null;          // { id, rect } of the crate or book the stack came out of
+  let closing = false;
+  const visibleCards = () => {
+    const vh = window.innerHeight;
+    return Array.from($("#stackBody").querySelectorAll(".card")).filter((c) => { const r = c.getBoundingClientRect(); return r.bottom > 0 && r.top < vh; });
+  };
+  function flipFrames(card, rect) {
+    const r = card.getBoundingClientRect();
+    const dx = rect.left + rect.width / 2 - (r.left + r.width / 2);
+    const dy = rect.top + rect.height / 2 - (r.top + r.height / 2);
+    const s = Math.max(0.08, Math.min(0.6, rect.width / r.width));
+    return [`translate(${dx}px, ${dy}px) scale(${s}) rotateX(78deg)`, "none"];
+  }
+  function flipIn(rect) {
+    visibleCards().slice(0, 3).forEach((card, i) => {
+      const [from, to] = flipFrames(card, rect);
+      card.animate(
+        [{ transform: from, opacity: 0 }, { opacity: 1, offset: 0.3 }, { transform: to, opacity: 1 }],
+        { duration: 760, delay: i * 90, easing: "cubic-bezier(.2,.75,.15,1)", fill: "backwards" }
+      );
+    });
+  }
+  function closeStack() {
+    if (closing || !stackDlg.open) return;
+    const finish = () => {
+      closing = false;
+      stackDlg.classList.remove("closing");
+      stackDlg.close();
+      const id = opened && opened.id;
+      opened = null;
+      window.dispatchEvent(new CustomEvent("desk:crateclose", { detail: id }));
+      if (id && window.BOOKS && typeof window.BOOKS.close === "function") window.BOOKS.close(id);
+    };
+    const S_cur = S.crates[currentCrate] && S.crates[currentCrate].id;
+    if (reduceMotion || !opened || !opened.rect || opened.id !== S_cur) return finish();
+    closing = true;
+    stackDlg.classList.add("closing");
+    const cards = visibleCards().slice(0, 3).reverse();
+    const anims = cards.map((card, i) => {
+      const [from] = flipFrames(card, opened.rect);
+      return card.animate(
+        [{ transform: "none", opacity: 1 }, { opacity: 1, offset: 0.7 }, { transform: from, opacity: 0 }],
+        { duration: 460, delay: i * 60, easing: "cubic-bezier(.5,0,.75,0)", fill: "forwards" }
+      ).finished;
+    });
+    Promise.all(anims).then(finish, finish);
+  }
 
   function cardHTML(p, i) {
     const links = (p.links || []).map((l) => `<a href="${esc(l.href)}" target="_blank" rel="noopener">${esc(l.label)} →</a>`).join("");
@@ -160,7 +216,7 @@
   }
   const slug = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 
-  function openCrate(id, focusProject) {
+  function openCrate(id, focusProject, originRect) {
     const idx = Math.max(0, S.crates.findIndex((c) => c.id === id));
     currentCrate = idx;
     const c = S.crates[idx];
@@ -169,9 +225,14 @@
     body.innerHTML = projectsIn(c.id).map(cardHTML).join("");
     const next = S.crates[(idx + 1) % S.crates.length];
     $("#nextCrateBtn").innerHTML = `${esc(next.title)} <span aria-hidden="true">→</span>`;
+    const fromOrigin = !!originRect && !reduceMotion && !focusProject;
+    body.classList.toggle("flip", fromOrigin);
+    // remember where this stack came from (kept while stepping between crates)
+    if (originRect || !stackDlg.open) opened = { id: c.id, rect: originRect || null };
     openDialog(stackDlg);
     body.scrollTop = 0;
     body.focus({ preventScroll: true });
+    if (fromOrigin) flipIn(originRect);
     if (focusProject) {
       const el = document.getElementById("card-" + slug(focusProject));
       if (el) setTimeout(() => {
@@ -228,6 +289,7 @@
     }),
   };
   function openPanel(name) {
+    if (name === "why" && window.RETRO && typeof window.RETRO.open === "function") return window.RETRO.open();
     const p = PANELS[name] && PANELS[name]();
     if (!p) return;
     $("#panelTitle").textContent = p.title;
@@ -241,6 +303,8 @@
   document.addEventListener("click", (e) => {
     const crateBtn = e.target.closest("[data-crate]");
     if (crateBtn) { e.preventDefault(); return openCrate(crateBtn.dataset.crate, crateBtn.dataset.project); }
+    const goBtn = e.target.closest("[data-goto]");
+    if (goBtn) { e.preventDefault(); const t = document.getElementById(goBtn.dataset.goto); if (t) t.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" }); return; }
     const openBtn = e.target.closest("[data-open]");
     if (openBtn) { e.preventDefault(); return openPanel(openBtn.dataset.open); }
   });
