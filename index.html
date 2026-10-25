@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Atul Abraham - Software Engineer, Fintech Builder</title>
+  <meta name="description" content="Atul Franklin Abraham - mechanical engineer turned software builder, MS Computer Science at Stevens. Trading tools, Flutter apps and offline AI tools." />
+  <meta name="theme-color" content="#0A0C10" />
+  <meta property="og:title" content="Atul's Portfolio - Atul Abraham" />
+  <meta property="og:description" content="Mechanical engineer turned software builder. Trading tools, mobile apps and offline AI." />
+  <meta property="og:image" content="assets/photo.jpg" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230A0C10'/%3E%3Cpath d='M14 44 L24 30 L32 36 L44 18 L50 24' stroke='%23F5B041' stroke-width='5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <a class="skip" href="#projects">Skip to content</a>
+
+  <!-- Top bar -->
+  <header class="topbar" id="topbar">
+    <a class="brand" href="#top" aria-label="Atul Abraham, back to top">
+      <span class="brand-name">Atul Abraham</span>
+      <span class="brand-meta mono">Hoboken, NJ</span>
+    </a>
+    <nav class="topnav" aria-label="Main">
+      <a href="#projects">Projects</a>
+      <a href="#about">About</a>
+      <a class="btn btn-secondary btn-sm" data-resume href="assets/Atul_Abraham_Resume.pdf" target="_blank" rel="noopener">Résumé</a>
+    </nav>
+  </header>
+
+  <!-- Section dots (desktop) -->
+  <nav class="dots" aria-label="Sections">
+    <a href="#top" data-dot="top" tabindex="-1" aria-label="Desk"></a>
+    <a href="#projects" data-dot="projects" tabindex="-1" aria-label="Projects"></a>
+    <a href="#why" data-dot="why" tabindex="-1" aria-label="Why hire me"></a>
+    <a href="#about" data-dot="about" tabindex="-1" aria-label="About and experience"></a>
+    <a href="#education" data-dot="education" tabindex="-1" aria-label="Education"></a>
+    <a href="#contact" data-dot="contact" tabindex="-1" aria-label="Contact"></a>
+  </nav>
+
+  <main>
+    <!-- ============ HERO: the desk ============ -->
+    <section class="hero" id="top" aria-label="Atul's portfolio">
+      <div class="scene" id="scene" aria-hidden="true"></div>
+      <div class="scene-fallback" id="sceneFallback" hidden></div>
+      <div class="scene-label mono" id="sceneLabel" aria-hidden="true"></div>
+
+      <div class="hero-copy">
+        <p class="mono hero-kicker">Open to SWE &amp; fintech internships</p>
+        <h1 class="hero-title" id="heroTitle">Atul's Portfolio</h1>
+        <p class="hero-tagline" id="heroTagline"></p>
+        <ul class="hero-links">
+          <li><button type="button" class="hero-link" data-open="about">About me</button></li>
+          <li><button type="button" class="hero-link" data-open="why">Why hire me</button></li>
+          <li><a class="hero-link" href="#projects">Projects</a></li>
+          <li><button type="button" class="hero-link" data-open="contact">Leave a message</button></li>
+        </ul>
+      </div>
+
+      <p class="hero-hint mono" id="heroHint">Click anything on the desk</p>
+      <a class="scroll-cue mono" href="#projects">Scroll<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></a>
+      <div class="loader mono" id="loader" role="status">Switching on the lamp…</div>
+    </section>
+
+    <!-- ============ 01 PROJECTS ============ -->
+    <section class="section" id="projects" aria-labelledby="projects-h">
+      <div class="wrap">
+        <p class="num mono">01</p>
+        <h2 id="projects-h">Projects.</h2>
+        <p class="section-lead">Four crates on the floor of my desk. Pull one out to flip through what is inside.</p>
+        <ul class="crates" id="crateList"></ul>
+        <button type="button" class="btn btn-secondary" id="allProjectsBtn">All projects, as a list <span aria-hidden="true">→</span></button>
+      </div>
+    </section>
+
+    <!-- ============ 02 WHY HIRE ME ============ -->
+    <section class="section section-alt" id="why" aria-labelledby="why-h">
+      <div class="wrap">
+        <p class="num mono">02</p>
+        <h2 id="why-h">Why hire me.</h2>
+        <div class="crt" id="whyCrt"></div>
+      </div>
+    </section>
+
+    <!-- ============ 03 ABOUT + EXPERIENCE ============ -->
+    <section class="section" id="about" aria-labelledby="about-h">
+      <div class="wrap about-grid">
+        <div class="about-text">
+          <p class="num mono">03</p>
+          <h2 id="about-h">About me.</h2>
+          <div id="aboutBody"></div>
+        </div>
+        <figure class="portrait">
+          <img src="assets/photo.jpg" alt="Portrait of Atul Abraham" width="853" height="1280" loading="lazy" />
+          <figcaption class="mono">Atul Franklin Abraham · Hoboken</figcaption>
+        </figure>
+      </div>
+      <div class="wrap">
+        <h3 class="sub-h mono" id="experience">Experience</h3>
+        <ol class="timeline" id="experienceList"></ol>
+      </div>
+    </section>
+
+    <!-- ============ 04 EDUCATION ============ -->
+    <section class="section section-alt" id="education" aria-labelledby="edu-h">
+      <div class="wrap">
+        <p class="num mono">04</p>
+        <h2 id="edu-h">Education & skills.</h2>
+        <div class="edu-grid" id="educationList"></div>
+        <div class="two-col">
+          <div>
+            <h3 class="sub-h mono">Skills</h3>
+            <dl class="skills" id="skillsList"></dl>
+          </div>
+          <div>
+            <h3 class="sub-h mono">Certifications</h3>
+            <ul class="certs" id="certList"></ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 05 CONTACT ============ -->
+    <section class="section contact" id="contact" aria-labelledby="contact-h">
+      <div class="wrap">
+        <p class="num mono">05</p>
+        <h2 id="contact-h" class="contact-h">Looking for an intern who ships? <span>Let's talk.</span></h2>
+        <div class="contact-actions" id="contactActions"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap footer-row">
+      <span>Atul Abraham · Hoboken, NJ</span>
+      <a href="#top">Back to top ↑</a>
+    </div>
+  </footer>
+
+  <!-- Project stack overlay -->
+  <dialog class="overlay" id="stackDialog" aria-labelledby="stackTitle">
+    <div class="overlay-head">
+      <div class="pill-head">
+        <span id="stackTitle">Crate</span>
+        <button type="button" class="icon-btn" data-close aria-label="Close">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="stack" id="stackBody" tabindex="-1"></div>
+    <div class="overlay-foot">
+      <span class="mono hint" id="stackHint">Scroll, or use ← → for the next crate</span>
+      <button type="button" class="btn btn-secondary btn-sm" id="nextCrateBtn">Next crate <span aria-hidden="true">→</span></button>
+    </div>
+  </dialog>
+
+  <!-- Generic panel overlay (about / why / contact / list) -->
+  <dialog class="overlay overlay-panel" id="panelDialog" aria-labelledby="panelTitle">
+    <div class="overlay-head">
+      <div class="pill-head">
+        <span id="panelTitle">Panel</span>
+        <button type="button" class="icon-btn" data-close aria-label="Close">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="panel-body" id="panelBody" tabindex="-1"></div>
+  </dialog>
+
+  <script src="js/content.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/scene.js"></script>
+</body>
+</html>

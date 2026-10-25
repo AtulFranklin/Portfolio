@@ -1,0 +1,10 @@
+# Development docs (kept locally, not published)
+PLAN.md
+DESIGN.md
+DEV-README.md
+
+# OS / editor clutter
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
