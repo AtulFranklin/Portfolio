@@ -109,12 +109,8 @@
   color: var(--bk-foil);
   text-shadow: 0 1px 0 rgba(0, 0, 0, 0.55), 0 -1px 0 rgba(255, 255, 255, 0.06);
 }
-/* style 0: a dark leather title label with a double foil rule */
-.bk-v0 .bk-label {
-  align-self: center; height: 64%; padding: 0 14px; border-radius: 2px;
-  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.05), rgba(0, 0, 0, 0.15)), var(--bk-deep);
-  box-shadow: inset 0 0 0 1px var(--bk-foil-2), inset 0 0 0 3px var(--bk-deep), inset 0 0 0 4px var(--bk-foil-3), 0 1px 0 rgba(255, 255, 255, 0.07);
-}
+/* style 0: plain foil title (no label box) */
+.bk-v0 .bk-label { padding: 0; }
 /* style 2: foil rules running the length of the spine */
 .bk-v2.bk-spine::before,
 .bk-v2 .bk-spine::before {
@@ -270,7 +266,7 @@
   .bk-book { width: calc((100% - 20px) * var(--bk-w, 1)); margin-left: calc(var(--bk-x, 0px) * 0.6); }
   .bk-spine { gap: 10px; padding: 0 9px; }
   .bk-emb { width: 18px; height: 18px; }
-  .bk-v0 .bk-label { padding: 0 10px; }
+  .bk-v0 .bk-label { padding: 0; }
   .bk-meta { font-size: 9.5px; padding-left: 10px; letter-spacing: 0.1em; }
 }
 @media (max-width: 420px) {
@@ -279,7 +275,7 @@
   .bk-book { width: calc((100% - 14px) * (0.12 + var(--bk-w, 1) * 0.88)); }
   .bk-spine { gap: 8px; padding: 0 7px; }
   .bk-emb { display: none; }
-  .bk-v0 .bk-label { padding: 0 8px; }
+  .bk-v0 .bk-label { padding: 0; }
   .bk-v1 .bk-cap i { width: 4px; }
   .bk-cap { gap: 2px; }
   .bk-meta { font-size: 9px; letter-spacing: 0.08em; padding-left: 8px; }
@@ -292,9 +288,9 @@
   .bk-cap { grid-row: 1 / span 2; }
   .bk-cap-r { grid-column: 3; }
   .bk-label { grid-column: 2; grid-row: 1; justify-self: start; max-width: 100%; }
-  .bk-v0 .bk-label { height: auto; padding: 3px 8px; }
+  .bk-v0 .bk-label { height: auto; padding: 0; }
   .bk-meta { grid-column: 2; grid-row: 2; flex-direction: row; justify-content: flex-start; gap: 0; margin: 0; padding: 0; border: 0; }
-  .bk-v0 .bk-meta { padding-left: 9px; }
+  .bk-v0 .bk-meta { padding-left: 0; }
   .bk-meta span + span::before { content: "\00B7"; margin: 0 7px; color: var(--bk-foil-3); }
 }
 

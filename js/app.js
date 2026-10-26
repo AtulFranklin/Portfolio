@@ -68,7 +68,10 @@
     </div></div>`;
   }
   // section 02: the retro word-processor window (falls back to the old CRT panel)
-  if (window.RETRO && typeof window.RETRO.sectionHTML === "function") $("#whyCrt").outerHTML = `<div id="whyCrt">${window.RETRO.sectionHTML()}</div>`;
+  if (window.RETRO && typeof window.RETRO.sectionHTML === "function") {
+    $("#whyCrt").outerHTML = `<div id="whyCrt">${window.RETRO.sectionHTML()}</div>`;
+    if (typeof window.RETRO.mountSection === "function") window.RETRO.mountSection(document.getElementById("whyCrt"));
+  }
   else $("#whyCrt").outerHTML = crtHTML().replace('<div class="crt">', '<div class="crt reveal" id="whyCrt">');
 
   /* ---------------- 03 About + experience ---------------- */

@@ -8,8 +8,9 @@
      RETRO.open()                    full-screen experience in a <dialog>
      RETRO.close()                   closes it
      RETRO.drawScreen(ctx, w, h, t)  draws the 3D monitor's screen texture
-     RETRO.sectionHTML()             static window for the on-page section
-   Any element with [data-retro-open] opens the computer on click.
+     RETRO.sectionHTML()             inline, operable monitor for the page section
+     RETRO.mountSection(el)          wires up an inserted sectionHTML() (el = it or a wrapper)
+   Any element with [data-retro-open] opens the full-screen computer on click.
    ========================================================= */
 (function () {
   "use strict";
@@ -397,61 +398,46 @@
       "</div>";
   }
 
-  function menusHTML(live) {
+  function menusHTML(o) {
     var names = ["File", "Edit", "View", "Insert", "Format", "Tools", "Help"];
     var rest = names.slice(1).map(function (n, i) {
       return '<span class="rt-menu rt-m' + (i + 1) + '"><u>' + n[0] + "</u>" + n.slice(1) + "</span>";
     }).join("");
-    if (!live) return '<div class="rt-menus" aria-hidden="true"><span class="rt-menu"><u>F</u>ile</span>' + rest + "</div>";
     var items = "";
     if (S.resume) items += '<a class="rt-mi" href="' + esc(S.resume) + '" target="_blank" rel="noopener">Open resume (PDF)...</a>';
     if (LINKS.email) items += '<a class="rt-mi" href="' + esc(mailHref()) + '">Send as e-mail...</a>';
     items += '<span class="rt-msep" role="separator"></span>';
-    items += '<button type="button" class="rt-mi" data-retro-close>Exit and shut down</button>';
+    items += '<button type="button" class="rt-mi" data-rt-act="closewin">' + (o.inline ? "Exit" : "Exit and shut down") + "</button>";
+    var id = o.uid + "-file";
     return '<div class="rt-menus">' +
-      '<div class="rt-filewrap"><button type="button" class="rt-menu rt-menu-btn" aria-expanded="false" aria-controls="rtFileMenu"><u>F</u>ile</button>' +
-      '<div class="rt-dropdown" id="rtFileMenu" hidden>' + items + "</div></div>" +
+      '<div class="rt-filewrap"><button type="button" class="rt-menu rt-menu-btn" data-rt-act="file" aria-expanded="false" aria-controls="' + id + '"><u>F</u>ile</button>' +
+      '<div class="rt-dropdown" id="' + id + '" hidden>' + items + "</div></div>" +
       '<span aria-hidden="true" class="rt-menus-rest">' + rest + "</span></div>";
   }
 
-  /* The word-processor window. live = inside the dialog (real buttons), else static for the page. */
-  function windowHTML(live) {
-    var close = live
-      ? '<button type="button" class="rt-wbtn rt-closebox" data-retro-close aria-label="Close document and shut down">' + svgIcon("x", 10, closeGlyph) + "</button>"
-      : '<span class="rt-wbtn rt-closebox" aria-hidden="true">' + svgIcon("x", 10, closeGlyph) + "</span>";
+  /* The word-processor window. o = { uid, inline, h } */
+  function windowHTML(o) {
+    var close = '<button type="button" class="rt-wbtn rt-closebox" data-rt-act="closewin" aria-label="' +
+      (o.inline ? "Close document" : "Close document and shut down") + '">' + svgIcon("x", 10, closeGlyph) + "</button>";
     var words = 0;
     WHY.forEach(function (w) { words += ((w.heading || w.label) + " " + w.text).split(/\s+/).length + 1; });
     if (S.about && S.about.lead) words += S.about.lead.split(/\s+/).length;
-    return '<div class="rt-win' + (live ? " rt-win-live" : " rt-win-static") + '">' +
+    return '<div class="rt-win rt-win-live">' +
       '<div class="rt-titlebar">' + close +
-      '<span class="rt-title"' + (live ? "" : ' aria-hidden="true"') + ">" + DOC_NAME + "</span>" +
+      '<span class="rt-title">' + DOC_NAME + "</span>" +
       '<span class="rt-wbtns" aria-hidden="true"><span class="rt-wbtn rt-min"><i></i></span><span class="rt-wbtn rt-max"><i></i></span></span>' +
       "</div>" +
-      menusHTML(live) + toolbarHTML() + rulerHTML() +
-      '<div class="rt-work"' + (live ? ' tabindex="0" role="region" aria-label="Document: ' + DOC_NAME + '"' : "") + ">" +
-      docHTML({ h: live ? 2 : 3 }) + "</div>" +
+      menusHTML(o) + toolbarHTML() + rulerHTML() +
+      '<div class="rt-work" tabindex="0" role="region" aria-label="Document: ' + DOC_NAME + '">' +
+      docHTML({ h: o.h }) + "</div>" +
       '<div class="rt-status" aria-hidden="true"><span>Page 1 of 1</span><span>Ln 1</span><span>Col 1</span>' +
       '<span class="rt-st-words">' + (words + 40) + ' words</span><span class="rt-st-ins">INS</span></div>' +
       "</div>";
   }
 
-  /* ---------------- on-page section ---------------- */
-  function sectionHTML() {
-    return '<div class="rt-section">' +
-      '<div class="rt-plate">' + windowHTML(false) + "</div>" +
-      '<div class="rt-cta">' +
-      '<button type="button" class="btn btn-primary rt-bootbtn" data-retro-open>' +
-      '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v8"/><path d="M6.6 6.6a7.5 7.5 0 1 0 10.8 0"/></svg>Boot it up</button>' +
-      '<p class="rt-cta-note">Opens the same document on a 1990s workstation.</p>' +
-      "</div></div>";
-  }
-
-  /* ---------------- full-screen experience ---------------- */
-  var dlg = null, screen = null, runId = 0, lastFocus = null, clockTimer = 0, closing = false, skipped = false;
-
-  function deskHTML() {
+  function deskHTML(o) {
     var icons = [
-      ["doc", DOC_NAME, null],
+      ["doc", DOC_NAME, { act: "opendoc" }],
       ["folder", "Projects", { href: "#projects", nav: true }],
       ["resume", "Resume", S.resume ? { href: S.resume, blank: true } : null],
       ["mail", "Mail", LINKS.email ? { href: mailHref() } : null],
@@ -461,9 +447,13 @@
       var svg = svgIcon(ic[0], 32, ICONS32[ic[0]], "rt-icon-img");
       var cls = "rt-icon rt-icon-" + ic[0];
       var label = '<span class="rt-icon-label">' + esc(ic[1]).replace(/_/g, "_<wbr>") + "</span>";
-      if (ic[2]) {
-        return '<a class="' + cls + '" href="' + esc(ic[2].href) + '"' +
-          (ic[2].blank ? ' target="_blank" rel="noopener"' : "") + (ic[2].nav ? " data-retro-nav" : "") + ">" + svg + label + "</a>";
+      var a = ic[2];
+      if (a && a.act) {
+        return '<button type="button" class="' + cls + '" data-rt-act="' + a.act + '" title="Double-click to open" aria-label="Open ' + DOC_NAME + '">' + svg + label + "</button>";
+      }
+      if (a) {
+        return '<a class="' + cls + '" href="' + esc(a.href) + '"' +
+          (a.blank ? ' target="_blank" rel="noopener"' : "") + (a.nav ? " data-retro-nav" : "") + ">" + svg + label + "</a>";
       }
       return '<span class="' + cls + '" aria-hidden="true">' + svg + label + "</span>";
     }).join("");
@@ -481,129 +471,355 @@
       '<span class="rt-mb-left" aria-hidden="true">' + svgIcon("lamp", 16, function () { return icon16("lamp"); }, "rt-mb-lamp") +
       '<span class="rt-mb-item rt-mb-strong">Desk</span><span class="rt-mb-item">File</span><span class="rt-mb-item rt-mb-x">Edit</span>' +
       '<span class="rt-mb-item rt-mb-x">View</span><span class="rt-mb-item rt-mb-x">Window</span></span>' +
-      '<span class="rt-mb-right"><button type="button" class="rt-mb-item rt-mb-shut" data-retro-close>Shut down</button>' +
-      '<span class="rt-clock" aria-hidden="true"></span></span>' +
+      '<span class="rt-mb-right"><button type="button" class="rt-mb-item rt-mb-shut" data-rt-act="shutdown">Shut down</button>' +
+      '<span class="rt-clock" aria-hidden="true">' + esc(clockText()) + "</span></span>" +
       "</div>" +
       '<div class="rt-icons">' + iconsHTML + "</div>" +
+      (o.inline ? '<p class="rt-desk-hint" aria-hidden="true">Double-click (or tap) ' + DOC_NAME + " to open it.</p>" : "") +
       setup +
-      windowHTML(true) +
+      windowHTML(o) +
       "</div>";
   }
 
-  function screenHTML() {
+  function screenHTML(o) {
     return '<div class="rt-content">' +
       '<div class="rt-boot" aria-hidden="true"><div class="rt-boot-log"></div></div>' +
-      deskHTML() +
+      deskHTML(o) +
       "</div>" +
       '<div class="rt-beam" aria-hidden="true"></div>' +
       '<div class="rt-glass" aria-hidden="true"></div>' +
-      '<div class="rt-bootctl"><button type="button" class="rt-btn rt-skip">Skip <span aria-hidden="true">&gt;&gt;</span><span class="rt-sr"> the boot sequence</span></button>' +
-      '<button type="button" class="rt-btn rt-off" data-retro-close>Power off</button></div>' +
-      '<p class="rt-sr rt-live" aria-live="polite"></p>';
+      (o.inline ? '<button type="button" class="rt-wake" data-rt-act="power"><span class="rt-wake-msg">Press the power button</span><span class="rt-sr"> to switch the computer on</span></button>' : "") +
+      '<div class="rt-bootctl"><button type="button" class="rt-btn rt-skip" data-rt-act="skip">Skip <span aria-hidden="true">&gt;&gt;</span><span class="rt-sr"> the boot sequence</span></button>' +
+      (o.inline ? "" : '<button type="button" class="rt-btn rt-off" data-rt-act="shutdown">Power off</button>') + "</div>";
   }
 
-  function build() {
-    dlg = document.createElement("dialog");
-    dlg.className = "rt-dlg";
-    dlg.setAttribute("aria-label", "Why hire Atul - retro computer");
-    dlg.innerHTML =
-      '<div class="rt-room">' +
-      '<div class="rt-monitor">' +
-      '<div class="rt-recess"><div class="rt-screen" data-stage="off"></div></div>' +
+  /* The monitor body. inner = screen markup, power = action for the chin button. */
+  function monitorHTML(inner, stage, power) {
+    return '<div class="rt-monitor">' +
+      '<div class="rt-recess"><div class="rt-screen" data-stage="' + stage + '">' + inner + "</div></div>" +
       '<div class="rt-chin">' +
       '<span class="rt-badge" aria-hidden="true">ATUL-OS <em>2.6</em></span>' +
       '<span class="rt-vents" aria-hidden="true"></span>' +
       '<span class="rt-led" aria-hidden="true"></span>' +
-      '<button type="button" class="rt-power" data-retro-close aria-label="Shut down"><span aria-hidden="true"></span></button>' +
-      "</div></div></div>";
-    document.body.appendChild(dlg);
-    screen = dlg.querySelector(".rt-screen");
-
-    dlg.addEventListener("click", function (e) {
-      var t = e.target;
-      if (t === dlg || (t.classList && t.classList.contains("rt-room"))) { shutdown(); return; }
-      if (t.closest("[data-retro-close]")) { e.preventDefault(); shutdown(); return; }
-      if (t.closest(".rt-skip")) { skip(); return; }
-      if (t.closest("[data-retro-nav]")) { close(); return; } /* let the #hash navigation happen */
-      var mb = t.closest(".rt-menu-btn");
-      if (mb) { toggleFile(mb.getAttribute("aria-expanded") !== "true"); return; }
-      if (!t.closest(".rt-dropdown")) toggleFile(false);
-    });
-    dlg.addEventListener("keydown", function (e) {
-      if (e.key === "Escape" && fileOpen()) {
-        e.preventDefault(); e.stopPropagation();
-        toggleFile(false);
-        var b = dlg.querySelector(".rt-menu-btn"); if (b) b.focus();
-      }
-    });
-    dlg.addEventListener("cancel", function (e) {
-      if (!closing) { e.preventDefault(); shutdown(); }
-    });
-    dlg.addEventListener("close", onClosed);
+      '<button type="button" class="rt-power" data-rt-act="' + power + '" aria-label="' + (power === "power" ? "Power button" : "Shut down") + '"><span aria-hidden="true"></span></button>' +
+      "</div></div>";
   }
 
-  function fileOpen() {
-    var b = dlg && dlg.querySelector(".rt-menu-btn");
-    return !!(b && b.getAttribute("aria-expanded") === "true");
+  function clockText() {
+    var d = new Date();
+    try {
+      return d.toLocaleDateString("en-US", { weekday: "short" }) + " " + d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+    } catch (_) { return ""; }
   }
-  function toggleFile(on) {
-    var b = dlg.querySelector(".rt-menu-btn"), m = dlg.querySelector(".rt-dropdown");
-    if (!b || !m) return;
-    b.setAttribute("aria-expanded", on ? "true" : "false");
-    m.hidden = !on;
-    if (on) { var first = m.querySelector(".rt-mi"); if (first) first.focus(); }
+  function isHidden(el) {
+    if (!el || !el.getClientRects().length) return true;
+    var cs = window.getComputedStyle(el);
+    return cs.visibility === "hidden" || cs.display === "none";
   }
-
-  function setStage(s) { if (screen) screen.setAttribute("data-stage", s); }
   function wait(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
 
-  function tickClock() {
-    var c = dlg && dlg.querySelector(".rt-clock");
-    if (!c) return;
-    var d = new Date();
-    var day = d.toLocaleDateString("en-US", { weekday: "short" });
-    var time = d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
-    c.textContent = day + " " + time;
+  /* ---------------- machine: one per screen ----------------
+     Holds the boot sequence, the desktop and the document window.
+     The dialog and every inline monitor get their own instance. */
+  var uidCount = 0;
+  function newUid(prefix) { uidCount++; return prefix + uidCount + "-" + Math.random().toString(36).slice(2, 6); }
+
+  function Machine(root, opts) {
+    var m = this;
+    this.root = root;
+    this.inline = !!opts.inline;
+    this.uid = opts.uid;
+    this.h = opts.h;
+    this.screen = root.querySelector(".rt-screen");
+    this.liveEl = root.querySelector(".rt-live");
+    this.runId = 0;
+    this.skipped = false;
+    this.busy = false;
+    this.clockTimer = 0;
+    this.lastPointer = "mouse";
+    this.isUp = function () { return true; };
+    this.onShutdown = function () { m.powerOff(); };
+    this.onCloseWin = function () { m.closeDoc(); };
+    root.addEventListener("pointerdown", function (e) { m.lastPointer = e.pointerType || "mouse"; }, true);
+    root.addEventListener("click", function (e) { m.onClick(e); });
+    root.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && m.fileOpen()) {
+        e.preventDefault(); e.stopPropagation();
+        m.toggleFile(false);
+        var b = m.q(".rt-menu-btn"); if (b) b.focus({ preventScroll: true });
+      }
+    });
   }
+  var MP = Machine.prototype;
+  MP.q = function (sel) { return this.screen ? this.screen.querySelector(sel) : null; };
+  MP.opts = function () { return { uid: this.uid, inline: this.inline, h: this.h }; };
+  MP.render = function (stage) {
+    this.screen.innerHTML = screenHTML(this.opts());
+    this.screen.classList.remove("rt-poweroff");
+    this.setStage(stage);
+  };
+  MP.setStage = function (s) { if (this.screen) this.screen.setAttribute("data-stage", s); };
+  MP.stage = function () { return this.screen ? this.screen.getAttribute("data-stage") : "off"; };
+  MP.say = function (text) {
+    var el = this.liveEl;
+    if (!el) return;
+    el.textContent = "";
+    setTimeout(function () { el.textContent = text; }, 30);
+  };
+  MP.tickClock = function () { var c = this.q(".rt-clock"); if (c) c.textContent = clockText(); };
+  MP.startClock = function () {
+    var m = this;
+    this.tickClock();
+    clearInterval(this.clockTimer);
+    this.clockTimer = setInterval(function () { m.tickClock(); }, 10000);
+  };
+  MP.stopClock = function () { clearInterval(this.clockTimer); this.clockTimer = 0; };
+  MP.alive = function (run) { return run === this.runId && !this.skipped && !this.busy && this.isUp(); };
 
-  function open() {
-    if (!dlg) build();
-    if (dlg.open) return;
-    lastFocus = document.activeElement;
-    closing = false;
-    skipped = false;
-    screen.innerHTML = screenHTML();
-    screen.classList.remove("rt-poweroff");
-    dlg.classList.add("rt-on");
-    tickClock();
-    clearInterval(clockTimer);
-    clockTimer = setInterval(tickClock, 10000);
-    dlg.showModal();
-    document.body.classList.add("modal-open");
-    window.dispatchEvent(new CustomEvent("desk:modal", { detail: true }));
+  MP.fileOpen = function () {
+    var b = this.q(".rt-menu-btn");
+    return !!(b && b.getAttribute("aria-expanded") === "true");
+  };
+  MP.toggleFile = function (on) {
+    var b = this.q(".rt-menu-btn"), menu = this.q(".rt-dropdown");
+    if (!b || !menu) return;
+    b.setAttribute("aria-expanded", on ? "true" : "false");
+    menu.hidden = !on;
+    if (on) { var first = menu.querySelector(".rt-mi"); if (first) first.focus({ preventScroll: true }); }
+  };
 
-    var run = ++runId;
-    if (reduced()) { finish(true); return; }
-    var fast = storeGet("retroBooted") === "1";
-    storeSet("retroBooted", "1");
-    setStage("power");
-    var skipBtn = screen.querySelector(".rt-skip");
-    if (skipBtn) skipBtn.focus();
-    sequence(run, fast);
-  }
+  MP.onClick = function (e) {
+    var t = e.target;
+    if (!t || !t.closest) return;
+    var actEl = t.closest("[data-rt-act]");
+    if (!actEl || !this.root.contains(actEl)) { if (!t.closest(".rt-dropdown")) this.toggleFile(false); return; }
+    var act = actEl.getAttribute("data-rt-act");
+    if (act !== "file") this.toggleFile(false);
+    if (act === "file") { this.toggleFile(!this.fileOpen()); return; }
+    e.preventDefault();
+    if (act === "skip") this.skip();
+    else if (act === "power") this.power();
+    else if (act === "shutdown") this.onShutdown();
+    else if (act === "closewin") this.onCloseWin();
+    else if (act === "opendoc") {
+      /* mouse: click selects, double-click opens. Keyboard and touch open at once. */
+      if (e.detail === 0 || e.detail >= 2 || this.lastPointer !== "mouse") this.openDoc();
+      else actEl.classList.add("rt-sel");
+    }
+  };
 
-  function alive(run) { return run === runId && !skipped && dlg && dlg.open && !closing; }
-
-  function sequence(run, fast) {
-    setStage("power");
+  /* full boot: power-on, log, setup, desktop, zoom, document */
+  MP.boot = function (fast) {
+    var m = this, run = ++this.runId;
+    this.skipped = false;
+    this.setStage("power");
     wait(fast ? 260 : 480)
-      .then(function () { if (!alive(run)) throw 0; setStage("boot"); return bootLog(run, fast); })
-      .then(function () { if (!alive(run)) throw 0; if (!fast) { setStage("setup"); return setupProgress(run); } })
-      .then(function () { if (!alive(run)) throw 0; setStage("desk"); return wait(fast ? 100 : 220); })
-      .then(function () { if (!alive(run)) throw 0; return zoom(run, fast ? 200 : 280); })
-      .then(function () { if (!alive(run)) throw 0; finish(); })
+      .then(function () { if (!m.alive(run)) throw 0; m.setStage("boot"); return m.bootLog(run, fast); })
+      .then(function () { if (!m.alive(run)) throw 0; if (!fast) { m.setStage("setup"); return m.setupProgress(run); } })
+      .then(function () {
+        if (!m.alive(run)) throw 0;
+        var a = document.activeElement;
+        m.skipHadFocus = !!(a && a.classList && a.classList.contains("rt-skip"));
+        m.setStage("desk"); m.tickClock();
+        return wait(fast ? 100 : 220);
+      })
+      .then(function () { if (!m.alive(run)) throw 0; return m.zoom(run, fast ? 200 : 280); })
+      .then(function () { if (!m.alive(run)) throw 0; m.finish(); })
       .catch(function () { /* cancelled */ });
-  }
+  };
+
+  MP.bootLog = function (run, fast) {
+    var m = this, log = this.q(".rt-boot-log"), lines = bootLines(fast), i = 0;
+    function line(text) {
+      var d = document.createElement("div");
+      d.className = "rt-bl";
+      d.textContent = text || " ";
+      log.appendChild(d);
+      return d;
+    }
+    function memCheck() {
+      var d = line("Testing memory ...... 0K");
+      var total = 16384, steps = 8, k = 0;
+      return new Promise(function (res) {
+        (function step() {
+          if (!m.alive(run)) return res();
+          k++;
+          var v = Math.min(total, Math.round((total / steps) * k / 64) * 64);
+          d.textContent = "Testing memory ...... " + v + "K" + (k >= steps ? "  OK" : "");
+          if (k >= steps) return res();
+          setTimeout(step, 28);
+        })();
+      });
+    }
+    function next() {
+      if (!m.alive(run) || i >= lines.length) return Promise.resolve();
+      var L = lines[i++];
+      return wait(L[1]).then(function () {
+        if (!m.alive(run)) return;
+        if (L[0] === "@mem") return memCheck();
+        var d = line(L[0]);
+        if (L[2]) {
+          return wait(fast ? 80 : 70).then(function () {
+            if (!m.alive(run)) return;
+            var s = document.createElement("span");
+            s.className = "rt-bl-ok";
+            s.textContent = L[2];
+            d.appendChild(s);
+          });
+        }
+      }).then(next);
+    }
+    if (!log) return Promise.resolve();
+    return next().then(function () { return wait(fast ? 80 : 120); });
+  };
+
+  MP.setupProgress = function (run) {
+    var m = this;
+    var segs = this.screen.querySelectorAll(".rt-progress-well i");
+    var pct = this.q(".rt-progress-pct");
+    var file = this.q(".rt-setup-file span");
+    var files = (S.projects || []).map(function (p) { return "/portfolio/" + slug(p.crate || "misc") + "/" + slug(p.title); });
+    files.push("/resume/" + (S.resume ? String(S.resume).split("/").pop() : "resume.pdf"));
+    files.push("/docs/" + DOC_NAME);
+    /* uneven steps, with a stall, like a real installer */
+    var plan = [[6, 60], [17, 50], [29, 60], [38, 50], [47, 50], [58, 50], [62, 140], [70, 50], [83, 50], [91, 50], [100, 60]];
+    var i = 0;
+    return new Promise(function (res) {
+      (function step() {
+        if (!m.alive(run)) return res();
+        if (i >= plan.length) return setTimeout(res, 160);
+        var p = plan[i];
+        var lit = Math.floor(p[0] * segs.length / 100);
+        for (var j = 0; j < segs.length; j++) segs[j].classList.toggle("on", j < lit);
+        if (pct) pct.textContent = p[0] + "%";
+        if (file && files.length) file.textContent = files[Math.min(files.length - 1, Math.floor(i * files.length / plan.length))];
+        i++;
+        setTimeout(step, p[1]);
+      })();
+    });
+  };
+
+  MP.zoom = function (run, dur) {
+    var m = this;
+    var desk = this.q(".rt-desk");
+    var from = this.q(".rt-icon-doc .rt-icon-img");
+    var to = this.q(".rt-win-live");
+    if (!desk || !from || !to) return Promise.resolve();
+    var D = desk.getBoundingClientRect(), A = from.getBoundingClientRect(), B = to.getBoundingClientRect();
+    if (!A.width || A.left > D.right || A.top > D.bottom) {
+      /* icon hidden (small screens): zoom from the centre of the window */
+      A = { left: B.left + B.width / 2 - 16, top: B.top + B.height / 2 - 16, width: 32, height: 32 };
+    }
+    var n = 9, k = 0, trail = [];
+    return new Promise(function (res) {
+      function cleanup() { trail.forEach(function (t) { t.remove(); }); }
+      (function step() {
+        if (!m.alive(run)) { cleanup(); return res(); }
+        k++;
+        var f = k / n, e = 1 - Math.pow(1 - f, 2);
+        var r = document.createElement("span");
+        r.className = "rt-zoom";
+        r.style.left = (A.left + (B.left - A.left) * e - D.left) + "px";
+        r.style.top = (A.top + (B.top - A.top) * e - D.top) + "px";
+        r.style.width = (A.width + (B.width - A.width) * e) + "px";
+        r.style.height = (A.height + (B.height - A.height) * e) + "px";
+        desk.appendChild(r);
+        trail.push(r);
+        if (trail.length > 3) trail.shift().remove();
+        if (k >= n) { setTimeout(function () { cleanup(); res(); }, 40); return; }
+        setTimeout(step, dur / n);
+      })();
+    });
+  };
+
+  /* show the open document. focus: true = move focus to it,
+     otherwise only rescue focus that was on a control that just disappeared. */
+  MP.finish = function (focus) {
+    if (!this.screen) return;
+    this.screen.querySelectorAll(".rt-zoom").forEach(function (z) { z.remove(); });
+    this.screen.querySelectorAll(".rt-icon.rt-sel").forEach(function (z) { z.classList.remove("rt-sel"); });
+    var a = document.activeElement;
+    var lost;
+    if (this.inline) {
+      lost = this.skipHadFocus || (!!a && this.root.contains(a) && (a.classList.contains("rt-skip") || a.classList.contains("rt-wake") || a.classList.contains("rt-icon-doc")));
+    } else {
+      lost = !a || a === document.body || a === this.root || !this.root.contains(a) || a.classList.contains("rt-skip");
+    }
+    this.skipHadFocus = false;
+    this.setStage("doc");
+    this.say(DOC_NAME + " is open.");
+    if (focus || lost) {
+      var work = this.q(".rt-work");
+      if (work) work.focus({ preventScroll: true });
+    }
+  };
+
+  MP.skip = function () {
+    this.skipped = true;
+    this.runId++;
+    this.tickClock();
+    this.finish();
+  };
+
+  /* inline only: window close box and File > Exit */
+  MP.closeDoc = function () {
+    if (this.stage() !== "doc") return;
+    var a = document.activeElement, win = this.q(".rt-win-live");
+    var hadFocus = !!(a && win && win.contains(a));
+    this.toggleFile(false);
+    this.setStage("desk");
+    this.say("Document closed. " + DOC_NAME + " is on the desktop; open it to read it again.");
+    if (hadFocus) { var ic = this.q(".rt-icon-doc"); if (ic) ic.focus({ preventScroll: true }); }
+  };
+  MP.openDoc = function () {
+    var st = this.stage();
+    if (st === "doc") { var w = this.q(".rt-work"); if (w) w.focus({ preventScroll: true }); return; }
+    if (st !== "desk" || this.busy) return;
+    var m = this, run = ++this.runId;
+    this.skipped = false;
+    if (reduced()) { this.finish(true); return; }
+    this.zoom(run, 260).then(function () { if (m.alive(run)) m.finish(true); });
+  };
+
+  MP.powerOff = function () {
+    var st = this.stage();
+    if (this.busy || st === "off") return;
+    var m = this;
+    var a = document.activeElement;
+    var hadFocus = !!(a && this.screen.contains(a));
+    this.busy = true;
+    this.runId++;
+    this.toggleFile(false);
+    this.root.classList.remove("rt-on");
+    function done() {
+      m.screen.classList.remove("rt-poweroff");
+      m.setStage("off");
+      m.busy = false;
+      m.stopClock();
+      m.say("Computer switched off. Press the power button to switch it on.");
+      if (hadFocus) { var p = m.root.querySelector(".rt-power"); if (p) p.focus({ preventScroll: true }); }
+    }
+    if (reduced()) { done(); return; }
+    this.screen.classList.add("rt-poweroff");
+    setTimeout(done, 420);
+  };
+  MP.powerOn = function () {
+    if (this.busy || this.stage() !== "off") return;
+    var a = document.activeElement;
+    var fromWake = !!(a && a.classList && a.classList.contains("rt-wake"));
+    this.root.classList.add("rt-on");
+    if (this.inline && this.visible !== false) this.startClock();
+    if (reduced()) {
+      this.render("desk");
+      this.finish(fromWake);
+      return;
+    }
+    this.render("power");
+    this.say("Starting up.");
+    if (fromWake) { var s = this.q(".rt-skip"); if (s) s.focus({ preventScroll: true }); }
+    this.boot(false);
+  };
+  MP.power = function () { if (this.stage() === "off") this.powerOn(); else this.powerOff(); };
 
   /* Boot log: [text, delay before it, optional suffix printed after a pause] */
   function bootLines(fast) {
@@ -635,149 +851,121 @@
     ];
   }
 
-  function bootLog(run, fast) {
-    var log = screen.querySelector(".rt-boot-log");
-    var lines = bootLines(fast);
-    var i = 0;
-    function line(text) {
-      var d = document.createElement("div");
-      d.className = "rt-bl";
-      d.textContent = text || " ";
-      log.appendChild(d);
-      return d;
-    }
-    function memCheck() {
-      var d = line("Testing memory ...... 0K");
-      var total = 16384, steps = 8, k = 0;
-      return new Promise(function (res) {
-        (function step() {
-          if (!alive(run)) return res();
-          k++;
-          var v = Math.min(total, Math.round((total / steps) * k / 64) * 64);
-          d.textContent = "Testing memory ...... " + v + "K" + (k >= steps ? "  OK" : "");
-          if (k >= steps) return res();
-          setTimeout(step, 28);
-        })();
+  /* ---------------- on-page section: an inline, operable monitor ---------------- */
+  function sectionHTML() {
+    var uid = newUid("rti");
+    var o = { uid: uid, inline: true, h: 3 };
+    return '<div class="rt-inline rt-on" data-rt-uid="' + uid + '">' +
+      monitorHTML(screenHTML(o), "doc", "power") +
+      '<p class="rt-sr rt-live" aria-live="polite"></p>' +
+      '<div class="rt-inline-cta">' +
+      '<button type="button" class="btn btn-secondary btn-sm rt-fullbtn" data-retro-open>' +
+      '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>Full screen</button>' +
+      '<p class="rt-cta-note">Opens the same document on a 1990s workstation.</p>' +
+      "</div></div>";
+  }
+
+  function mountSection(el) {
+    var root = null;
+    if (el && el.classList && el.classList.contains("rt-inline")) root = el;
+    else if (el && el.querySelector) root = el.querySelector(".rt-inline");
+    if (!root) return null;
+    if (root.__rtMachine) return root.__rtMachine;
+    var m = new Machine(root, { inline: true, uid: root.getAttribute("data-rt-uid") || newUid("rti"), h: 3 });
+    root.__rtMachine = m;
+    root.setAttribute("data-rt-mounted", "");
+    m.visible = false;
+    if ("IntersectionObserver" in window) {
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (en) {
+          m.visible = en.isIntersecting;
+          if (en.isIntersecting && m.stage() !== "off") m.startClock(); else m.stopClock();
+        });
       });
+      io.observe(root);
+    } else {
+      m.visible = true;
+      m.startClock();
     }
-    function next() {
-      if (!alive(run) || i >= lines.length) return Promise.resolve();
-      var L = lines[i++];
-      return wait(L[1]).then(function () {
-        if (!alive(run)) return;
-        if (L[0] === "@mem") return memCheck();
-        var d = line(L[0]);
-        if (L[2]) {
-          return wait(fast ? 80 : 70).then(function () {
-            if (!alive(run)) return;
-            var s = document.createElement("span");
-            s.className = "rt-bl-ok";
-            s.textContent = L[2];
-            d.appendChild(s);
-          });
-        }
-      }).then(next);
-    }
-    return next().then(function () { return wait(fast ? 80 : 120); });
+    return m;
   }
+  /* safety net: mount any inline monitor that was inserted but not mounted */
+  function autoMount() {
+    document.querySelectorAll(".rt-inline:not([data-rt-mounted])").forEach(function (r) { mountSection(r); });
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", function () { setTimeout(autoMount, 0); });
+  else setTimeout(autoMount, 0);
 
-  function setupProgress(run) {
-    var segs = screen.querySelectorAll(".rt-progress-well i");
-    var pct = screen.querySelector(".rt-progress-pct");
-    var file = screen.querySelector(".rt-setup-file span");
-    var files = (S.projects || []).map(function (p) { return "/portfolio/" + slug(p.crate || "misc") + "/" + slug(p.title); });
-    files.push("/resume/" + (S.resume ? String(S.resume).split("/").pop() : "resume.pdf"));
-    files.push("/docs/" + DOC_NAME);
-    /* uneven steps, with a stall, like a real installer */
-    var plan = [[6, 60], [17, 50], [29, 60], [38, 50], [47, 50], [58, 50], [62, 140], [70, 50], [83, 50], [91, 50], [100, 60]];
-    var i = 0;
-    return new Promise(function (res) {
-      (function step() {
-        if (!alive(run)) return res();
-        if (i >= plan.length) return setTimeout(res, 160);
-        var p = plan[i];
-        var lit = Math.floor(p[0] * segs.length / 100);
-        for (var j = 0; j < segs.length; j++) segs[j].classList.toggle("on", j < lit);
-        pct.textContent = p[0] + "%";
-        if (files.length) file.textContent = files[Math.min(files.length - 1, Math.floor(i * files.length / plan.length))];
-        i++;
-        setTimeout(step, p[1]);
-      })();
+  /* ---------------- full-screen experience ---------------- */
+  var dlg = null, dm = null, lastFocus = null, closing = false;
+
+  function build() {
+    var uid = newUid("rtd");
+    dlg = document.createElement("dialog");
+    dlg.className = "rt-dlg";
+    dlg.setAttribute("aria-label", "Why hire Atul - retro computer");
+    dlg.innerHTML = '<div class="rt-room">' + monitorHTML("", "off", "shutdown") +
+      '<p class="rt-sr rt-live" aria-live="polite"></p></div>';
+    document.body.appendChild(dlg);
+    dm = new Machine(dlg, { inline: false, uid: uid, h: 2 });
+    dm.isUp = function () { return dlg.open && !closing; };
+    dm.onShutdown = shutdown;
+    dm.onCloseWin = shutdown;
+
+    dlg.addEventListener("click", function (e) {
+      var t = e.target;
+      if (t === dlg || (t.classList && t.classList.contains("rt-room"))) { shutdown(); return; }
+      if (t.closest && t.closest("[data-retro-nav]")) close(); /* let the #hash navigation happen */
     });
-  }
-
-  function zoom(run, dur) {
-    var desk = screen.querySelector(".rt-desk");
-    var from = screen.querySelector(".rt-icon-doc .rt-icon-img");
-    var to = screen.querySelector(".rt-win-live");
-    if (!desk || !from || !to) return Promise.resolve();
-    var D = desk.getBoundingClientRect(), A = from.getBoundingClientRect(), B = to.getBoundingClientRect();
-    if (!A.width || A.left > D.right || A.top > D.bottom) {
-      /* icon hidden (small screens): zoom from the centre of the window */
-      A = { left: B.left + B.width / 2 - 16, top: B.top + B.height / 2 - 16, width: 32, height: 32 };
-    }
-    var n = 9, k = 0, trail = [];
-    desk.classList.add("rt-zooming");
-    return new Promise(function (res) {
-      (function step() {
-        if (!alive(run)) { cleanup(); return res(); }
-        k++;
-        var f = k / n, e = 1 - Math.pow(1 - f, 2);
-        var r = document.createElement("span");
-        r.className = "rt-zoom";
-        r.style.left = (A.left + (B.left - A.left) * e - D.left) + "px";
-        r.style.top = (A.top + (B.top - A.top) * e - D.top) + "px";
-        r.style.width = (A.width + (B.width - A.width) * e) + "px";
-        r.style.height = (A.height + (B.height - A.height) * e) + "px";
-        desk.appendChild(r);
-        trail.push(r);
-        if (trail.length > 3) trail.shift().remove();
-        if (k >= n) { setTimeout(function () { cleanup(); res(); }, 40); return; }
-        setTimeout(step, dur / n);
-      })();
-      function cleanup() { trail.forEach(function (t) { t.remove(); }); desk.classList.remove("rt-zooming"); }
+    dlg.addEventListener("cancel", function (e) {
+      if (!closing) { e.preventDefault(); shutdown(); }
     });
+    dlg.addEventListener("close", onClosed);
   }
 
-  function finish(forceFocus) {
-    if (!screen) return;
-    screen.querySelectorAll(".rt-zoom").forEach(function (z) { z.remove(); });
-    setStage("doc");
-    var live = screen.querySelector(".rt-live");
-    if (live) live.textContent = DOC_NAME + " is open.";
-    var a = document.activeElement;
-    if (forceFocus || !a || a === document.body || a === dlg || !dlg.contains(a) || a.classList.contains("rt-skip")) {
-      var work = screen.querySelector(".rt-work");
-      if (work) work.focus({ preventScroll: true });
-    }
-  }
+  function open() {
+    if (!dlg) build();
+    if (dlg.open) return;
+    lastFocus = document.activeElement;
+    closing = false;
+    dm.render("off");
+    dlg.classList.add("rt-on");
+    dm.startClock();
+    dlg.showModal();
+    document.body.classList.add("modal-open");
+    window.dispatchEvent(new CustomEvent("desk:modal", { detail: true }));
 
-  function skip() {
-    skipped = true;
-    runId++;
-    finish();
+    if (reduced()) { dm.setStage("desk"); dm.finish(true); return; }
+    var fast = storeGet("retroBooted") === "1";
+    storeSet("retroBooted", "1");
+    dm.setStage("power");
+    var skipBtn = dm.q(".rt-skip");
+    if (skipBtn) skipBtn.focus();
+    dm.boot(fast);
   }
 
   function shutdown() {
     if (!dlg || !dlg.open || closing) return;
     closing = true;
-    runId++;
+    dm.runId++;
     dlg.classList.remove("rt-on");
     if (reduced()) { dlg.close(); return; }
-    screen.classList.add("rt-poweroff");
+    dm.screen.classList.add("rt-poweroff");
     setTimeout(function () { if (dlg.open) dlg.close(); }, 420);
   }
 
   function close() {
-    if (dlg && dlg.open) { closing = true; runId++; dlg.close(); }
+    if (dlg && dlg.open) { closing = true; dm.runId++; dlg.close(); }
   }
 
   function onClosed() {
-    runId++;
+    dm.runId++;
     closing = false;
-    clearInterval(clockTimer);
+    dm.stopClock();
     dlg.classList.remove("rt-on");
-    if (screen) { screen.classList.remove("rt-poweroff"); setStage("off"); screen.innerHTML = ""; }
+    dm.screen.classList.remove("rt-poweroff");
+    dm.setStage("off");
+    dm.screen.innerHTML = "";
     document.body.classList.remove("modal-open");
     window.dispatchEvent(new CustomEvent("desk:modal", { detail: false }));
     if (lastFocus && document.contains(lastFocus) && typeof lastFocus.focus === "function") {
@@ -929,5 +1117,5 @@
     ctx.drawImage(DS.fx, 0, 0);
   }
 
-  window.RETRO = { open: open, close: close, drawScreen: drawScreen, sectionHTML: sectionHTML };
+  window.RETRO = { open: open, close: close, drawScreen: drawScreen, sectionHTML: sectionHTML, mountSection: mountSection };
 })();
