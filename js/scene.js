@@ -793,13 +793,13 @@
     wall(BW, 0.01, BD, 0, 0.005, 0);                                // floor
     const well = new THREE.Mesh(new THREE.PlaneGeometry(BW - 2 * T, BD - 2 * T), inside);  // dark interior seen from above
     well.rotation.x = -Math.PI / 2; well.position.y = 0.011; roles.add(well);
-    const n = S.roles.length, CH = 0.112, STEP = 0.042;
+    const n = S.roles.length, CH = 0.112, STEP = 0.024;
     S.roles.forEach((r, i) => {
       const tex = canvasTex(512, 248, (g, w, h) => {
         g.fillStyle = "#F1ECE1"; roundRect(g, 0, 0, w, h, 12); g.fill();
         g.fillStyle = "rgba(22,19,14,.08)"; g.fillRect(0, 0, w, 3);
         g.fillStyle = C.ink; g.font = `650 42px ${FONT}`; g.textAlign = "center"; g.textBaseline = "middle";
-        g.fillText(r, w / 2, 36);
+        g.fillText(r, w / 2, 33);
       });
       const card = new THREE.Mesh(new THREE.BoxGeometry(BW - 2 * T - 0.012, CH, 0.003),
         [M.paper, M.paper, M.paper, M.paper, new THREE.MeshStandardMaterial({ map: tex, roughness: 0.85 }), M.paper]);
