@@ -782,7 +782,7 @@
   /* ---- role cards holder: an open-top card box, cards standing inside it ---- */
   const roles = new THREE.Group();
   {
-    const BW = 0.36, BD = 0.16, BH = 0.075, T = 0.012;            // box width / depth / wall height / wall thickness
+    const BW = 0.36, BD = 0.16, BH = 0.099, T = 0.012;            // box width / depth / wall height / wall thickness
     const shell = new THREE.MeshStandardMaterial({ color: "#1E1F24", roughness: 0.4, metalness: 0.55 });
     const inside = new THREE.MeshStandardMaterial({ color: "#0C0C0F", roughness: 0.9 });
     const wall = (w, h, d, x, y, z, m) => { const b = new THREE.Mesh(new RoundedBoxGeometry(w, h, d, 2, 0.004), m || shell); b.position.set(x, y, z); roles.add(b); };
@@ -793,7 +793,7 @@
     wall(BW, 0.01, BD, 0, 0.005, 0);                                // floor
     const well = new THREE.Mesh(new THREE.PlaneGeometry(BW - 2 * T, BD - 2 * T), inside);  // dark interior seen from above
     well.rotation.x = -Math.PI / 2; well.position.y = 0.011; roles.add(well);
-    const n = S.roles.length, CH = 0.15, STEP = 0.042;
+    const n = S.roles.length, CH = 0.112, STEP = 0.042;
     S.roles.forEach((r, i) => {
       const tex = canvasTex(512, 248, (g, w, h) => {
         g.fillStyle = "#F1ECE1"; roundRect(g, 0, 0, w, h, 12); g.fill();
