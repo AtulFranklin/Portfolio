@@ -36,4 +36,4 @@ text: Built a paper-trading simulator with 5x intraday leverage, margin tracking
 heading: Lean engineering habits
 stat: Lean
 label: engineering habits
-text: Quality and process work taught me root-cause thinking, validation testing and documentation. Six Sigma White Belt.
+text: Quality and process work taught me root-cause thinking, validation testing and documentation. I hold a Six Sigma White Belt Certification.
