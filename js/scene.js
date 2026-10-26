@@ -779,21 +779,34 @@
   }
   hot(frame, "About me", () => DESK.openPanel("about"));
 
-  /* ---- role cards holder (index-card tray) ---- */
+  /* ---- role cards holder: an open-top card box, cards standing inside it ---- */
   const roles = new THREE.Group();
   {
-    const tray = new THREE.Mesh(new RoundedBoxGeometry(0.34, 0.07, 0.15, 2, 0.015), M.metal);
-    tray.position.y = 0.035;
-    roles.add(tray);
+    const BW = 0.36, BD = 0.16, BH = 0.075, T = 0.012;            // box width / depth / wall height / wall thickness
+    const shell = new THREE.MeshStandardMaterial({ color: "#1E1F24", roughness: 0.4, metalness: 0.55 });
+    const inside = new THREE.MeshStandardMaterial({ color: "#0C0C0F", roughness: 0.9 });
+    const wall = (w, h, d, x, y, z, m) => { const b = new THREE.Mesh(new RoundedBoxGeometry(w, h, d, 2, 0.004), m || shell); b.position.set(x, y, z); roles.add(b); };
+    wall(BW, BH, T, 0, BH / 2, BD / 2 - T / 2);                     // front lip (hides the card bottoms)
+    wall(BW, BH + 0.01, T, 0, (BH + 0.01) / 2, -BD / 2 + T / 2);    // back
+    wall(T, BH, BD, -BW / 2 + T / 2, BH / 2, 0);                    // sides
+    wall(T, BH, BD, BW / 2 - T / 2, BH / 2, 0);
+    wall(BW, 0.01, BD, 0, 0.005, 0);                                // floor
+    const well = new THREE.Mesh(new THREE.PlaneGeometry(BW - 2 * T, BD - 2 * T), inside);  // dark interior seen from above
+    well.rotation.x = -Math.PI / 2; well.position.y = 0.011; roles.add(well);
+    const n = S.roles.length, CH = 0.15, STEP = 0.042;
     S.roles.forEach((r, i) => {
-      const tex = canvasTex(512, 120, (g, w, h) => {
-        g.fillStyle = "#EFE9DD"; roundRect(g, 0, 0, w, h, 14); g.fill();
-        g.fillStyle = C.ink; g.font = `650 40px ${FONT}`; g.textAlign = "center"; g.textBaseline = "middle";
-        g.fillText(r, w / 2, 30);
+      const tex = canvasTex(512, 248, (g, w, h) => {
+        g.fillStyle = "#F1ECE1"; roundRect(g, 0, 0, w, h, 12); g.fill();
+        g.fillStyle = "rgba(22,19,14,.08)"; g.fillRect(0, 0, w, 3);
+        g.fillStyle = C.ink; g.font = `650 42px ${FONT}`; g.textAlign = "center"; g.textBaseline = "middle";
+        g.fillText(r, w / 2, 36);
       });
-      const card = new THREE.Mesh(new THREE.BoxGeometry(0.31, 0.072, 0.004), [M.paper, M.paper, M.paper, M.paper, new THREE.MeshStandardMaterial({ map: tex, roughness: 0.85 }), M.paper]);
-      card.position.set(0, 0.075 + (S.roles.length - 1 - i) * 0.03, -0.05 + i * 0.028);
-      card.rotation.x = -0.12;
+      const card = new THREE.Mesh(new THREE.BoxGeometry(BW - 2 * T - 0.012, CH, 0.003),
+        [M.paper, M.paper, M.paper, M.paper, new THREE.MeshStandardMaterial({ map: tex, roughness: 0.85 }), M.paper]);
+      const lift = (n - 1 - i) * STEP;                              // back cards stand taller
+      card.position.set(0, 0.012 + CH / 2 + lift, -BD / 2 + T + 0.018 + i * ((BD - 2 * T - 0.03) / (n - 1)));
+      card.rotation.x = -0.1;
+      card.castShadow = true;
       roles.add(card);
     });
     roles.position.set(-1.0, TOP, DESK_Z - 0.18);
