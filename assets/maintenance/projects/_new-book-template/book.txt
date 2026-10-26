@@ -1,0 +1,15 @@
+# NEW BOOK TEMPLATE - book cover.
+#
+# How to use: copy this whole folder, rename the copy (for example my-new-book),
+# add that name to projects/books.txt, then fill in the lines below
+# and remove the # at the start of each one.
+#
+# title:  the name on the book
+# blurb:  one short line shown under the title
+# color:  the book colour as a hex code, for example #B48CFF
+# icon:   one of: fintech, apps, tools, engineering, star
+
+# title: My New Book
+# blurb: One short line about what is inside.
+# color: #B48CFF
+# icon: star

@@ -22,6 +22,7 @@
       '<circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/><circle cx="12" cy="12" r="6.4"/>',
   };
   var EMBLEM_FALLBACK = '<path d="M12 3l2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5z"/>';
+  EMBLEMS.star = EMBLEM_FALLBACK; // "icon: star" in a book.txt picks the four-point star
 
   /* Per-position shape of the pile, top to bottom (cycled for more than 4 books).
      w: length as a share of the pile, x: sideways offset px, z: pushed back px, r: tilt deg, v: spine style. */
@@ -98,8 +99,13 @@
   function countLabel(n) {
     return n + " project" + (n === 1 ? "" : "s");
   }
-  function emblem(id, cls) {
-    return '<svg class="' + cls + '" viewBox="0 0 24 24" aria-hidden="true" focusable="false">' + (EMBLEMS[id] || EMBLEM_FALLBACK) + "</svg>";
+  /* Emblem for a crate (book): its "icon" field first (from book.txt), then its id, then the star. */
+  function emblem(crate, cls) {
+    var c = crate || {};
+    var icon = String(c.icon || "").toLowerCase();
+    var has = function (k) { return !!k && Object.prototype.hasOwnProperty.call(EMBLEMS, k); };
+    var path = has(icon) ? EMBLEMS[icon] : has(c.id) ? EMBLEMS[c.id] : EMBLEM_FALLBACK;
+    return '<svg class="' + cls + '" viewBox="0 0 24 24" aria-hidden="true" focusable="false">' + path + "</svg>";
   }
   function info(id) {
     var crate = null, idx = -1;
@@ -113,7 +119,7 @@
     var c = inf.crate;
     return (
       '<span class="bk-cap bk-cap-l"><i></i><i></i></span>' +
-      emblem(c.id, "bk-emb") +
+      emblem(c, "bk-emb") +
       '<span class="bk-label"><span class="bk-title">' + esc(c.title) + "</span></span>" +
       '<span class="bk-meta"><span>' + esc(countLabel(inf.n)) + "</span>" + (inf.years ? "<span>" + esc(inf.years) + "</span>" : "") + "</span>" +
       '<span class="bk-cap bk-cap-r"><i></i><i></i></span>'
@@ -255,7 +261,7 @@
       '<div class="bk-f bk-back" style="transform:translateZ(' + -half + 'px) rotateY(180deg)"></div>' +
       '<div class="bk-f bk-page" style="transform:translateZ(' + (half - 1.5) + 'px)">' +
       '<p class="bk-pg-no">' + pad(vol) + " / " + pad(of) + "</p>" +
-      emblem(c.id, "bk-pg-emb") +
+      emblem(c, "bk-pg-emb") +
       '<h3 class="bk-pg-title">' + esc(c.title) + "</h3>" +
       '<p class="bk-pg-meta">' + esc(countLabel(inf.n)) + (inf.years ? " · " + esc(inf.years) : "") + "</p>" +
       '<p class="bk-pg-h">Contents</p><ol class="bk-pg-list">' + contents + "</ol>" +
@@ -270,7 +276,7 @@
       '<div class="bk-f bk-cover-out">' +
       '<span class="bk-cv-frame"></span>' +
       '<p class="bk-cv-vol">Vol. ' + pad(vol) + "</p>" +
-      emblem(c.id, "bk-cv-emb") +
+      emblem(c, "bk-cv-emb") +
       '<p class="bk-cv-title">' + esc(c.title) + "</p>" +
       '<span class="bk-cv-rule"></span>' +
       '<p class="bk-cv-meta">' + esc(countLabel(inf.n)) + "</p>" +

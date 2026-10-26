@@ -1,0 +1,15 @@
+# SKILLS - one row per line, top to bottom = order on the site.
+#
+# Write each row as   Category: item, item, item
+# Everything before the first colon is the category name.
+# No --- lines needed here. Lines starting with # are ignored.
+#
+# Copy-paste example (remove the # at the start):
+# Databases: PostgreSQL, SQLite
+
+Languages: Python, Java, Dart, SQL, HTML/CSS, Google Apps Script
+Trading: Experienced in stock, intraday, and futures & derivatives (F&O) trading
+Platforms: Windows, macOS, Linux, Android, iOS
+Mobile & cloud: Flutter, Firebase, Kotlin (Android), Riverpod
+Tools: Git, Microsoft 365, Google Workspace, SOLIDWORKS, ANSYS Workbench
+Ways of working: Agile, UI/UX design, quality management, technical documentation, AI-assisted development

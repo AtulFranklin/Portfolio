@@ -1,4 +1,4 @@
-/* app.js - renders the page from content.js and runs the overlays.
+/* app.js - renders the page from window.SITE (content.js + assets/maintenance, merged by maintenance.js) and runs the overlays.
    The 3D scene (scene.js) calls window.DESK.* when objects are clicked. */
 (function () {
   "use strict";
@@ -17,6 +17,9 @@
   };
 
   /* ---------------- Hero text ---------------- */
+  // kicker: the static text in index.html stays when hero.txt has none
+  const heroKicker = $(".hero-kicker");
+  if (heroKicker && S.hero.kicker) heroKicker.textContent = S.hero.kicker;
   $("#heroTitle").textContent = S.hero.title;
   $("#heroTagline").textContent = S.hero.tagline;
   $$("[data-resume]").forEach((a) => (a.href = S.resume));
@@ -36,7 +39,7 @@
   } else $("#crateList").innerHTML = S.crates
     .map((c) => {
       const n = projectsIn(c.id).length;
-      return `<li class="reveal"><button type="button" class="crate-row" data-crate="${c.id}">
+      return `<li class="reveal"><button type="button" class="crate-row" data-crate="${esc(c.id)}">
         ${crateArt(c)}
         <span><span class="ct">${esc(c.title)}</span><span class="cb">${esc(c.blurb)}</span>
         <span class="count mono">${n} project${n === 1 ? "" : "s"} →</span></span>
@@ -78,6 +81,10 @@
   const rolesHTML = `<div class="roles">${S.roles.map((r) => `<span class="role">${esc(r)}</span>`).join("")}</div>`;
   $("#aboutBody").innerHTML =
     `<p class="about-lead">${esc(S.about.lead)}</p>` + S.about.body.map((p) => `<p>${esc(p)}</p>`).join("") + rolesHTML;
+  // section 03 portrait (the src in index.html stays if no photo is set)
+  const portraitImg = $(".portrait img");
+  if (portraitImg && S.photo) portraitImg.src = S.photo;
+  const ABOUT_GREETING = S.about.greeting || "Hi, I'm Atul.";
   $("#experienceList").innerHTML = S.experience
     .map(
       (e) => `<li class="job reveal">
@@ -98,6 +105,13 @@
     .join("");
 
   /* ---------------- 05 Contact ---------------- */
+  // headline from assets/maintenance/contact/contact.txt; the static text in index.html is the fallback
+  const C = S.contact || {};
+  if (C.headline || C.headlineAccent) {
+    const h = $("#contact-h");
+    if (h) h.innerHTML = esc(C.headline || "") + (C.headlineAccent ? ` <span>${esc(C.headlineAccent)}</span>` : "");
+  }
+  const CONTACT_LEAD = C.message || "Email is the quickest way to reach me. I am happy to talk about internships, projects or anything.";
   function contactActionsHTML() {
     return `<a class="btn btn-primary" href="mailto:${esc(S.links.email)}?subject=${encodeURIComponent("Hello Atul")}">${ICON.mail}Email me</a>
       <a class="btn btn-secondary" href="${esc(S.links.linkedin)}" target="_blank" rel="noopener">${ICON.linkedin}LinkedIn</a>
@@ -212,7 +226,7 @@
         <h3>${esc(p.title)}</h3>
         <p class="blurb">${esc(p.blurb)}</p>
         ${p.points && p.points.length ? `<ul class="points">${p.points.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}
-        <div class="tags">${p.tags.map((t) => `<span class="tag">${esc(t)}</span>`).join("")}</div>
+        <div class="tags">${(p.tags || []).map((t) => `<span class="tag">${esc(t)}</span>`).join("")}</div>
         ${links ? `<div class="card-links">${links}</div>` : ""}
       </div>
     </article>`;
@@ -223,6 +237,7 @@
     const idx = Math.max(0, S.crates.findIndex((c) => c.id === id));
     currentCrate = idx;
     const c = S.crates[idx];
+    if (!c) return; // no books loaded (maintenance files missing)
     $("#stackTitle").textContent = c.title;
     const body = $("#stackBody");
     body.innerHTML = projectsIn(c.id).map(cardHTML).join("");
@@ -245,6 +260,7 @@
   }
   function stepCrate(d) {
     const n = S.crates.length;
+    if (!n) return;
     openCrate(S.crates[(currentCrate + d + n) % n].id);
   }
   $("#nextCrateBtn").addEventListener("click", () => stepCrate(1));
@@ -265,7 +281,7 @@
       title: "About me",
       html: `<div class="panel panel-about">
         <img src="${esc(S.photo)}" alt="Portrait of Atul Abraham" width="853" height="1280">
-        <div><h3>Hi, I'm Atul.</h3><p class="lead">${esc(S.about.lead)}</p>${S.about.body.map((p) => `<p>${esc(p)}</p>`).join("")}
+        <div><h3>${esc(ABOUT_GREETING)}</h3><p class="lead">${esc(S.about.lead)}</p>${S.about.body.map((p) => `<p>${esc(p)}</p>`).join("")}
         ${rolesHTML}
         <div class="contact-actions" style="margin-top:22px">
           <a class="btn btn-primary btn-sm" href="${esc(S.resume)}" target="_blank" rel="noopener">${ICON.doc}Résumé</a>
@@ -276,7 +292,7 @@
     contact: () => ({
       title: "Leave a message",
       html: `<div class="panel panel-contact"><h3>Let's talk.</h3>
-        <p class="lead">Email is the quickest way to reach me. I am happy to talk about internships, projects or anything on this desk.</p>
+        <p class="lead">${esc(CONTACT_LEAD)}</p>
         <p>${esc(S.links.email)} <button type="button" class="btn btn-secondary btn-sm" data-copy="${esc(S.links.email)}" style="margin-left:8px">Copy</button></p>
         <div class="contact-actions">${contactActionsHTML()}</div></div>`,
     }),
@@ -285,7 +301,7 @@
       html: `<div class="panel"><h3>Everything, as a list.</h3>${S.crates
         .map(
           (c) => `<div class="list-group"><h4>${esc(c.title)}</h4>${projectsIn(c.id)
-            .map((p) => `<button type="button" class="list-row" data-crate="${c.id}" data-project="${esc(p.title)}"><span class="t">${esc(p.title)}<span class="s">${esc(p.tags.join(" · "))}</span></span><span class="y">${esc(p.year)}</span></button>`)
+            .map((p) => `<button type="button" class="list-row" data-crate="${esc(c.id)}" data-project="${esc(p.title)}"><span class="t">${esc(p.title)}<span class="s">${esc((p.tags || []).join(" · "))}</span></span><span class="y">${esc(p.year)}</span></button>`)
             .join("")}</div>`
         )
         .join("")}</div>`,

@@ -1,0 +1,12 @@
+# HERO - the big text at the top of the page (one entry only).
+#
+# kicker:   the small line above the title
+# title:    the big title
+# tagline:  the paragraph under the title (can wrap onto the next lines)
+#
+# Example line:
+# kicker: Open to SWE & fintech internships
+
+kicker: Open to SWE & fintech internships
+title: Atul's Portfolio
+tagline: I’m a mechanical engineer turned software developer, currently pursuing an MS in Computer Science at Stevens Institute of Technology. I build trading tools, AI tools, and applications.

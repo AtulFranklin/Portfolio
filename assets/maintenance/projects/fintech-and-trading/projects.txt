@@ -1,0 +1,39 @@
+# PROJECTS in this book, top to bottom = order on the site.
+# Put a line with three dashes --- between projects. Lines starting with # are ignored.
+#
+# title, year, blurb:  plain text (a long blurb can wrap onto the next lines)
+# image:   a photo file in this folder, for example my-project.jpg (1200x750 jpg)
+# points:  then one line per point, each starting with "- "  (optional)
+# tags:    comma separated, for example Flutter, Dart
+# link:    Label | https://address  (optional, add one link: line per link)
+#
+# Copy-paste example (remove the # at the start of each line):
+# title: My New Project
+# year: 2026
+# image: my-new-project.jpg
+# blurb: One or two sentences about what it is and why I built it.
+# points:
+# - First highlight
+# tags: Flutter, Dart
+# link: View on GitHub | https://github.com/AtulFranklin
+
+title: Trade on Paper
+year: 2026
+image: trade-on-paper.jpg
+blurb: I wanted to practise trading Indian markets without risking money, so I built a full paper-trading simulator for NSE/BSE equities and F&O.
+points:
+- 5x intraday leverage, margin tracking, stop loss / target and auto square-off at 3:20 PM
+- Yahoo, Stooq and NSE data fallback chain so prices keep flowing when a source fails
+- Black-Scholes option chain with delta, PCR and max pain for NIFTY, BANKNIFTY and FINNIFTY
+- Automated scalping engine with RSI / volume confirmation, tick-based reversal detection and daily stop limits
+- Google Sign-In with per-user data and Excel trade-log export
+tags: Flutter, Dart, Firebase, Quant
+
+---
+
+title: INVA Capital Markets
+year: 2024
+image: inva-capital.jpg
+blurb: I designed and built the website for INVA Capital Markets: services, vision, ethics and risk pages, and an enquiry form.
+tags: Web, HTML/CSS, Responsive
+link: Visit site | https://www.invacapital.cv/

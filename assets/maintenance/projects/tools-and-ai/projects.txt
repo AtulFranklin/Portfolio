@@ -1,0 +1,58 @@
+# PROJECTS in this book, top to bottom = order on the site.
+# Put a line with three dashes --- between projects. Lines starting with # are ignored.
+#
+# title, year, blurb:  plain text (a long blurb can wrap onto the next lines)
+# image:   a photo file in this folder, for example my-project.jpg (1200x750 jpg)
+# points:  then one line per point, each starting with "- "  (optional)
+# tags:    comma separated, for example Flutter, Dart
+# link:    Label | https://address  (optional, add one link: line per link)
+#
+# Copy-paste example (remove the # at the start of each line):
+# title: My New Project
+# year: 2026
+# image: my-new-project.jpg
+# blurb: One or two sentences about what it is and why I built it.
+# points:
+# - First highlight
+# tags: Flutter, Dart
+# link: View on GitHub | https://github.com/AtulFranklin
+
+title: Clean Spirit AI
+year: 2026
+image: clean-spirit-ai.jpg
+blurb: A fully offline, privacy-first AI chat app for Android. The models run on the phone itself, so nothing you type leaves the device. No server, no account, no subscription.
+points:
+- Gemma 4 E2B / E4B on GPU through Google LiteRT, Qwen3 4B on CPU through llama.cpp, plus an Auto mode
+- Image understanding from camera or gallery; PDF, DOCX and text attachments added as chat context
+- Lazy model loading, resumable downloads, incognito chats, markdown replies
+tags: Flutter, On-device LLM, LiteRT, llama.cpp
+link: View on GitHub | https://github.com/Clean-Spirit-Studios/Clean-Spirit-AI
+
+---
+
+title: CodeBot
+year: 2026
+image: codebot.jpg
+blurb: An offline AI coding assistant. A Python desktop app that talks to a local Qwen2.5-Coder model through Ollama and can list, read, write and edit files in your project. No cloud, no subscription.
+tags: Python, Ollama, LLM tools
+
+---
+
+title: My Job AutoFill
+year: 2026
+image: job-autofill.jpg
+blurb: A browser extension that fills job applications from my own profile and a bank of saved answers. Everything is encrypted locally with AES-256-GCM and never leaves the browser.
+points:
+- Reads a resume (PDF, .docx, .txt) in the browser with bundled PDF.js to prefill the profile
+- Learns custom answers from pages you fill, matches similar questions later
+- Green outline = filled, yellow = needs you. Never auto-submits
+tags: JavaScript, Chrome extension, Web Crypto
+link: View on GitHub | https://github.com/AtulFranklin/My-Job-AutoFill
+
+---
+
+title: BOM Price Tracker
+year: 2025
+image: bom-automation.jpg
+blurb: At Whirlpool I automated bill-of-materials tracking for component and material pricing with Google Apps Script, cutting monthly maintenance work by more than 50%.
+tags: Apps Script, Automation, Whirlpool

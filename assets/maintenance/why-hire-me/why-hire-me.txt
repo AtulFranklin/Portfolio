@@ -1,0 +1,39 @@
+# WHY HIRE ME - the reason cards, top to bottom = order on the site.
+# Put a line with three dashes --- between cards. Lines starting with # are ignored.
+#
+# heading:  the card title
+# stat:     the big number or word, for example >50%
+# label:    the small line under the stat
+# text:     one or two sentences (can wrap onto the next lines)
+#
+# Copy-paste example (remove the # at the start of each line):
+# heading: Ships fast
+# stat: 3 apps
+# label: shipped this year
+# text: One or two sentences that back up the stat.
+
+heading: Half the maintenance, gone
+stat: >50%
+label: less time on BOM upkeep
+text: Automated bill-of-materials price tracking at Whirlpool with Google Apps Script, cutting monthly maintenance work by more than half.
+
+---
+
+heading: Comfortable on 5 operating systems
+stat: 5 OS
+label: Windows · macOS · Linux · Android · iOS
+text: I ship apps end to end in Flutter for Android and iOS (an 8-module productivity suite with native notifications, charts, themes and backup/restore) and I'm experienced with Windows, macOS and Linux.
+
+---
+
+heading: Simulated options pricing, built into a trading simulator
+stat: Black-Scholes
+label: in a trading engine
+text: Built a paper-trading simulator with 5x intraday leverage, margin tracking, auto square-off, an option chain with delta, PCR and max pain, and a data fallback chain.
+
+---
+
+heading: Lean engineering habits
+stat: Lean
+label: engineering habits
+text: Quality and process work taught me root-cause thinking, validation testing and documentation. Six Sigma White Belt.

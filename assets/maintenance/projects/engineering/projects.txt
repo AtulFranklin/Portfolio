@@ -1,0 +1,44 @@
+# PROJECTS in this book, top to bottom = order on the site.
+# Put a line with three dashes --- between projects. Lines starting with # are ignored.
+#
+# title, year, blurb:  plain text (a long blurb can wrap onto the next lines)
+# image:   a photo file in this folder, for example my-project.jpg (1200x750 jpg)
+# points:  then one line per point, each starting with "- "  (optional)
+# tags:    comma separated, for example Flutter, Dart
+# link:    Label | https://address  (optional, add one link: line per link)
+#
+# Copy-paste example (remove the # at the start of each line):
+# title: My New Project
+# year: 2026
+# image: my-new-project.jpg
+# blurb: One or two sentences about what it is and why I built it.
+# points:
+# - First highlight
+# tags: Flutter, Dart
+# link: View on GitHub | https://github.com/AtulFranklin
+
+title: Polymer Composite Spur Gear
+year: B.Tech
+image: spur-gear.jpg
+blurb: My capstone at VIT. I led the design and evaluation of polymer composite spur gears, from concept to real-world implementation.
+tags: Capstone, Mechanical design, Materials
+
+---
+
+title: Mechatronic Simulators
+year: 2024
+image: mechatronic-sims.jpg
+blurb: Three interactive physics simulators in Python: an electric pump driving a hydraulic piston, a DC motor rotary actuator and a driven vehicle wheel, each with a live animated readout.
+points:
+- Electrical to shaft to hydraulic power chain, flow rate, piston force and time to full stroke
+- Motor equations (torque, back-EMF, current) integrated with the Euler method
+tags: Python, matplotlib, numpy, Physics
+link: View on GitHub | https://github.com/AtulFranklin/Mechatronic-Simulators-using-Python
+
+---
+
+title: Car Body Crash Test
+year: B.Tech
+image: crash-fea.jpg
+blurb: I modelled a car body in SOLIDWORKS and ran crash simulations in ANSYS Workbench to find failure zones, comparing stainless steel and aluminium.
+tags: SOLIDWORKS, ANSYS, FEA

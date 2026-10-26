@@ -645,6 +645,23 @@
     return entry;
   }
 
+  /* Desk objects that open a book (crate). Books come from assets/maintenance, so the
+     crate is found by its "icon" (tools / engineering / apps), falling back to an id match.
+     If no book uses that icon the object is still drawn, just not clickable. */
+  function crateByIcon(icon) {
+    const list = S.crates || [];
+    return list.find((c) => String(c.icon || "").toLowerCase() === icon) || list.find((c) => c.id === icon) || null;
+  }
+  function hotCrate(group, icon, fallbackLabel) {
+    const c = crateByIcon(icon);
+    if (!c) {
+      group.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+      scene.add(group);
+      return null;
+    }
+    return hot(group, c.title || fallbackLabel, () => DESK.openCrate(c.id, null, screenRect(group)));
+  }
+
   /* ---- CRT terminal ---- */
   const crtTex = canvasTex(640, 480, () => {});
   const candles = [];
@@ -739,7 +756,7 @@
     kb.position.set(-0.28, TOP, DESK_Z + 0.27);
     kb.rotation.y = 0.06;
   }
-  hot(kb, "Tools & AI", () => DESK.openCrate("tools", null, screenRect(kb)));
+  hotCrate(kb, "tools", "Tools & AI");
 
   /* ---- photo frame ---- */
   const frame = new THREE.Group();
@@ -853,7 +870,7 @@
     gearGroup.position.set(0.25, TOP, DESK_Z + 0.2);
     gearGroup.rotation.y = -0.25;
   }
-  hot(gearGroup, "Engineering", () => DESK.openCrate("engineering", null, screenRect(gearGroup)));
+  hotCrate(gearGroup, "engineering", "Engineering");
 
   /* ---- phone with app icons ---- */
   const phoneScreen = canvasTex(300, 620, () => {});
@@ -894,7 +911,7 @@
     phone.position.set(0.86, TOP, DESK_Z + 0.22);
     phone.rotation.y = -0.5;
   }
-  hot(phone, "Mobile Apps", () => DESK.openCrate("apps", null, screenRect(phone)));
+  hotCrate(phone, "apps", "Mobile Apps");
 
   /* ---- envelope ---- */
   const envelope = new THREE.Group();
@@ -1027,10 +1044,27 @@
         slipMat.map = t2; slipMat.needsUpdate = true;
       });
     });
-    g.userData.rowPos = new THREE.Vector3(-1.38 + i * 0.92, 0, 0.62 + (i % 2 ? 0.08 : 0));
-    g.userData.rowRot = (i - 1.5) * -0.06 + (rnd() - 0.5) * 0.06;
-    g.userData.gridPos = new THREE.Vector3((i % 2 ? 0.44 : -0.4), 0, 0.42 + Math.floor(i / 2) * 0.95);
-    g.userData.gridRot = (i % 2 ? -0.12 : 0.12);
+    // Floor layout. Up to 4 crates: exactly the original row / 2x2 grid.
+    // More than 4 (extra books in assets/maintenance): crates shrink so the row keeps
+    // the same width, and the portrait grid grows to 3+ columns over 2 rows.
+    const n = S.crates.length;
+    if (n <= 4) {
+      g.userData.rowPos = new THREE.Vector3(-1.38 + i * 0.92, 0, 0.62 + (i % 2 ? 0.08 : 0));
+      g.userData.rowRot = (i - 1.5) * -0.06 + (rnd() - 0.5) * 0.06;
+      g.userData.gridPos = new THREE.Vector3((i % 2 ? 0.44 : -0.4), 0, 0.42 + Math.floor(i / 2) * 0.95);
+      g.userData.gridRot = (i % 2 ? -0.12 : 0.12);
+      g.userData.rowScale = g.userData.gridScale = 1;
+    } else {
+      const rs = 4 / n, mid = (n - 1) / 2;
+      g.userData.rowPos = new THREE.Vector3((i - mid) * 0.92 * rs, 0, 0.62 + (i % 2 ? 0.08 * rs : 0));
+      g.userData.rowRot = (i - mid) * -0.06 * rs + (rnd() - 0.5) * 0.06;
+      const cols = Math.ceil(n / 2), gs = 2 / cols, col = i % cols, row = Math.floor(i / cols);
+      g.userData.gridPos = new THREE.Vector3(0.02 + (col - (cols - 1) / 2) * 0.84 * gs, 0, 0.42 + row * 0.95 * gs);
+      g.userData.gridRot = 0.12 * (1 - (2 * col) / (cols - 1));
+      g.userData.rowScale = rs;
+      g.userData.gridScale = gs;
+    }
+    g.scale.setScalar(g.userData.rowScale);
     g.position.copy(g.userData.rowPos);
     g.rotation.y = g.userData.rowRot;
     const entry = hot(g, `${c.title} · ${ps.length} project${ps.length === 1 ? "" : "s"}`, () => openFromCrate(entry, c.id));
@@ -1086,6 +1120,7 @@
     crateGroups.forEach(({ group }) => {
       group.position.copy(portrait ? group.userData.gridPos : group.userData.rowPos);
       group.rotation.y = portrait ? group.userData.gridRot : group.userData.rowRot;
+      group.scale.setScalar((portrait ? group.userData.gridScale : group.userData.rowScale) || 1);
     });
     if (skyPlane) {
       // top edge of the photo: keeps the spires inside the window on each layout

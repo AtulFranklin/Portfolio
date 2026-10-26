@@ -1,0 +1,33 @@
+# EXPERIENCE - jobs and internships, top to bottom = order on the site.
+# Put a line with three dashes --- between jobs. Lines starting with # are ignored.
+#
+# org:     company name        role:  job title
+# place:   city, country       dates: for example Mar 2025 - Sep 2025
+# points:  then one line per point, each starting with "- "
+#
+# Copy-paste example (remove the # at the start of each line):
+# org: Company Name
+# role: Software Engineering Intern
+# place: Hoboken, NJ, USA
+# dates: Jun 2027 - Aug 2027
+# points:
+# - What I did and the result
+
+org: Whirlpool Corporation
+role: Intern - Cost, Quality & Product Development
+place: Pune, India
+dates: Mar 2025 - Sep 2025
+points:
+- Automated bill-of-materials (BOM) tracking for component and material pricing with Google Apps Script, reducing monthly maintenance and BOM work time by more than 50%.
+- Led corrective actions, reworks and validation testing with a focus on lean principles, risk mitigation and continuous improvement.
+- Coordinated cross-functional teams (marketing, process, quality) and ran meetings for budget planning, ECR processes and safety audits.
+
+---
+
+org: Motherson Automotive Technologies & Engineering
+role: Trainee Intern - Quality Control (Exports)
+place: Chennai, India
+dates: Aug 2023 - Sep 2023
+points:
+- Monitored production operations for adherence to quality control standards.
+- Learned production planning, resource allocation, lean kaizen, risk assessment and operations management.

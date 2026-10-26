@@ -1,0 +1,17 @@
+# BOOK - the cover of this book (one entry only).
+#
+# title:  the name on the book
+# blurb:  one short line shown under the title
+# color:  the book colour as a hex code, for example #F5B041
+# icon:   the emblem on the cover - one of: fintech, apps, tools, engineering, star
+#
+# Example:
+# title: Fintech & Trading
+# blurb: Trading simulators, option chains, a markets website.
+# color: #F5B041
+# icon: fintech
+
+title: Tools & AI
+blurb: Offline AI apps, browser extensions and automations.
+color: #7FB2FF
+icon: tools

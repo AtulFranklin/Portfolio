@@ -1,0 +1,19 @@
+# CONTACT - how people reach me (one entry only).
+#
+# email, linkedin, github, studio:  my address and profile links (full https:// links)
+# resume:           path to the resume PDF from the website folder
+# headline:         the big contact line
+# headline accent:  the coloured words at the end of the headline
+# message:          the first line in the Leave a message panel
+#
+# Example line:
+# email: me@example.com
+
+email: atulfabraham@gmail.com
+linkedin: https://www.linkedin.com/in/atulfranklin
+github: https://github.com/AtulFranklin
+studio: https://github.com/Clean-Spirit-Studios
+resume: assets/Atul_Abraham_Resume.pdf
+headline: Looking for an intern who ships?
+headline accent: Let's talk.
+message: Email is the quickest way to reach me. I am happy to talk about internships, projects or anything.

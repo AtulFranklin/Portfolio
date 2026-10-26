@@ -1,0 +1,20 @@
+# ABOUT ME - the About me section and panel (one entry only).
+#
+# greeting:   the heading in the About me panel
+# photo:      my portrait. A bare file name means a photo in this folder,
+#             a path with a / starts from the website folder (assets/photo.jpg)
+# lead:       the first, larger paragraph
+# paragraph:  one body paragraph - add one paragraph: line per paragraph, in order
+#             (a long paragraph can wrap onto the next lines)
+# roles:      the role cards, separated by commas
+#
+# Copy-paste example (remove the # at the start of each line):
+# paragraph: One more paragraph about me.
+# roles: Software Engineer, Fintech Builder
+
+greeting: Hi, I'm Atul.
+photo: assets/photo.jpg
+lead: I studied mechanical engineering at VIT Chennai, spent my internships on factory floors in quality and cost engineering, and kept finding that the part I enjoyed most was writing the script that made the spreadsheet do the work.
+paragraph: At Whirlpool I automated bill-of-materials price tracking with Google Apps Script and cut the monthly upkeep by more than half. That was the turn: since then I have shipped a paper-trading simulator for Indian markets, a productivity suite on Android and iOS, an offline Bible reader, a transport strategy game and two offline AI apps.
+paragraph: Now I am doing my MS in Computer Science at Stevens Institute of Technology in Hoboken, looking for internships in fintech, trading systems and software engineering.
+roles: Software Engineer, Fintech Builder, Flutter Developer, Mechanical Engineer

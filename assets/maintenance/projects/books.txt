@@ -1,0 +1,15 @@
+# BOOKS - the project books on the desk, in order.
+#
+# One folder name per line. Top line = first book on the site.
+# Each name must match a folder next to this file (for example fintech-and-trading).
+# To hide a book, delete its line or put # in front of it.
+# To add a book, copy the _new-book-template folder, rename it and add the new name here.
+#
+# Example:
+# fintech-and-trading
+# my-new-book
+
+fintech-and-trading
+mobile-apps
+tools-and-ai
+engineering

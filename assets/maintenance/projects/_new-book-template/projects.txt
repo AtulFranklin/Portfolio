@@ -1,0 +1,22 @@
+# PROJECTS in this book, top to bottom = order on the site.
+# Put a line with three dashes --- between projects. Lines starting with # are ignored.
+#
+# title, year, blurb:  plain text (a long blurb can wrap onto the next lines)
+# image:   a photo file in this folder, for example my-project.jpg (1200x750 jpg)
+# points:  then one line per point, each starting with "- "  (optional)
+# tags:    comma separated, for example Flutter, Dart
+# link:    Label | https://address  (optional, add one link: line per link)
+#
+# Example project (remove the # at the start of each line to use it):
+# title: My New Project
+# year: 2026
+# image: my-new-project.jpg
+# blurb: One or two sentences about what it is and why I built it.
+# points:
+# - First highlight
+# tags: Flutter, Dart
+# link: View on GitHub | https://github.com/AtulFranklin
+#
+# ---
+#
+# (start the next project after a --- line like the one above)

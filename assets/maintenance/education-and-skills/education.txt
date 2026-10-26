@@ -1,0 +1,22 @@
+# EDUCATION - schools, top to bottom = order on the site.
+# Put a line with three dashes --- between schools. Lines starting with # are ignored.
+#
+# school, degree, place, dates:  plain text
+#
+# Copy-paste example (remove the # at the start of each line):
+# school: School Name
+# degree: Degree Name
+# place: City, Country
+# dates: Sep 2026 - May 2028
+
+school: Stevens Institute of Technology
+degree: Master of Science in Computer Science
+place: Hoboken, NJ, USA
+dates: Sep 2026 - May 2028 (expected)
+
+---
+
+school: Vellore Institute of Technology
+degree: Bachelor of Technology in Mechanical Engineering
+place: Chennai, India
+dates: Jul 2021 - Jul 2025

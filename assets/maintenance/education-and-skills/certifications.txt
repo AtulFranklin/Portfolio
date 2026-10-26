@@ -1,0 +1,56 @@
+# CERTIFICATIONS - top to bottom = order on the site.
+# Put a line with three dashes --- between certificates. Lines starting with # are ignored.
+#
+# name:    the certificate name
+# issuer:  who gave it, for example Udemy (optional - leave the line out if none)
+# date:    for example Dec 2025
+#
+# Copy-paste example (remove the # at the start of each line):
+# name: Certificate Name
+# issuer: Udemy
+# date: Jan 2026
+
+name: Python Programming: Python Bootcamp for Beginners
+issuer: Udemy
+date: Dec 2025
+
+---
+
+name: Java Fundamentals Course for Beginners
+issuer: Udemy
+date: Feb 2025
+
+---
+
+name: Building AI Solutions Using Advanced Algorithms and Open Source Frameworks
+issuer: IBM
+date: Oct 2024
+
+---
+
+name: Getting Started with Enterprise Data Science
+issuer: IBM
+date: Aug 2024
+
+---
+
+name: Getting Started with Enterprise-grade AI
+issuer: IBM
+date: Aug 2024
+
+---
+
+name: Six Sigma White Belt
+date: Jul 2024
+
+---
+
+name: Advanced C++
+issuer: IIT Bombay
+date: Feb 2022
+
+---
+
+name: Python 3.4.3
+issuer: IIT Bombay
+date: Feb 2022

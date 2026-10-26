@@ -1,0 +1,69 @@
+# PROJECTS in this book, top to bottom = order on the site.
+# Put a line with three dashes --- between projects. Lines starting with # are ignored.
+#
+# title, year, blurb:  plain text (a long blurb can wrap onto the next lines)
+# image:   a photo file in this folder, for example my-project.jpg (1200x750 jpg)
+# points:  then one line per point, each starting with "- "  (optional)
+# tags:    comma separated, for example Flutter, Dart
+# link:    Label | https://address  (optional, add one link: line per link)
+#
+# Copy-paste example (remove the # at the start of each line):
+# title: My New Project
+# year: 2026
+# image: my-new-project.jpg
+# blurb: One or two sentences about what it is and why I built it.
+# points:
+# - First highlight
+# tags: Flutter, Dart
+# link: View on GitHub | https://github.com/AtulFranklin
+
+title: Productivity Plus
+year: 2026
+image: productivity-plus.jpg
+blurb: I needed one app for everything I track, so I built eight: Kanban, day planner, habits, sleep, expenses, reminders, timelines and routines.
+points:
+- Reusable widgets, light and dark themes, drag-and-drop Kanban, swipe-to-complete planner, haptics
+- fl_chart analytics (line, bar, pie, scatter) for sleep, habits and expenses with selectable ranges
+- Real OS-level notifications and full XML backup / restore; ported from Android to iOS
+tags: Flutter, Kotlin, iOS, UI/UX
+link: Try the web demo | https://atulfranklin.github.io/Productivity-Plus-Demo/
+
+---
+
+title: Bible+
+year: 2026
+image: bible-plus.jpg
+blurb: A fully offline Bible reader with 50+ translations, a swipe dial to switch between them, highlights, bookmarks and a verse-of-the-day home screen widget.
+points:
+- Debounced full-text search across every verse with match highlighting
+- Android home screen widget with a day-of-week rotating background
+- 120fps scrolling, haptics, persisted reading progress and font size
+tags: Flutter, Offline-first, Android widget
+
+---
+
+title: Reminders Plus
+year: 2026
+image: reminders-plus.jpg
+blurb: My first Flutter app: a reminder and task manager rebuilt from an HTML / Capacitor version into pure Flutter, with native notifications, sound and vibration.
+points:
+- Gradient project cards, recurring reminders from 1 minute to 2 weeks, dark / light mode
+tags: Flutter, Notifications
+
+---
+
+title: World Transit Sim
+year: 2026
+image: world-transit-sim.jpg
+blurb: An offline transport management strategy game. Draw routes on a tile map, buy a fleet, take contracts and run your HQ while a timed simulation ticks at 1x, 2x or 4x.
+points:
+- Riverpod state, CustomPainter map with routes and vehicles, 3 save slots plus autosave
+tags: Flutter, Riverpod, Game
+
+---
+
+title: Grand Roulette
+year: 2026
+image: grand-roulette.jpg
+blurb: A roulette game that started as a single HTML file and went through several HTML versions before I rebuilt it in Flutter with a custom-painted board, sound and a dealer.
+tags: Flutter, CustomPainter, Game
