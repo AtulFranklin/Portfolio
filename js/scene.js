@@ -792,7 +792,7 @@
         g.fillText(r, w / 2, 30);
       });
       const card = new THREE.Mesh(new THREE.BoxGeometry(0.31, 0.072, 0.004), [M.paper, M.paper, M.paper, M.paper, new THREE.MeshStandardMaterial({ map: tex, roughness: 0.85 }), M.paper]);
-      card.position.set((i % 2 ? 0.006 : -0.006), 0.075 + (S.roles.length - 1 - i) * 0.03, -0.05 + i * 0.028);
+      card.position.set(0, 0.075 + (S.roles.length - 1 - i) * 0.03, -0.05 + i * 0.028);
       card.rotation.x = -0.12;
       roles.add(card);
     });
