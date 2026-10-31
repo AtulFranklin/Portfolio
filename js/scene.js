@@ -25,7 +25,7 @@
     if (!(c.getContext("webgl2") || c.getContext("webgl"))) return fail();
   } catch (_) { return fail(); }
 
-  // Phones get the flat, Sienna-style object grid instead of the 3D desk (see index.html .m-desk).
+  // Phones get the flat object grid instead of the 3D desk (see index.html .m-desk).
   // ?snap=<object> is a render-only mode used to export those object images.
   const SNAP = new URLSearchParams(location.search).get("snap");
   if (!SNAP && window.matchMedia("(max-width: 720px)").matches) { loader.classList.add("done"); return; }

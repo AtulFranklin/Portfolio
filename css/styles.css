@@ -404,7 +404,7 @@ body.modal-open { overflow: hidden; }
   .job { padding: 22px; }
 }
 
-/* ---------- Phones: Sienna-style object grid instead of the 3D desk ---------- */
+/* ---------- Phones: object grid instead of the 3D desk ---------- */
 .m-desk { display: none; }
 @media (max-width: 720px) {
   .hero { height: auto; min-height: 0; padding: 92px 0 28px; background: #07080B url("../assets/skyline.jpg") 42% 0 / auto 470px no-repeat; }
