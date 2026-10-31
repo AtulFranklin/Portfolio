@@ -1,24 +1,11 @@
-/* ------------------------------------------------------------------
-   content.js - the name, place and the ticker. Edit this file for the
-   ticker. No build step needed.
-
-   The hero (kicker, title, tagline), About me (greeting, photo, lead,
-   paragraphs) and roles now live in assets/maintenance/hero/hero.txt and
-   assets/maintenance/about-me/about-me.txt. The hero, about, roles and
-   photo values below are only the fallback, used if those files fail to
-   load or leave a field empty.
-
-   Projects (books), experience, education, skills, certifications,
-   why hire me and contact also live in plain .txt files under
-   assets/maintenance/ - see assets/maintenance/README.md.
-   js/maintenance.js loads them into window.SITE when the page opens.
-   ------------------------------------------------------------------ */
+// site name, place, ticker + fallback values
+// assets/maintenance/*.txt override these (see README)
 window.SITE = {
   name: "Atul Abraham",
   fullName: "Atul Franklin Abraham",
   place: "Hoboken, NJ, USA",
   photo: "assets/photo.jpg",
-  resume: "assets/Atul_Abraham_Resume.pdf", // fallback - the live value comes from assets/maintenance/contact/contact.txt
+  resume: "assets/Atul_Abraham_Resume.pdf", // fallback, real value in contact.txt
 
   hero: {
     title: "Atul's Portfolio",
@@ -47,8 +34,7 @@ window.SITE = {
     ["WORLD TRANSIT", "4x speed"],
   ],
 
-  /* Filled from assets/maintenance/ by js/maintenance.js.
-     Empty defaults so nothing reads undefined if those files fail to load. */
+  /* filled by maintenance.js, empty defaults */
   links: { email: "", linkedin: "", github: "", studio: "" },
   contact: { headline: "", headlineAccent: "", message: "" },
   whyHire: [],

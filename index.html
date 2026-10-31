@@ -10,7 +10,7 @@
   <link rel="canonical" href="https://atulabraham.site/" />
   <meta name="theme-color" content="#0A0C10" />
   <meta name="color-scheme" content="dark" />
-  <!-- the site is already dark: ask forced-dark modes (Dark Reader / Brave Night Mode) not to re-colour it -->
+  <!-- stop dark reader recolouring -->
   <meta name="darkreader-lock" />
   <meta property="og:type" content="profile" />
   <meta property="og:site_name" content="Atul Abraham" />
@@ -25,13 +25,13 @@
   <meta name="twitter:title" content="Atul Abraham - Software Engineer &amp; Fintech Builder" />
   <meta name="twitter:description" content="Atul Franklin Abraham - mechanical engineer turned software developer, MS Computer Science at Stevens." />
   <meta name="twitter:image" content="https://atulabraham.site/assets/photo.jpg" />
-  <!-- icons: real files so Google can show the icon next to the search result -->
+  <!-- icons -->
   <link rel="icon" href="/favicon.ico" sizes="48x48" />
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <link rel="icon" href="/favicon-48.png" type="image/png" sizes="48x48" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
   <link rel="manifest" href="/site.webmanifest" />
-  <!-- who this site is about, for search engines (Google uses it to match "Atul Abraham", "Atul Franklin", "Atul Franklin Abraham") -->
+  <!-- structured data -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -85,7 +85,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
-  <!-- certificate fonts (sections 03 + 04): script name, serif lines -->
+  <!-- certificate fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Pinyon+Script&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/styles.css" />
   <link rel="stylesheet" href="css/books.css" />
@@ -103,7 +103,7 @@
 <body>
   <a class="skip" href="#projects">Skip to content</a>
 
-  <!-- Top bar -->
+  <!-- top bar -->
   <header class="topbar" id="topbar">
     <a class="brand" href="#top" aria-label="Atul Abraham, back to top">
       <span class="brand-name">Atul Abraham</span>
@@ -116,7 +116,7 @@
     </nav>
   </header>
 
-  <!-- Section dots (desktop) -->
+  <!-- section dots, desktop -->
   <nav class="dots" aria-label="Sections">
     <a href="#top" data-dot="top" tabindex="-1" aria-label="Desk"></a>
     <a href="#projects" data-dot="projects" tabindex="-1" aria-label="Projects"></a>
@@ -127,7 +127,7 @@
   </nav>
 
   <main>
-    <!-- ============ HERO: the desk ============ -->
+    <!-- ============ hero / desk ============ -->
     <section class="hero" id="top" aria-label="Atul's portfolio">
       <div class="scene" id="scene" aria-hidden="true"></div>
       <div class="scene-fallback" id="sceneFallback" hidden></div>
@@ -145,7 +145,7 @@
         </ul>
       </div>
 
-      <!-- Phones: the desk objects laid out one by one as a grid -->
+      <!-- mobile grid -->
       <div class="m-desk" aria-label="Desk objects">
         <button type="button" class="m-obj m-obj-wide" data-open="why">
           <img src="assets/mobile/crt.webp" alt="" width="550" height="550" loading="eager" />
@@ -252,7 +252,7 @@
     </div>
   </footer>
 
-  <!-- Project stack overlay -->
+  <!-- project stack overlay -->
   <dialog class="overlay" id="stackDialog" aria-labelledby="stackTitle">
     <div class="overlay-head">
       <div class="pill-head">
@@ -269,7 +269,7 @@
     </div>
   </dialog>
 
-  <!-- Generic panel overlay (about / why / contact / list) -->
+  <!-- panel overlay -->
   <dialog class="overlay overlay-panel" id="panelDialog" aria-labelledby="panelTitle">
     <div class="overlay-head">
       <div class="pill-head">
@@ -283,7 +283,7 @@
   </dialog>
 
   <script src="js/content.js"></script>
-  <!-- maintenance.js reads assets/maintenance/*.txt, then loads books.js, retro.js, app.js and scene.js in order -->
+  <!-- loads the rest of the scripts -->
   <script src="js/maintenance.js"></script>
 </body>
 </html>

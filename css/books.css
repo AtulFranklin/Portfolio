@@ -1,9 +1,6 @@
-/* =========================================================
-   books.css - the "stack of books" project picker (js/books.js).
-   Every class is prefixed "bk-". Tokens come from styles.css.
-   ========================================================= */
+/* books - project stack picker */
 
-/* The mount element: neutralise any list/grid styling it had. */
+/* reset mount */
 .bk-host { display: block; padding: 0; list-style: none; }
 
 .bk-pile,
@@ -24,7 +21,7 @@
   width: min(680px, 100%);
   padding: calc(var(--bk-d) + 18px) calc(var(--bk-d) + 6px) 40px 0;
 }
-/* lamp light pooling on the desk, and the pile's shadow */
+/* lamp light + shadow */
 .bk-pile::before {
   content: ""; position: absolute; z-index: -2; pointer-events: none;
   left: -14%; right: -10%; top: -18%; bottom: -12%;
@@ -40,7 +37,7 @@
 
 .bk-item { position: relative; }
 
-/* ---------- one book (lying flat, spine to the viewer) ---------- */
+/* ---------- book ---------- */
 .bk-book {
   appearance: none; -webkit-appearance: none;
   display: block; position: relative; padding: 0; margin: 0 0 0 var(--bk-x, 0px);
@@ -62,7 +59,7 @@
 .bk-book:focus-visible .bk-spine { outline: 2px solid var(--amber, #F5B041); outline-offset: 3px; }
 .bk-book.bk-out > span { opacity: 0; }
 
-/* cloth: rounded-spine light, a fine weave, the colour */
+/* cloth texture */
 .bk-spine,
 .bk-cover-out,
 .bk-back {
@@ -109,9 +106,9 @@
   color: var(--bk-foil);
   text-shadow: 0 1px 0 rgba(0, 0, 0, 0.55), 0 -1px 0 rgba(255, 255, 255, 0.06);
 }
-/* style 0: plain foil title (no label box) */
+/* style 0: plain foil title */
 .bk-v0 .bk-label { padding: 0; }
-/* style 2: foil rules running the length of the spine */
+/* style 2: foil rules */
 .bk-v2.bk-spine::before,
 .bk-v2 .bk-spine::before {
   content: ""; position: absolute; left: 8px; right: 8px; top: 6px; bottom: 6px; pointer-events: none;
@@ -126,7 +123,7 @@
 }
 .bk-meta span:first-child { color: var(--bk-foil); }
 
-/* the book's right end: boards with the page block between them */
+/* end face, pages */
 .bk-end {
   position: absolute; left: 100%; top: 0; width: var(--bk-d); height: 100%;
   transform-origin: 0 0; transform: skewY(-45deg);
@@ -138,7 +135,7 @@
     repeating-linear-gradient(to bottom, var(--bk-paper-edge) 0 1px, var(--bk-paper-line) 1px 2px, #C2B497 2px 3px);
   box-shadow: inset 1px 0 0 rgba(0, 0, 0, 0.4);
 }
-/* the cover seen from above (only the top book shows all of it) */
+/* top cover */
 .bk-top {
   position: absolute; left: 0; bottom: 100%; width: 100%; height: var(--bk-d);
   transform-origin: 0 100%; transform: skewX(-45deg);
@@ -154,7 +151,7 @@
   border: 1px solid var(--bk-foil-3); border-radius: 1px;
 }
 
-/* ---------- the flying copy (fixed layer) ---------- */
+/* ---------- flying copy ---------- */
 .bk-stage { position: fixed; inset: 0; z-index: 60; pointer-events: none; }
 .bk-view { position: absolute; inset: 0; perspective: 2000px; perspective-origin: 50% 50%; }
 .bk-scrim { position: absolute; inset: 0; opacity: 0; background: rgba(7, 8, 11, 0.62); }
@@ -195,7 +192,7 @@
   box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
 .bk-cover-out::after {
-  /* the hinge groove next to the spine */
+  /* hinge groove */
   content: ""; position: absolute; top: 0; bottom: 0; left: calc(var(--bk-u) * 5.5); width: calc(var(--bk-u) * 1.4);
   background: linear-gradient(to right, rgba(0, 0, 0, 0.4), rgba(255, 255, 255, 0.09));
 }
@@ -213,7 +210,7 @@
 .bk-cv-meta { font-family: var(--mono, monospace); font-size: calc(var(--bk-u) * 3); letter-spacing: 0.16em; text-transform: uppercase; color: var(--bk-foil); }
 .bk-cv-foot { margin-top: auto !important; display: flex; flex-direction: column; gap: calc(var(--bk-u) * 1.2); font-family: var(--mono, monospace); font-size: calc(var(--bk-u) * 2.6); letter-spacing: 0.18em; text-transform: uppercase; color: var(--bk-foil-2); }
 
-/* inside of the cover: a patterned endpaper and a bookplate */
+/* endpaper + bookplate */
 .bk-cover-in {
   width: 100%; height: 100%; border-radius: 6px 2px 2px 6px; transform: rotateY(180deg);
   display: grid; place-items: center;
@@ -232,7 +229,7 @@
 .bk-plate span { font-family: var(--mono, monospace); font-size: calc(var(--bk-u) * 2.3); letter-spacing: 0.22em; text-transform: uppercase; }
 .bk-plate b { font-size: calc(var(--bk-u) * 4); font-weight: 600; letter-spacing: -0.01em; }
 
-/* the first page */
+/* first page */
 .bk-page {
   top: 1.4%; width: 98.2%; height: 97.2%; border-radius: 1px 4px 4px 1px;
   padding: calc(var(--bk-u) * 11) calc(var(--bk-u) * 10) calc(var(--bk-u) * 9) calc(var(--bk-u) * 12);
@@ -281,7 +278,7 @@
   .bk-meta { font-size: 9px; letter-spacing: 0.08em; padding-left: 8px; }
 }
 
-/* very narrow phones: count and years move under the title */
+/* narrow phones: meta under title */
 @media (max-width: 380px) {
   .bk-pile, .bk-model { --bk-tb: 46px; --bk-tn: 3px; }
   .bk-spine { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; grid-template-rows: auto auto; align-content: center; column-gap: 9px; row-gap: 3px; }

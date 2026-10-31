@@ -1,17 +1,5 @@
-/* =========================================================
-   retro.js - the "Why hire me" computer.
-   An early-90s workstation: CRT power-on, boot log, setup
-   progress, a patterned desktop, then a word-processor window
-   with the "Why hire me" document.
-
-   API (classic script, load after content.js, before app.js):
-     RETRO.open()                    full-screen experience in a <dialog>
-     RETRO.close()                   closes it
-     RETRO.drawScreen(ctx, w, h, t)  draws the 3D monitor's screen texture
-     RETRO.sectionHTML()             inline, operable monitor for the page section
-     RETRO.mountSection(el)          wires up an inserted sectionHTML() (el = it or a wrapper)
-   Any element with [data-retro-open] opens the full-screen computer on click.
-   ========================================================= */
+// retro computer: boot screen + "why hire me" doc
+// RETRO.open/close, drawScreen (3D texture), sectionHTML/mountSection
 (function () {
   "use strict";
 
@@ -20,7 +8,7 @@
   var LINKS = S.links || {};
   var DOC_NAME = "why_hire_atul.doc";
 
-  /* ---------------- small helpers ---------------- */
+  /* ---- helpers ---- */
   function esc(s) {
     return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
@@ -35,9 +23,7 @@
   function fullName() { return S.name || "Atul Abraham"; }
   function firstName() { return fullName().split(" ")[0]; }
 
-  /* ---------------- pixel art ----------------
-     Icons are drawn on a tiny pixel grid, then written out as
-     crisp SVG paths (DOM) or fillRects (canvas). */
+  /* ---- pixel art (svg paths / canvas rects) ---- */
   var PAL = {
     k: "#111214", w: "#ffffff", l: "#e4e6ea", g: "#c3c6cc", d: "#7b7f88",
     b: "#2c4c7c", y: "#e8c35c", Y: "#fff0bd", o: "#a98224", r: "#b8382c",
@@ -97,7 +83,7 @@
     });
   };
 
-  /* A sheet of paper with a folded corner and a 1px drop shadow. */
+  /* paper icon with folded corner */
   function page32() {
     var P = new Pix(32, 32), x0 = 6, y0 = 2, w = 20, h = 28, f = 6, i, j;
     P.r(x0, y0, w, h, "w");
@@ -332,7 +318,7 @@
     return svgCache[k];
   }
 
-  /* ---------------- document markup ---------------- */
+  /* ---- document markup ---- */
   function todayLine() {
     try {
       return new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
@@ -340,7 +326,7 @@
   }
   function mailHref() { return "mailto:" + (LINKS.email || ""); }
 
-  /* opts.h = heading level for the document title (items use h + 1) */
+  /* opts.h = title heading level */
   function docHTML(opts) {
     var h = opts.h, h2 = h + 1;
     var items = WHY.map(function (w) {
@@ -415,7 +401,7 @@
       '<span aria-hidden="true" class="rt-menus-rest">' + rest + "</span></div>";
   }
 
-  /* The word-processor window. o = { uid, inline, h } */
+  /* word processor window */
   function windowHTML(o) {
     var close = '<button type="button" class="rt-wbtn rt-closebox" data-rt-act="closewin" aria-label="' +
       (o.inline ? "Close document" : "Close document and shut down") + '">' + svgIcon("x", 10, closeGlyph) + "</button>";
@@ -493,7 +479,7 @@
       (o.inline ? "" : '<button type="button" class="rt-btn rt-off" data-rt-act="shutdown">Power off</button>') + "</div>";
   }
 
-  /* The monitor body. inner = screen markup, power = action for the chin button. */
+  /* monitor body */
   function monitorHTML(inner, stage, power) {
     return '<div class="rt-monitor">' +
       '<div class="rt-recess"><div class="rt-screen" data-stage="' + stage + '">' + inner + "</div></div>" +
@@ -518,9 +504,7 @@
   }
   function wait(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
 
-  /* ---------------- machine: one per screen ----------------
-     Holds the boot sequence, the desktop and the document window.
-     The dialog and every inline monitor get their own instance. */
+  /* ---- machine: one per screen ---- */
   var uidCount = 0;
   function newUid(prefix) { uidCount++; return prefix + uidCount + "-" + Math.random().toString(36).slice(2, 6); }
 
@@ -602,13 +586,13 @@
     else if (act === "shutdown") this.onShutdown();
     else if (act === "closewin") this.onCloseWin();
     else if (act === "opendoc") {
-      /* mouse: click selects, double-click opens. Keyboard and touch open at once. */
+      /* click selects, double-click opens */
       if (e.detail === 0 || e.detail >= 2 || this.lastPointer !== "mouse") this.openDoc();
       else actEl.classList.add("rt-sel");
     }
   };
 
-  /* full boot: power-on, log, setup, desktop, zoom, document */
+  /* full boot sequence */
   MP.boot = function (fast) {
     var m = this, run = ++this.runId;
     this.skipped = false;
@@ -681,7 +665,7 @@
     var files = (S.projects || []).map(function (p) { return "/portfolio/" + slug(p.crate || "misc") + "/" + slug(p.title); });
     files.push("/resume/" + (S.resume ? String(S.resume).split("/").pop() : "resume.pdf"));
     files.push("/docs/" + DOC_NAME);
-    /* uneven steps, with a stall, like a real installer */
+    /* uneven steps, like a real installer */
     var plan = [[6, 60], [17, 50], [29, 60], [38, 50], [47, 50], [58, 50], [62, 140], [70, 50], [83, 50], [91, 50], [100, 60]];
     var i = 0;
     return new Promise(function (res) {
@@ -707,7 +691,7 @@
     if (!desk || !from || !to) return Promise.resolve();
     var D = desk.getBoundingClientRect(), A = from.getBoundingClientRect(), B = to.getBoundingClientRect();
     if (!A.width || A.left > D.right || A.top > D.bottom) {
-      /* icon hidden (small screens): zoom from the centre of the window */
+      /* no icon: zoom from window centre */
       A = { left: B.left + B.width / 2 - 16, top: B.top + B.height / 2 - 16, width: 32, height: 32 };
     }
     var n = 9, k = 0, trail = [];
@@ -732,8 +716,7 @@
     });
   };
 
-  /* show the open document. focus: true = move focus to it,
-     otherwise only rescue focus that was on a control that just disappeared. */
+  /* show doc, optionally move focus */
   MP.finish = function (focus) {
     if (!this.screen) return;
     this.screen.querySelectorAll(".rt-zoom").forEach(function (z) { z.remove(); });
@@ -761,7 +744,7 @@
     this.finish();
   };
 
-  /* inline only: window close box and File > Exit */
+  /* inline only: close box + File > Exit */
   MP.closeDoc = function () {
     if (this.stage() !== "doc") return;
     var a = document.activeElement, win = this.q(".rt-win-live");
@@ -821,7 +804,7 @@
   };
   MP.power = function () { if (this.stage() === "off") this.powerOn(); else this.powerOff(); };
 
-  /* Boot log: [text, delay before it, optional suffix printed after a pause] */
+  /* boot log: [text, delay, suffix] */
   function bootLines(fast) {
     var n = (S.projects || []).length || 14;
     if (fast) {
@@ -851,7 +834,7 @@
     ];
   }
 
-  /* ---------------- on-page section: an inline, operable monitor ---------------- */
+  /* ---- inline section monitor ---- */
   function sectionHTML() {
     var uid = newUid("rti");
     var o = { uid: uid, inline: true, h: 3 };
@@ -889,14 +872,14 @@
     }
     return m;
   }
-  /* safety net: mount any inline monitor that was inserted but not mounted */
+  /* mount any unmounted inline monitors */
   function autoMount() {
     document.querySelectorAll(".rt-inline:not([data-rt-mounted])").forEach(function (r) { mountSection(r); });
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", function () { setTimeout(autoMount, 0); });
   else setTimeout(autoMount, 0);
 
-  /* ---------------- full-screen experience ---------------- */
+  /* ---- full screen ---- */
   var dlg = null, dm = null, lastFocus = null, closing = false;
 
   function build() {
@@ -915,7 +898,7 @@
     dlg.addEventListener("click", function (e) {
       var t = e.target;
       if (t === dlg || (t.classList && t.classList.contains("rt-room"))) { shutdown(); return; }
-      if (t.closest && t.closest("[data-retro-nav]")) close(); /* let the #hash navigation happen */
+      if (t.closest && t.closest("[data-retro-nav]")) close(); /* allow #hash nav */
     });
     dlg.addEventListener("cancel", function (e) {
       if (!closing) { e.preventDefault(); shutdown(); }
@@ -974,15 +957,13 @@
     lastFocus = null;
   }
 
-  /* [data-retro-open] anywhere on the page opens the computer */
+  /* [data-retro-open] opens the computer */
   document.addEventListener("click", function (e) {
     var t = e.target && e.target.closest && e.target.closest("[data-retro-open]");
     if (t) { e.preventDefault(); open(); }
   });
 
-  /* ---------------- 3D monitor screen texture ----------------
-     Static parts are painted once into an offscreen canvas;
-     each frame only blits it and draws the clock, caret and button. */
+  /* ---- 3D screen texture (static parts cached) ---- */
   var DS = { base: null, fx: null, key: "" };
   var UI_FONT = '"Helvetica Neue", Helvetica, Arial, "Liberation Sans", sans-serif';
   var SERIF = '"Times New Roman", Times, "Liberation Serif", "Nimbus Roman", serif';
@@ -1078,7 +1059,7 @@
     g.fillText("Page 1 of 1     Ln 1     Col 1", x + 12, y + wh - 14);
     g.restore();
 
-    /* CRT overlay: scanlines + vignette */
+    /* scanlines + vignette */
     var fx = mkCanvas(w, h), f = fx.getContext("2d");
     f.fillStyle = "rgba(0,0,0,.16)";
     for (var sy = 0; sy < h; sy += 3) f.fillRect(0, sy, w, 1);
@@ -1105,7 +1086,7 @@
     /* caret */
     var P = L3.page;
     if (still || Math.floor(t * 1.8) % 2 === 0) { ctx.fillStyle = "#111214"; ctx.fillRect(DS.caretX || 400, P[1] + 106, 6, 84); }
-    /* OPEN button: blinks between raised and pressed/inverted */
+    /* OPEN button blink */
     var B = L3.btn, on = still || Math.floor(t * 1.4) % 2 === 0;
     ctx.fillStyle = "#111214"; ctx.fillRect(B[0] - 2, B[1] - 2, B[2] + 4, B[3] + 4);
     if (on) { bevel(ctx, B[0], B[1], B[2], B[3], true); ctx.fillStyle = "#111214"; }

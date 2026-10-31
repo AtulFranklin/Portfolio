@@ -1,28 +1,5 @@
-/* ------------------------------------------------------------------
-   maintenance.js - loads the editable content in assets/maintenance/
-   and then starts the site.
-
-   How it works
-   1. content.js has already set window.SITE (name, ticker, fallback hero,
-      about, roles and photo, plus empty defaults for everything below).
-   2. This script fetches the plain .txt files in assets/maintenance/ (hero,
-      about me, books, projects, experience, education, skills, certifications,
-      why hire me, contact), parses them and writes the results into
-      window.SITE in exactly the shapes the rest of the code expects. Hero and
-      about me fields that are missing or empty keep the content.js value.
-   3. Then it loads books.js, retro.js, app.js, certificates.js, letter.js, lounge.js and scene.js, in that order.
-
-   If a file is missing or broken, the console says which one and the rest of
-   the site still loads. On localhost a small banner lists the problems, and
-   when the page is opened straight from disk (file://) a banner explains how
-   to preview it. The live site never shows a banner.
-
-   window.SITE_READY is a Promise that resolves with window.SITE once the
-   maintenance data is in (just before the site scripts are added).
-
-   The text format is explained for editors in assets/maintenance/README.md.
-   Classic script, no dependencies. In Node it only exports the parsers (for tests).
-   ------------------------------------------------------------------ */
+// loads assets/maintenance/*.txt into window.SITE, then starts the site
+// format: "key: value", --- separates entries, # = comment
 (function () {
   "use strict";
 
@@ -36,9 +13,8 @@
   var ICONS = ["fintech", "apps", "tools", "engineering", "star"];
   var FETCH_TIMEOUT_MS = 10000;
 
-  /* Known keys per file. Only these count as "key: value", so a colon inside a
-     sentence is just text. "list" keys collect "- " lines, "repeat" keys can
-     appear many times in one entry. */
+  // known keys only, other colons stay text
+  // list = "- " items, repeat = can appear many times
   var FORMATS = {
     book: { keys: ["title", "blurb", "color", "icon"] },
     projects: { keys: ["title", "year", "image", "blurb", "points", "tags", "link"], list: "points", repeat: ["link"] },
@@ -51,21 +27,19 @@
     about: { keys: ["greeting", "photo", "lead", "paragraph", "roles"], repeat: ["paragraph"] },
   };
 
-  /* ---------------- text helpers ---------------- */
+  /* ---- text helpers ---- */
 
-  // Split a file into lines: drops a UTF-8 BOM and handles \r\n, \r and \n.
+  // split lines, drop BOM, any newline style
   function toLines(text) {
     return String(text == null ? "" : text).replace(/^﻿/, "").split(/\r\n|\r|\n/);
   }
   function isComment(trimmed) { return trimmed.charAt(0) === "#"; }
   function isSeparator(trimmed) { return /^-{3,}$/.test(trimmed); }
-  // "Headline Accent", "headline_accent" and "headline-accent" all become "headline accent"
+  // "Headline_Accent" -> "headline accent"
   function normKey(k) { return String(k).trim().toLowerCase().replace(/[\s_-]+/g, " "); }
 
-  /* ---------------- block parser ----------------
-     Parses the shared format into a list of plain objects:
-       { title: "...", blurb: "...", points: ["..."], link: ["Label | url"] }
-     Returns { entries, warnings } where warnings are { line, msg }. */
+  /* ---- block parser ---- */
+  // returns { entries, warnings }
   function parseBlocks(text, format) {
     var known = {};
     (format.keys || []).forEach(function (k) { known[normKey(k)] = true; });
@@ -75,8 +49,8 @@
 
     var entries = [];
     var warnings = [];
-    var cur = null;   // the entry being filled
-    var last = null;  // where a continuation line goes: { key } or { key, index }
+    var cur = null;   // current entry
+    var last = null;  // target for continuation lines
 
     function start() {
       cur = { _keys: 0 };
@@ -93,13 +67,13 @@
 
     toLines(text).forEach(function (raw, i) {
       var lineNo = i + 1;
-      var line = raw.replace(/\s+$/, ""); // also strips a trailing \r
+      var line = raw.replace(/\s+$/, ""); // trims trailing \r too
       var t = line.trim();
       if (!t || isComment(t)) return;
       if (isSeparator(t)) { finish(); return; }
       if (!cur) start();
 
-      // "- item" goes into the list (points), if this file has one
+      // "- item" -> list
       var item = /^[-*•]\s+(.*)$/.exec(t);
       if (item && listKey) {
         if (!cur[listKey]) cur[listKey] = [];
@@ -109,13 +83,13 @@
         return;
       }
 
-      // "key: value" (split at the first colon only, and only for known keys)
+      // "key: value", known keys only
       var kv = /^([A-Za-z][A-Za-z _-]*?)\s*:\s*(.*)$/.exec(t);
       if (kv && known[normKey(kv[1])]) {
         var key = normKey(kv[1]);
         var val = kv[2].trim();
         if (key === listKey) {
-          // "points:" on its own line starts the list; "points: text" is the first item
+          // "points:" alone starts the list
           if (!cur[listKey]) cur[listKey] = [];
           if (val) cur[listKey].push(val);
           cur._keys++;
@@ -136,7 +110,7 @@
         return;
       }
 
-      // anything else continues the previous text field, joined with a space
+      // continues previous field
       if (!last || last.afterList) {
         warnings.push({
           line: lineNo,
@@ -157,8 +131,7 @@
     return { entries: entries, warnings: warnings };
   }
 
-  /* Skills: every non-comment line "Category: items" is one row ["Category", "items"].
-     A line without a colon continues the previous row. */
+  /* skills: "Category: items", no colon = continuation */
   function parseSkills(text) {
     var rows = [];
     var warnings = [];
@@ -178,7 +151,7 @@
     return { rows: rows, warnings: warnings };
   }
 
-  /* books.txt: one folder name per line, in order. */
+  /* books.txt: one folder per line, in order */
   function parseBookList(text) {
     var seen = {};
     var out = [];
@@ -191,8 +164,7 @@
     return out;
   }
 
-  /* Images: bare name = in the book's folder, a path with "/" = from the site root,
-     a full http(s) URL = as given. Nothing is encoded. */
+  /* images: bare name = book folder, "/" = site root, http = as is */
   function resolveIn(dir, name) {
     var v = String(name || "").trim();
     if (!v) return "";
@@ -200,13 +172,13 @@
     return dir + v;
   }
   function resolveImage(folder, name) { return resolveIn(PROJECTS_DIR + folder + "/", name); }
-  // About me photo: a bare name is in assets/maintenance/about-me/
+  // photo: bare name = about-me folder
   function resolvePhoto(name) { return resolveIn(ABOUT_DIR, name); }
 
   function splitTags(v) {
     return String(v || "").split(",").map(function (s) { return s.trim(); }).filter(Boolean);
   }
-  // "Label | https://url" -> { label, href }. A bare URL gets the label "Link".
+  // "Label | url" -> { label, href }, bare url = "Link"
   function parseLink(v) {
     var s = String(v || "").trim();
     if (!s) return null;
@@ -227,7 +199,7 @@
   function str(v) { return v == null ? "" : String(v); }
   function clip(s) { s = String(s); return s.length > 60 ? s.slice(0, 57) + "..." : s; }
 
-  /* ---------------- builders: parsed entries -> SITE shapes ---------------- */
+  /* ---- builders: entries -> SITE shapes ---- */
   function buildCrate(folder, entry) {
     var e = entry || {};
     var col = normColor(e.color);
@@ -260,8 +232,7 @@
   }
   function buildCert(e) { return [str(e.name), str(e.issuer), str(e.date)]; }
   function buildWhy(e) { return { heading: str(e.heading), stat: str(e.stat), label: str(e.label), text: str(e.text) }; }
-  /* Hero and about me: empty strings / empty lists mean "not set", and apply()
-     then keeps the content.js value for that field. */
+  /* hero/about: empty = not set, keeps content.js value */
   function buildHero(e) {
     e = e || {};
     return { kicker: str(e.kicker).trim(), title: str(e.title).trim(), tagline: str(e.tagline).trim() };
@@ -292,14 +263,14 @@
     buildAbout: buildAbout,
   };
 
-  // Node (tests): export the parsers and stop here.
+  // Node: export parsers only
   if (typeof window === "undefined" || typeof document === "undefined") {
     if (typeof module !== "undefined" && module.exports) module.exports = API;
     return;
   }
   window.MAINTENANCE = API;
 
-  /* ================= browser: load everything, then start the site ================= */
+  /* ==== browser: load all, then start ==== */
   var S = (window.SITE = window.SITE || {});
   var problems = []; // { file, msg, kind: "error" | "warn" }
 
@@ -313,7 +284,7 @@
     (warnings || []).forEach(function (w) { report(file, "line " + w.line + " - " + w.msg, "warn"); });
   }
 
-  // Fetch a text file. Resolves with the text, or null after reporting the problem.
+  // fetch text, null on failure
   function getText(path) {
     var ctrl = typeof AbortController === "function" ? new AbortController() : null;
     var timer = ctrl ? setTimeout(function () { ctrl.abort(); }, FETCH_TIMEOUT_MS) : null;
@@ -340,7 +311,7 @@
       );
   }
 
-  // Parse one block file, keeping only entries that have the required field.
+  // parse block file, skip entries without required field
   function blocks(path, text, format, required) {
     if (text == null) return null;
     try {
@@ -401,7 +372,7 @@
     });
   }
 
-  // Hero and about me: copy only the fields that are set; the rest keep content.js.
+  // hero/about: copy only set fields
   function applyHero(text) {
     var e = single(HERO_FILE, text, FORMATS.hero);
     if (!e) return;
@@ -425,7 +396,7 @@
     if (a.roles.length) S.roles = a.roles; else missing("roles");
   }
 
-  // Write the loaded data into window.SITE. Anything that failed keeps what content.js had.
+  // write loaded data into window.SITE
   function apply(books, t) {
     applyHero(t.hero);
     applyAbout(t.about);
@@ -459,7 +430,7 @@
     }
   }
 
-  // Safe defaults so the site scripts never read undefined, even if everything failed.
+  // safe defaults if loading failed
   function ensureDefaults() {
     ["crates", "projects", "experience", "education", "certifications", "skills", "whyHire", "roles", "ticker"].forEach(function (k) {
       if (!Array.isArray(S[k])) S[k] = [];
@@ -473,7 +444,7 @@
     if (S.resume == null) S.resume = "";
   }
 
-  // Add the site scripts in order. async=false keeps them running in the order added.
+  // load site scripts in order (async=false keeps order)
   function loadScripts() {
     SCRIPTS.forEach(function (src) {
       var s = document.createElement("script");
@@ -484,7 +455,7 @@
     });
   }
 
-  /* ---------------- problems banner (file:// and localhost only) ---------------- */
+  /* ---- problems banner (file:// + localhost) ---- */
   function showBanner(title, lines) {
     var box = document.createElement("div");
     box.setAttribute("role", "status");
@@ -539,7 +510,7 @@
     // live site: console only
   }
 
-  /* ---------------- go ---------------- */
+  /* ---- go ---- */
   var resolveReady;
   window.SITE_READY = new Promise(function (r) { resolveReady = r; });
 
@@ -550,7 +521,7 @@
     try { ensureDefaults(); } catch (_) { /* keep going */ }
     try { resolveReady(S); } catch (_) { /* keep going */ }
     try { loadScripts(); } catch (err) { console.error("[maintenance] could not start the site scripts", err); }
-    try { maybeBanner(); } catch (_) { /* the banner is optional */ }
+    try { maybeBanner(); } catch (_) { /* banner is optional */ }
   }
 
   var run;

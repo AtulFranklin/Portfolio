@@ -1,7 +1,4 @@
-/* scene.js - "Atul's Desk": a night trading desk in Three.js.
-   Classic script that dynamically imports three (via the importmap in index.html),
-   so the page also works when opened straight from disk.
-   Every object action is also reachable through normal HTML links on the page. */
+/* scene.js - three.js night desk scene */
 (async function () {
   "use strict";
   const S = window.SITE;
@@ -19,20 +16,20 @@
     loader.classList.add("done");
   }
 
-  // WebGL available?
+  // webgl check
   try {
     const c = document.createElement("canvas");
     if (!(c.getContext("webgl2") || c.getContext("webgl"))) return fail();
   } catch (_) { return fail(); }
 
-  // Phones get the flat object grid instead of the 3D desk (see index.html .m-desk).
-  // ?snap=<object> is a render-only mode used to export those object images.
+  // phones use the flat grid instead
+  // ?snap=<object> renders one object for export
   const SNAP = new URLSearchParams(location.search).get("snap");
   if (!SNAP && window.matchMedia("(max-width: 720px)").matches) { loader.classList.add("done"); return; }
 
   const params = new URLSearchParams(location.search);
   const DEBUG = params.has("debug");
-  const FXQ = params.get("fx");          // "0" = no post-processing, "1".."3" = fixed quality (no auto-tuning)
+  const FXQ = params.get("fx");          // 0 = no fx, 1-3 = fixed quality
   const tStart = performance.now();
 
   let THREE, RoundedBoxGeometry, mergeGeometries;
@@ -46,8 +43,7 @@
     console.warn("Three.js could not load", e);
     return fail();
   }
-  // Optional extras: the window's area light and the post-processing chain.
-  // If any of them fails to load, the desk still renders, just more plainly.
+  // optional extras: area light + post fx
   let RectAreaLightUniformsLib = null, PP = null;
   const optional = [
     import("three/addons/lights/RectAreaLightUniformsLib.js")
@@ -75,11 +71,10 @@
   const MONO = '"Geist Mono", ui-monospace, Menlo, monospace';
   const C = { amber: "#F5B041", up: "#3DDC97", down: "#FF6B6B", paper: "#F3EEE4", ink: "#16130E" };
 
-  // The view out of the window: a photo (assets/skyline.jpg) when it can be used,
-  // otherwise the procedural 3D city further down.
+  // window view: skyline photo, else procedural city
   const SKY_PHOTO = "assets/skyline.jpg";
   const skyPhotoP = Promise.race([loadImage(SKY_PHOTO), new Promise((r) => setTimeout(() => r(null), 5000))]);
-  // wait briefly for fonts so canvas textures use Geist
+  // wait for fonts before drawing textures
   const fontsP = Promise.race([
     Promise.all([document.fonts.load('700 64px "Geist"'), document.fonts.load('500 32px "Geist Mono"')]),
     new Promise((r) => setTimeout(r, 1500)),
@@ -89,10 +84,7 @@
   let seed = 7;
   const rnd = () => ((seed = (seed * 16807) % 2147483647) - 1) / 2147483646;
 
-  /* ---------------- procedural material textures ----------------
-     Everything is painted into canvases at load time (no downloads): a height field per
-     surface gives the albedo, a normal map (from the height) and a roughness map that all
-     agree with each other. Generated while the skyline photo and fonts are loading. */
+  /* ---------------- procedural textures ---------------- */
   let tseed = 20261031;
   const trnd = () => ((tseed = (tseed * 16807) % 2147483647) - 1) / 2147483646;
   const RT = new Float32Array(65536);
@@ -119,7 +111,7 @@
     P.g.putImageData(P.id, 0, 0);
     return P.c;
   }
-  function normalCanvas(hf, w, h, k) {   // tangent-space normal map (OpenGL / three convention)
+  function normalCanvas(hf, w, h, k) {   // tangent-space normal map (opengl convention)
     const P = pix(w, h), d = P.d;
     for (let y = 0; y < h; y++) {
       const ym = ((y - 1 + h) % h) * w, yp = ((y + 1) % h) * w, yr = y * w;
@@ -134,7 +126,7 @@
     return P.c;
   }
 
-  /* smoked oak, long planks running toward the window. Tile = 3 m x 3 m, 16 planks across. */
+  /* smoked oak planks, 3 m tile, 16 planks */
   function genFloor(N) {
     const COLS = 16, PW = N / COLS;
     const A = pix(N, N), d = A.d, R = new Float32Array(N * N), H = new Float32Array(N * N);
@@ -181,8 +173,7 @@
     return { map: A.c, normal: normalCanvas(H, N, N, 3), rough: grayCanvas(R, N, N) };
   }
 
-  /* solid walnut top: staves glued edge to edge along the length, cathedral + straight grain,
-     the odd streak of pale sapwood. u = desk width (x), rows = desk depth (z). */
+  /* walnut top: glued staves, mixed grain */
   function genDesk(W, Hh) {
     const A = pix(W, Hh), d = A.d, R = new Float32Array(W * Hh), H = new Float32Array(W * Hh);
     const warp = new Float32Array(W), tl = new Float32Array(W);
@@ -227,7 +218,7 @@
     return { map: A.c, normal: normalCanvas(H, W, Hh, 2.2), rough: grayCanvas(R, W, Hh) };
   }
 
-  /* hand-trowelled plaster (light grey, tinted per material). Tiles seamlessly. */
+  /* trowelled plaster, tiles seamlessly */
   function genPlaster(N) {
     const A = pix(N, N), d = A.d, R = new Float32Array(N * N), H = new Float32Array(N * N);
     for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
@@ -242,7 +233,7 @@
     return { map: A.c, normal: normalCanvas(H, N, N, 5), rough: grayCanvas(R, N, N) };
   }
 
-  /* wool rug: the design (albedo) plus a separate tiling pile normal map */
+  /* wool rug: albedo + tiling pile normal */
   function genRug(W, Hh) {
     const P = pix(W, Hh), g = P.g;
     g.fillStyle = "#4A3A30"; g.fillRect(0, 0, W, Hh);
@@ -262,7 +253,7 @@
     return { map: P.c, normal: normalCanvas(H, N, N, 1.4) };
   }
 
-  /* pebbled leather desk pad with a stitched border */
+  /* pebbled leather pad, stitched border */
   function genLeather(W, Hh) {
     const A = pix(W, Hh), d = A.d, R = new Float32Array(W * Hh), H = new Float32Array(W * Hh);
     const IN = 16;
@@ -284,7 +275,7 @@
     return { map: A.c, normal: normalCanvas(H, W, Hh, 1.6), rough: grayCanvas(R, W, Hh) };
   }
 
-  /* pine crate boards: three planks per face, worn edges, grime in the seams, nail heads */
+  /* pine crate boards with nails and wear */
   function genCrate(W, Hh) {
     const A = pix(W, Hh), d = A.d, R = new Float32Array(W * Hh), H = new Float32Array(W * Hh);
     const rows = [[0, 112], [112, 160], [272, 112]];
@@ -307,7 +298,7 @@
         H[i] = (0.62 + 0.06 * lw + 0.05 * fib) * (e >= 4 ? 1 : e === 3 ? 0.9 : e === 2 ? 0.75 : e === 1 ? 0.5 : 0.1);
         R[i] = 0.72 + 0.12 * (1 - grime) + 0.06 * lw;
       }
-      // nail heads near both ends of the plank
+      // nail heads near plank ends
       for (const nx of [18, W - 19]) for (const ny of bh > 130 ? [bh * 0.3, bh * 0.7] : [bh * 0.5]) {
         const cx = nx, cy = b0 + ny;
         for (let y = Math.floor(cy - 8); y <= cy + 8; y++) for (let x = Math.floor(cx - 8); x <= cx + 8; x++) {
@@ -330,7 +321,7 @@
     }
     return { map: A.c, H, rough: grayCanvas(R, W, Hh) };
   }
-  function genBatten(W, Hh) {           // corner posts: grain runs along the post (image y)
+  function genBatten(W, Hh) {           // corner posts: grain along y
     const A = pix(W, Hh), d = A.d, H = new Float32Array(W * Hh);
     for (let y = 0; y < Hh; y++) for (let x = 0; x < W; x++) {
       const i = y * W + x, j = i * 4;
@@ -343,7 +334,7 @@
     A.g.putImageData(A.id, 0, 0);
     return { map: A.c, normal: normalCanvas(H, W, Hh, 2) };
   }
-  function genMicro(N) {                // orange-peel micro texture for plastics / powder coat
+  function genMicro(N) {                // orange-peel texture for plastics
     const H = new Float32Array(N * N);
     for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) H[y * N + x] = 0.7 * vn(x / 3, y / 3, N / 3 | 0) + 0.3 * h2(x, y);
     return normalCanvas(H, N, N, 0.9);
@@ -370,10 +361,10 @@
   /* ---------------- renderer / scene / camera ---------------- */
   const mobile = window.matchMedia("(max-width: 720px)").matches;
   const useFX = !!PP;
-  // With post-processing the anti-aliasing comes from SMAA, so the canvas itself skips MSAA.
+  // smaa handles aa when post fx is on
   const renderer = new THREE.WebGLRenderer({ antialias: !useFX, powerPreference: "high-performance", alpha: !!SNAP, preserveDrawingBuffer: !!SNAP });
   const DPR = window.devicePixelRatio || 1;
-  // pixel ratio per quality level: the post chain costs per pixel, so it runs a little below retina
+  // pixel ratio per quality level
   const prFor = (lvl) => Math.min(DPR, mobile ? 1.5 : !useFX ? 1.75 : lvl >= 2 ? 1.5 : 1.25);
   renderer.setPixelRatio(prFor(3));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -381,13 +372,13 @@
   renderer.toneMappingExposure = 1.1;
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-  renderer.shadowMap.autoUpdate = false;        // updated once per frame in draw(), not again in the AO pass
+  renderer.shadowMap.autoUpdate = false;        // updated once per frame in draw()
   host.appendChild(renderer.domElement);
   if (RectAreaLightUniformsLib) RectAreaLightUniformsLib.init();
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color("#07080B");
-  scene.fog = new THREE.Fog("#57557F", 150, 560);   // dusk haze over the city; far beyond the room
+  scene.fog = new THREE.Fog("#57557F", 150, 560);   // dusk haze over the city
 
   const pmrem = new THREE.PMREMGenerator(renderer);
 
@@ -419,7 +410,7 @@
     return t;
   }
   function loadImage(src) {
-    // From file:// the browser treats images as cross-origin, so WebGL can't use them.
+    // file:// images are cross-origin, unusable in webgl
     if (isFile) return Promise.resolve(null);
     return new Promise((res) => {
       const im = new Image();
@@ -433,7 +424,7 @@
     g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r);
     g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath();
   }
-  // box UVs from world position (metres / tile), so plaster keeps one scale on every wall piece
+  // world-space box uvs so plaster scale matches
   function worldUV(geo, tile) {
     const p = geo.attributes.position, n = geo.attributes.normal, uv = geo.attributes.uv;
     for (let i = 0; i < p.count; i++) {
@@ -462,7 +453,7 @@
   };
   const v2 = (a, b = a) => new THREE.Vector2(a, b);
   const M = {
-    // dark warm plaster (the light grey texture is tinted down by the colour)
+    // dark warm plaster
     wall: new THREE.MeshStandardMaterial({ color: "#5E5852", map: T.plaster, normalMap: T.plasterN, normalScale: v2(0.55), roughnessMap: T.plasterR, roughness: 1, envMapIntensity: 0.7 }),
     stone: new THREE.MeshStandardMaterial({ color: "#8E867A", map: T.plaster, normalMap: T.plasterN, normalScale: v2(0.2), roughness: 0.32, envMapIntensity: 1.1 }),
     skirting: new THREE.MeshStandardMaterial({ color: "#1C1A19", roughness: 0.42, normalMap: T.micro, normalScale: v2(0.15) }),
@@ -482,15 +473,14 @@
     gear: new THREE.MeshPhysicalMaterial({ color: "#E8E0CB", roughness: 0.42, clearcoat: 0.3, clearcoatRoughness: 0.5, sheen: 0.2 }),
     mug: new THREE.MeshPhysicalMaterial({ color: "#E9E4DA", roughness: 0.3, clearcoat: 1, clearcoatRoughness: 0.08 }),
     leather: new THREE.MeshStandardMaterial({ map: T.leather, normalMap: T.leatherN, normalScale: v2(0.6), roughnessMap: T.leatherR, roughness: 1 }),
-    // window / screen glass: only the reflection of the room (env map), added on top, so the
-    // view behind is never dimmed and the invisible helper lights leave no highlights in it
+    // glass: env reflection only, added on top
     glass: new THREE.MeshBasicMaterial({ color: 0x000000, combine: THREE.AddOperation, reflectivity: 0.07, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }),
   };
 
   /* ---------------- lights ---------------- */
   const hemi = new THREE.HemisphereLight("#2C3756", "#1A120C", 0.8);
   scene.add(hemi);
-  // warm bounce: lamp light scattered off the desk onto the wall and floor around it (no shadows)
+  // warm bounce light near the desk
   const bounce = new THREE.PointLight("#FFAE6B", 3, 7, 2);
   bounce.position.set(0.35, 1.05, -1.0);
   scene.add(bounce);
@@ -513,8 +503,7 @@
   const glow = new THREE.PointLight("#FF9A3D", 1.2, 4, 2);
   scene.add(glow);
 
-  // Warm incandescent ceiling downlights (about 2700K), recessed above the frame: only their light is
-  // seen, so the room, floor, crates and walls read clearly. No shadows (the desk lamp keeps those).
+  // warm ceiling downlights, no shadows
   const CEIL_Y = 4.3, CEIL_CD = 26;
   const ceilingLights = [];
   [[-2.3, -0.9], [0, -0.9], [2.3, -0.9], [-2.3, 1.5], [0, 1.5], [2.3, 1.5]].forEach(([x, z]) => {
@@ -524,7 +513,7 @@
     scene.add(l, l.target);
     ceilingLights.push(l);
   });
-  // light from those fixtures bouncing off the ceiling and walls: lifts the deepest shadows a little
+  // ceiling bounce fill
   hemi.color.set("#4A4A5C"); hemi.groundColor.set("#2A1C12"); hemi.intensity = 1.0;
 
   /* ---------------- room ---------------- */
@@ -539,7 +528,7 @@
   [T.floor, T.floorN, T.floorR].forEach((t) => t.repeat.set(30 / FLOOR_TILE, 14 / FLOOR_TILE));
   scene.add(floor);
 
-  // wool rug under the desk, with a little thickness
+  // wool rug under the desk
   const RUG_T = 0.012;
   const rug = new THREE.Mesh(
     new RoundedBoxGeometry(4.6, RUG_T, 2.8, 2, 0.005),
@@ -549,7 +538,7 @@
   rug.receiveShadow = true;
   scene.add(rug);
 
-  // back wall with a deep window opening, side walls, skirting
+  // back wall, window opening, side walls, skirting
   function wallBox(x0, x1, y0, y1, z0, z1, mat = M.wall) {
     const geo = new THREE.BoxGeometry(x1 - x0, y1 - y0, z1 - z0);
     geo.translate((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2);
@@ -573,9 +562,9 @@
     scene.add(m);
   }
 
-  const aoHidden = [];          // see-through bits the AO pass should ignore
+  const aoHidden = [];          // transparent bits, skip in ao
   let winGlassMat = null;
-  // window: stone sill, dark-bronze aluminium frame with mullions, transom and glazing beads, glass
+  // window: sill, frame, mullions, beads, glass
   {
     const sill = new THREE.Mesh(new RoundedBoxGeometry(WIN.x1 - WIN.x0 + 0.14, 0.035, WALL_Z - GLASS_Z + 0.06, 3, 0.01), M.stone);
     sill.position.set(0, WIN.y0 - 0.0175 + 0.004, (GLASS_Z + WALL_Z + 0.06) / 2);
@@ -591,7 +580,7 @@
     bar(FW, WIN.y1 - Y0, 0.11, WIN.x1 - FW / 2, (Y0 + WIN.y1) / 2, GLASS_Z);
     XM.forEach((x) => bar(0.06, WIN.y1 - Y0 - 2 * FW, 0.14, x, (Y0 + WIN.y1) / 2, GLASS_Z + 0.012));   // mullions
     bar(WIN.x1 - WIN.x0 - 2 * FW, 0.05, 0.12, 0, YT, GLASS_Z + 0.006);                                  // transom
-    // glazing beads around each pane, room side
+    // glazing beads on each pane
     const cols = [[WIN.x0 + FW, XM[0] - 0.03], [XM[0] + 0.03, XM[1] - 0.03], [XM[1] + 0.03, WIN.x1 - FW]];
     const rowsY = [[Y0 + FW, YT - 0.025], [YT + 0.025, WIN.y1 - FW]];
     const B = 0.016, BZ = GLASS_Z + 0.02;
@@ -603,8 +592,7 @@
     frameMesh.castShadow = frameMesh.receiveShadow = true;
     scene.add(frameMesh);
 
-    // A planar window can't get positionally correct reflections from an env map, so the faint
-    // ghost of the lit desk and the lamp (as seen from the camera's home position) is painted on.
+    // fake desk + lamp reflection painted on the glass
     winGlassMat = M.glass.clone();
     winGlassMat.color.set(0xffffff);
     winGlassMat.map = canvasTex(512, 228, (g, w, h) => {
@@ -629,7 +617,7 @@
     aoHidden.push(glass);
   }
 
-  // cool dusk light coming in through the window (soft, no shadows)
+  // cool dusk light through the window
   let winLight = null;
   if (RectAreaLightUniformsLib) {
     winLight = new THREE.RectAreaLight("#A4A8D8", 1.1, WIN.x1 - WIN.x0, WIN.y1 - WIN.y0);
@@ -643,11 +631,7 @@
   }
 
 
-  /* ---------------- NYC skyline at dusk, outside the window ----------------
-     Procedural Manhattan in the style of the classic three.js procedural city:
-     every building is a box written straight into one merged geometry, faces
-     sample a generated window texture, bases are darkened (fake street-level AO)
-     and distance haze comes from scene fog. Two facade draw calls in total. */
+  /* ---------------- procedural nyc skyline ---------------- */
   let skylineBeacon = null;
   function buildCity() {
     const LOW = mobile;
@@ -672,7 +656,7 @@
     };
     const fbm = (x, y) => { let s = 0, a = 0.5, f = 1; for (let o = 0; o < 5; o++) { s += a * noise(x * f, y * f); f *= 2.03; a *= 0.5; } return s; };
 
-    /* ---- dusk sky with clouds and a band of far-off lights ---- */
+    /* ---- dusk sky + clouds ---- */
     const skyTex = canvasTex(1024, 512, (g, w, h) => {
       const gr = g.createLinearGradient(0, 0, 0, h);
       gr.addColorStop(0, "#0E1029"); gr.addColorStop(0.3, "#1D2050"); gr.addColorStop(0.58, "#3B3D78");
@@ -697,7 +681,7 @@
       og.putImageData(img, 0, 0);
       g.imageSmoothingEnabled = true;
       g.drawImage(off, 0, 0, w, h * 0.93);
-      // far horizon: low skyline silhouettes + specks of light (New Jersey / Brooklyn)
+      // far horizon silhouettes + lights
       for (let x = 0; x < w; x += 2 + rnd() * 4) {
         const bh = 2 + rnd() * rnd() * 14;
         g.fillStyle = "rgba(36,30,62,0.9)"; g.fillRect(x, h - bh - 2, 3 + rnd() * 6, bh + 2);
@@ -802,7 +786,7 @@
       b.idx.push(base, base + 2, base + 1, base, base + 3, base + 2);
     }
 
-    /* ---- Manhattan: avenues along the island, short cross-street blocks ---- */
+    /* ---- manhattan blocks ---- */
     const AV = 11, ST = 3.7, D0 = 26;
     const halfW = (d) => 52 - Math.max(0, d - 220) * 0.28;          // island narrows toward downtown
     const centre = (d) => Math.sin(d * 0.012) * 4;
@@ -846,14 +830,14 @@
         const [x, z] = W(u, d); if (inView(x, z, 6)) lights.push(x, GROUND + 0.25, z);
       }
     }
-    // avenue lights, running away down the island
+    // avenue lights
     for (let u0 = -60; u0 <= 60; u0 += AV) for (let d = D0; d < FAR; d += 1.2) {
       const u = u0 + centre(d);
       if (Math.abs(u - centre(d)) > halfW(d)) continue;
       const [x, z] = W(u, d); if (inView(x, z, 6)) lights.push(x, GROUND + 0.25, z);
     }
 
-    /* ---- the boroughs across the rivers: low-rise, mostly lights ---- */
+    /* ---- boroughs: low-rise, mostly lights ---- */
     const RIVER_L = 26, RIVER_R = 34;
     for (let d = 40; d < FAR + 10; d += LOW ? 7 : 4.5) {
       for (const side of [-1, 1]) {
@@ -868,7 +852,7 @@
       }
     }
 
-    /* ---- landmark-style towers (generic shapes, lit crowns) ---- */
+    /* ---- landmark towers ---- */
     const glow = [];                                     // crown/spire meshes
     const crownMat = new THREE.MeshBasicMaterial({ color: "#FFE7B5", fog: true, toneMapped: false });
     const spireMat = new THREE.MeshBasicMaterial({ color: "#DCE6FF", fog: true, toneMapped: false });
@@ -952,7 +936,7 @@
       scene.add(new THREE.Points(rg, new THREE.PointsMaterial({ color: "#FF3B30", size: 0.5, sizeAttenuation: true, fog: true, toneMapped: false })));
     }
 
-    /* ---- ground, rivers and street lights ---- */
+    /* ---- land, rivers, street lights ---- */
     const land = new THREE.Mesh(new THREE.PlaneGeometry(900, 520), new THREE.MeshBasicMaterial({ color: "#07080D", fog: true }));
     land.rotation.x = -Math.PI / 2; land.position.set(0, GROUND - 0.02, -FAR / 2); scene.add(land);
     const waterTex = canvasTex(256, 1024, (g, w, h) => {
@@ -982,7 +966,7 @@
       const m = new THREE.Mesh(geo, waterMat); m.material.side = THREE.DoubleSide; scene.add(m);
     }
     river(-1, RIVER_L); river(1, RIVER_R);
-    { // the harbour past the island's tip
+    { // harbour past the tip
       const hb = new THREE.Mesh(new THREE.PlaneGeometry(700, 80), waterMat);
       hb.rotation.x = -Math.PI / 2; hb.position.set(30, GROUND + 0.005, -FAR - 8); scene.add(hb);
     }
@@ -997,9 +981,7 @@
   }
   var tower;
 
-  /* ---------------- photo view (preferred) ----------------
-     One textured plane far behind the window. Sized so the photo's width covers
-     the whole window; its height is placed per layout in resize(). */
+  /* ---------------- photo view ---------------- */
   let skyPlane = null;
   const skyBoost = { value: 0 };
   const SKY = { dist: 60, wDeg: 48 };
@@ -1011,8 +993,7 @@
     const w = 2 * SKY.dist * Math.tan(THREE.MathUtils.degToRad(SKY.wDeg / 2));
     const h = w * (img.height / img.width);
     const mat = new THREE.MeshBasicMaterial({ map: t, fog: false, toneMapped: false, color: "#D9D6E0" });
-    // With bloom on, the brightest pixels of the photo (windows, street lights, spires) are pushed
-    // above white so they - and only they - pick up a soft glow.
+    // with bloom, push brightest photo pixels above white
     mat.onBeforeCompile = (sh) => {
       sh.uniforms.uBoost = skyBoost;
       sh.fragmentShader = "uniform float uBoost;\n" + sh.fragmentShader.replace("#include <map_fragment>",
@@ -1029,13 +1010,13 @@
   /* ---------------- desk ---------------- */
   const DESK_Y = 0.76, DESK_Z = -0.62, DESK_W = 2.7, DESK_D = 1.08;
   const TOP = DESK_Y + 0.025;
-  // solid walnut slab: 55 mm thick, softly radiused edges; the top surface stays at TOP
+  // walnut slab, 55 mm, soft edges
   const DESK_T = 0.055, UNDER = TOP - DESK_T;
   const deskTop = new THREE.Mesh(new RoundedBoxGeometry(DESK_W, DESK_T, DESK_D, 4, 0.011), M.desk);
   deskTop.position.set(0.05, TOP - DESK_T / 2, DESK_Z);
   deskTop.castShadow = deskTop.receiveShadow = true;
   scene.add(deskTop);
-  // matte black steel sled frame: a closed rectangle each side, back stretcher, cable tray, glides
+  // black steel sled frame
   {
     const parts = [];
     const tube = (w, h, d, x, y, z) => { const g = new RoundedBoxGeometry(w, h, d, 2, Math.min(w, h, d) * 0.2); g.translate(x, y, z); parts.push(g); };
@@ -1048,14 +1029,14 @@
       for (const sz of [-1, 1]) { const g = new THREE.CylinderGeometry(0.016, 0.018, FOOT, 16); g.translate(x, FOOT / 2, DESK_Z + sz * (LZ + 0.005)); parts.push(g); }
     }
     tube(LX * 2 - S, 0.05, 0.025, 0.05, UNDER - 0.025, DESK_Z - LZ);       // back stretcher
-    // cable tray: shallow U channel hung under the back edge
+    // cable tray under the back edge
     tube(1.3, 0.004, 0.11, 0.05, UNDER - 0.085, DESK_Z - LZ + 0.08);
     tube(1.3, 0.07, 0.004, 0.05, UNDER - 0.05, DESK_Z - LZ + 0.135);
     const frameMesh = new THREE.Mesh(mergeGeometries(parts.map((g) => (g.index ? g.toNonIndexed() : g))), M.deskLeg);
     frameMesh.castShadow = frameMesh.receiveShadow = true;
     scene.add(frameMesh);
   }
-  // leather desk pad under the keyboard
+  // leather desk pad
   const PAD_T = 0.004;
   {
     const pad = new THREE.Mesh(new RoundedBoxGeometry(0.92, PAD_T, 0.38, 1, 0.0015), M.leather);
@@ -1064,8 +1045,7 @@
     pad.receiveShadow = true; pad.castShadow = true;
     scene.add(pad);
   }
-  // soft contact shadows (ambient-occlusion blobs) where things meet the desk / rug.
-  // One merged mesh; with the AO pass on they are faint, without it they carry the grounding.
+  // contact shadow blobs (one merged mesh)
   const blobTex = canvasTex(128, 128, (g, w) => {
     const r = g.createRadialGradient(w / 2, w / 2, 0, w / 2, w / 2, w / 2);
     r.addColorStop(0, "rgba(0,0,0,.9)"); r.addColorStop(0.45, "rgba(0,0,0,.5)"); r.addColorStop(1, "rgba(0,0,0,0)");
@@ -1099,7 +1079,7 @@
     aoHidden.push(legBlobs);
   }
 
-  // LED ticker under the front edge of the desk
+  // led ticker texture
   const tickerTex = canvasTex(2048, 64, (g, w, h) => {
     g.fillStyle = "#050607"; g.fillRect(0, 0, w, h);
     g.font = `500 30px ${MONO}`; g.textBaseline = "middle";
@@ -1121,7 +1101,7 @@
     [M.black, M.black, M.black, M.black, new THREE.MeshBasicMaterial({ map: tickerTex, toneMapped: false }), M.black]
   );
   ticker.position.set(0.05, DESK_Y - 0.07, DESK_Z + DESK_D / 2 - 0.02);
-  // (LED ticker under the desk removed)
+  // ticker not added to scene
 
   /* ---------------- interactive objects registry ---------------- */
   const hotspots = []; // { group, label, action, lift, base }
@@ -1134,9 +1114,7 @@
     return entry;
   }
 
-  /* Desk objects that open a book (crate). Books come from assets/maintenance, so the
-     crate is found by its "icon" (tools / engineering / apps), falling back to an id match.
-     If no book uses that icon the object is still drawn, just not clickable. */
+  /* desk objects that open a crate, matched by icon */
   function crateByIcon(icon) {
     const list = S.crates || [];
     return list.find((c) => String(c.icon || "").toLowerCase() === icon) || list.find((c) => c.id === icon) || null;
@@ -1274,7 +1252,7 @@
     frame.add(inner);
     frame.position.set(0.62, TOP, DESK_Z - 0.28);
     frame.rotation.y = -0.38;
-    // monogram placeholder until/unless the photo loads
+    // monogram until the photo loads
     photoMat.map = canvasTex(360, 480, (g, w, h) => {
       g.fillStyle = "#1E1A16"; g.fillRect(0, 0, w, h);
       g.fillStyle = "#F5B041"; g.font = `700 150px ${FONT}`; g.textAlign = "center"; g.textBaseline = "middle";
@@ -1297,10 +1275,10 @@
   frameGlass.castShadow = frameGlass.receiveShadow = false;
   aoHidden.push(frameGlass);
 
-  /* ---- role cards holder: an open-top card box, cards standing inside it ---- */
+  /* ---- role cards box ---- */
   const roles = new THREE.Group();
   {
-    const BW = 0.36, BD = 0.16, BH = 0.099, T = 0.012;            // box width / depth / wall height / wall thickness
+    const BW = 0.36, BD = 0.16, BH = 0.099, T = 0.012;            // width / depth / wall height / thickness
     const shell = new THREE.MeshStandardMaterial({ color: "#1E1F24", roughness: 0.4, metalness: 0.55 });
     const inside = new THREE.MeshStandardMaterial({ color: "#0C0C0F", roughness: 0.9 });
     const wall = (w, h, d, x, y, z, m) => { const b = new THREE.Mesh(new RoundedBoxGeometry(w, h, d, 2, 0.004), m || shell); b.position.set(x, y, z); roles.add(b); };
@@ -1309,7 +1287,7 @@
     wall(T, BH, BD, -BW / 2 + T / 2, BH / 2, 0);                    // sides
     wall(T, BH, BD, BW / 2 - T / 2, BH / 2, 0);
     wall(BW, 0.01, BD, 0, 0.005, 0);                                // floor
-    const well = new THREE.Mesh(new THREE.PlaneGeometry(BW - 2 * T, BD - 2 * T), inside);  // dark interior seen from above
+    const well = new THREE.Mesh(new THREE.PlaneGeometry(BW - 2 * T, BD - 2 * T), inside);  // dark interior
     well.rotation.x = -Math.PI / 2; well.position.y = 0.011; roles.add(well);
     const n = S.roles.length, CH = 0.112, STEP = 0.024;
     S.roles.forEach((r, i) => {
@@ -1332,7 +1310,7 @@
   }
   hot(roles, "About me", () => DESK.openPanel("about"));
 
-  /* ---- polymer spur gear on a stand ---- */
+  /* ---- spur gear on a stand ---- */
   function gearGeometry(teeth = 22, rTip = 0.115, rRoot = 0.095, depth = 0.026) {
     const shape = new THREE.Shape();
     const seg = (Math.PI * 2) / teeth;
@@ -1487,7 +1465,7 @@
     inner.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), lampDir);
     const j1 = new THREE.Mesh(new THREE.SphereGeometry(0.02, 16, 12), M.brass); j1.position.copy(J1);
     const j2 = new THREE.Mesh(new THREE.SphereGeometry(0.018, 16, 12), M.brass); j2.position.copy(J2);
-    // warm inside of the shade, lit by the bulb
+    // warm inside of the shade
     const shadeIn = new THREE.Mesh(new THREE.ConeGeometry(0.097, 0.165, 40, 1, true), shadeInMat);
     shadeIn.position.copy(shade.position); shadeIn.quaternion.copy(shade.quaternion);
     lamp.add(base, rod(L0, J1, 0.01, M.black), rod(J1, J2, 0.009, M.black), rod(J2, cap.position, 0.008, M.black), j1, j2, cap, shade, shadeIn, bulb, inner);
@@ -1517,7 +1495,7 @@
     }));
   })();
   const crateBlobGeo = blobGeo([[0, RUG_T + 0.0008, 0, CRATE.w + 0.2, CRATE.d + 0.2, 0]]);
-  // Front board with a paper label stapled on the middle plank (640 x 384 = the 0.6 x 0.36 m face)
+  // front board with a paper label
   function crateFront(c) {
     const LW = 640, LH = 384, cv = mkCanvas(LW, LH), cx = cv.getContext("2d");
     cx.drawImage(TX.crate.map, 0, 0);
@@ -1537,7 +1515,7 @@
     cx.fillStyle = "#9A968E";                                   // staples
     cx.fillRect(px + 14, py + 10, 22, 3); cx.fillRect(px + pw - 36, py + 10, 22, 3);
     cx.restore();
-    // the paper sits flat over the plank grain in the normal map too
+    // paper is flat in the normal map too
     const H = Float32Array.from(TX.crate.H);
     for (let y = Math.floor(py); y < py + ph; y++) for (let x = Math.floor(px); x < px + pw; x++) {
       const e = Math.min(x - px, px + pw - x, y - py, py + ph - y);
@@ -1556,7 +1534,7 @@
     const bottom = new THREE.Mesh(new THREE.BoxGeometry(w, t, d), M.crateDark); bottom.position.y = t / 2;
     const posts = new THREE.Mesh(battenGeo, M.batten);
     const blob = new THREE.Mesh(crateBlobGeo, blobMat); blob.renderOrder = 1;
-    blob.raycast = () => {};             // the shadow is not part of the hit area
+    blob.raycast = () => {};             // shadow is not part of the hit area
     g.userData.blob = blob;
     g.add(front, back, left, right, bottom, posts, blob);
     // paper slips (one per project)
@@ -1577,7 +1555,7 @@
       slip.userData.base = { y: slip.position.y, z: slip.position.z, rx: slip.rotation.x };
       (g.userData.slips = g.userData.slips || []).push(slip);
       g.add(slip);
-      // real cover image if we can use it (served over http/https)
+      // cover image (http/https only)
       loadImage(p.image).then((im) => {
         if (!im) return;
         const t2 = canvasTex(400, 260, (cx, W, H) => {
@@ -1587,9 +1565,7 @@
         slipMat.map = t2; slipMat.needsUpdate = true;
       });
     });
-    // Floor layout. Up to 4 crates: exactly the original row / 2x2 grid.
-    // More than 4 (extra books in assets/maintenance): crates shrink so the row keeps
-    // the same width, and the portrait grid grows to 3+ columns over 2 rows.
+    // floor layout: row or grid, crates shrink past 4
     const n = S.crates.length;
     if (n <= 4) {
       g.userData.rowPos = new THREE.Vector3(-1.38 + i * 0.92, 0, 0.62 + (i % 2 ? 0.08 : 0));
@@ -1618,7 +1594,7 @@
     crateGroups.push(entry);
   });
 
-  /* ---- crate opening: slips flip up out of the crate, then the cards fly out ---- */
+  /* ---- crate opening animation ---- */
   function screenRect(obj) {
     const box = new THREE.Box3().setFromObject(obj), r = host.getBoundingClientRect();
     let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
@@ -1653,10 +1629,7 @@
     }
   }
 
-  /* ---------------- reflections: this room, baked into a PMREM environment ----------------
-     Instead of a generic studio, the reflection map holds the room itself: the dusk window
-     with the skyline in it, the warm lamp and its pool of light on the desk, the CRT glow.
-     Two versions (lamp on / off), so switching the lamp also changes the reflections. */
+  /* ---------------- room env map (lamp on / off) ---------------- */
   const envWindowTex = (() => {
     if (skyPhoto) { const t = new THREE.Texture(skyPhoto); t.colorSpace = THREE.SRGBColorSpace; t.needsUpdate = true; return t; }
     return canvasTex(64, 64, (g, w, h) => {
@@ -1667,7 +1640,7 @@
   })();
   function buildEnv(lampIsOn) {
     const es = new THREE.Scene();
-    const P = new THREE.Vector3(0.05, 1.15, -0.4);           // probe: just above the desk
+    const P = new THREE.Vector3(0.05, 1.15, -0.4);           // probe above the desk
     const basic = (color, opts) => new THREE.MeshBasicMaterial(Object.assign({ color }, opts || {}));
     const put = (geo, mat, x, y, z) => { const m = new THREE.Mesh(geo, mat); m.position.set(x - P.x, y - P.y, z - P.z); es.add(m); return m; };
     put(new THREE.BoxGeometry(ROOM_X * 2, 4.2, 9.5), basic(new THREE.Color(0.0055, 0.005, 0.0048), { side: THREE.BackSide }), 0, 2.1, WALL_Z + 4.75);
@@ -1685,9 +1658,7 @@
     es.traverse((o) => { if (o.isMesh) { o.geometry.dispose(); o.material.dispose(); } });
     return rt.texture;
   }
-  /* fewer draw calls: boxes with a material per face (paper slips, labels, cards, envelope)
-     get their index buffer regrouped so each distinct material is drawn once, not once per face.
-     This matters three times over: main pass, AO normal pass and the lamp's shadow map. */
+  /* group faces by material to cut draw calls */
   function packGroups(mesh) {
     const geo = mesh.geometry, mats = mesh.material;
     if (!Array.isArray(mats) || !geo.index) return;
@@ -1706,17 +1677,13 @@
     mesh.material = uniq;
   }
   scene.traverse((o) => { if (o.isMesh) packGroups(o); });
-  // paper slips stay inside their crates: the crate walls' shadows and the AO cover them
+  // slips skip shadow casting, hidden in crates
   crateGroups.forEach((e) => (e.group.userData.slips || []).forEach((sl) => { sl.castShadow = false; }));
 
   const envOn = buildEnv(true), envOff = buildEnv(false);
   scene.environment = M.glass.envMap = winGlassMat.envMap = envOn;
 
-  /* ---------------- post-processing ----------------
-     Render (HDR) -> GTAO (half res) -> bloom (only things brighter than white: bulb, shade,
-     screen, brightest city lights) -> ACES + sRGB -> SMAA -> vignette + dither.
-     Quality levels: 3 = all, 2 = no AO, 1 = SMAA only (lower pixel ratio), 0 = no composer.
-     Unless ?fx= pins a level, the level steps down by itself if frames take too long. */
+  /* ---------------- post fx: ao, bloom, smaa ---------------- */
   let composer = null, gtaoPass = null, bloomPass = null;
   let fxLevel = useFX ? Math.max(1, Math.min(3, +FXQ || 3)) : 0;
   let autoFX = useFX && !FXQ;
@@ -1766,7 +1733,7 @@
     resize();
   }
   function draw(dt) {
-    renderer.shadowMap.needsUpdate = true;      // once per frame (the AO pass re-renders the scene)
+    renderer.shadowMap.needsUpdate = true;      // once per frame (ao re-renders the scene)
     if (composer) composer.render(dt);
     else renderer.render(scene, camera);
   }
@@ -1783,14 +1750,14 @@
     const aspect = W / H;
     portrait = aspect < 0.9;
     camera.aspect = aspect;
-    // crates: one row on wide screens, a 2x2 stack on tall phones
+    // crates: row on wide, 2x2 on tall
     crateGroups.forEach(({ group }) => {
       group.position.copy(portrait ? group.userData.gridPos : group.userData.rowPos);
       group.rotation.y = portrait ? group.userData.gridRot : group.userData.rowRot;
       group.scale.setScalar((portrait ? group.userData.gridScale : group.userData.rowScale) || 1);
     });
     if (skyPlane) {
-      // top edge of the photo: keeps the spires inside the window on each layout
+      // photo top edge per layout
       const topY = portrait ? 2.4 : aspect < 1.25 ? 6.6 : 8.15;
       skyPlane.position.y = topY - skyPlane.userData.h / 2;
     }
@@ -1798,13 +1765,13 @@
       camera.fov = 50;
       camHome.set(0.05, 4.1, 6.2);
       lookHome.set(0.05, 0.35, 0.2);
-      // push the scene down so the title sits on the night sky
+      // push scene down under the title
       camera.setViewOffset(W, H, 0, -H * 0.2, W, H);
     } else {
       camera.fov = aspect < 1.25 ? 42 : 34;
       camHome.set(0, 2.2, aspect < 1.25 ? 5.9 : 5.1);
       lookHome.set(0.05, 0.78, -0.3);
-      // shift the scene right so the hero copy has room on the left
+      // shift scene right for the hero text
       const shift = aspect > 1.3 ? -W * 0.11 : 0;
       camera.setViewOffset(W, H, shift, -H * 0.04, W, H);
     }
@@ -1866,7 +1833,7 @@
   const clock = new THREE.Clock();
   let introT = reduce ? 1 : 0;
   const tmpV = new THREE.Vector3(), tmpL = new THREE.Vector3(), labelPos = new THREE.Vector3(), labelBox = new THREE.Box3();
-  // quality governor: if frames keep missing ~40 fps, drop one post-processing level (never back up)
+  // quality governor: drop a level below ~40 fps
   const perf = { skip: 60, n: 0, sum: 0 };
   function governor(dt) {
     if (!autoFX || fxLevel <= 1) return;
@@ -1894,7 +1861,7 @@
     if (introT < 1) introT = Math.min(1, introT + dt / 2.4);
     const k = easeOut(introT);
     tmpV.lerpVectors(camStart, camHome, k);
-    // ease the pointer itself (frame-rate independent), so fast flicks glide instead of snapping
+    // smooth the pointer
     if (!reduce) {
       const k = 1 - Math.exp(-dt * 2.2);
       parallaxSmooth.x += (THREE.MathUtils.clamp(parallax.x, -1, 1) - parallaxSmooth.x) * k;
@@ -1915,7 +1882,7 @@
 
     animateSlips(dt);
 
-    // gear spin (polymer gear, slow)
+    // gear spin
     if (!reduce) gear.rotation.z -= dt * (hovered && hovered.group === gearGroup ? 1.6 : 0.45);
 
     // ticker scroll
@@ -1930,7 +1897,7 @@
     lampLevel += ((lampOn ? 1 : 0) - lampLevel) * Math.min(1, dt * 8);
     lampLight.intensity = LAMP_CD * lampLevel;
     fill.intensity = 3 + 6 * lampLevel;
-    // with bloom the bulb and the inside of the shade go brighter than white so only they glow
+    // hdr bulb + shade so only they bloom
     const L = lampLevel, hdr = composer ? 1 + 7 * L : 1;
     bulbMat.color.setRGB((0.25 + 0.75 * L) * hdr, (0.22 + 0.67 * L) * hdr, (0.18 + 0.51 * L) * hdr);
     const si = (0.03 + 0.97 * L) * (composer ? 2.8 : 1);
@@ -1970,7 +1937,7 @@
 
   camera.position.copy(reduce ? camHome : camStart);
   camera.lookAt(lookHome);
-  // compile every shader up front (in parallel where the browser can) so the intro doesn't hitch
+  // precompile shaders to avoid intro hitch
   try {
     if (renderer.extensions.has("KHR_parallel_shader_compile")) await Promise.race([renderer.compileAsync(scene, camera), new Promise((r) => setTimeout(r, 3000))]);
     else renderer.compile(scene, camera);
@@ -1981,7 +1948,7 @@
   setTimeout(() => loader.classList.add("done"), 150);
   if (DEBUG) console.log("[scene] first frame after", Math.round(performance.now() - tStart), "ms, quality level", fxLevel);
 
-  /* ---------------- render-only mode: one object on a transparent background ---------------- */
+  /* ---------------- snap mode: one object, transparent bg ---------------- */
   function buildNameplate() {
     const g = new THREE.Group();
     const tex = canvasTex(720, 300, (c, w, h) => {
@@ -2011,7 +1978,7 @@
     if (name === "crt" && window.RETRO && RETRO.drawScreen) { RETRO.drawScreen(crtTex.userData.ctx, 640, 480, 1.0); crtTex.needsUpdate = true; } else drawCRT(0.2);
     scene.background = null; scene.fog = null;
     renderer.setClearColor(0x000000, 0);
-    // product-shot lighting for the phone images: neutral studio reflections, not the night room
+    // studio lighting for snap shots
     try {
       const { RoomEnvironment } = await import("three/addons/environments/RoomEnvironment.js");
       scene.environment = M.glass.envMap = pmrem.fromScene(new RoomEnvironment(renderer), 0.04).texture;
@@ -2023,8 +1990,8 @@
     key2.position.set(-2.5, 4, -6);
     scene.add(key2);
     renderer.toneMappingExposure = 1.05;
-    lampHead.slice(0, 3).forEach((m) => { m.castShadow = true; });   // the light is off the lamp here, so the head can cast
-    // hide everything that is not a light or the target
+    lampHead.slice(0, 3).forEach((m) => { m.castShadow = true; });   // light is off the lamp, so the head can cast
+    // hide everything except lights + target
     scene.children.forEach((o) => { if (!o.isLight && o !== target && o !== lampLight.target && o !== fill.target) o.visible = false; });
     target.visible = true;
     target.position.y = TOP;
@@ -2034,7 +2001,7 @@
     const catcher = new THREE.Mesh(new THREE.PlaneGeometry(4, 4), new THREE.ShadowMaterial({ opacity: 0.32 }));
     catcher.rotation.x = -Math.PI / 2; catcher.position.set(c.x, TOP + 0.001, c.z); catcher.receiveShadow = true;
     scene.add(catcher);
-    // light it evenly from the front-top so every object reads well
+    // even front-top light
     lampLight.position.set(c.x + 0.5, TOP + 1.4, c.z + 0.9); lampLight.target.position.copy(c); lampLight.intensity = 16;
     fill.position.set(c.x - 0.8, TOP + 0.9, c.z + 1.6); fill.target.position.copy(c); fill.intensity = 5;
     const S2 = 1100;

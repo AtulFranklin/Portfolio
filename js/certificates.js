@@ -1,6 +1,4 @@
-/* certificates.js - renders Education (section 04) and Experience (section 03) as framed certificates.
-   Runs right after app.js (loaded by maintenance.js) and re-renders #educationList and #experienceList
-   from window.SITE. All ornaments (gold corners, laurel, rosette seal) are inline SVG drawn here. */
+/* education + experience certificates */
 (function () {
   "use strict";
   const S = window.SITE || {};
@@ -10,7 +8,7 @@
   const r1 = (n) => Math.round(n * 100) / 100;
 
   /* ---------------- SVG ornaments ---------------- */
-  // teardrop leaf starting at (x, y), pointing along angle a (degrees), length l, half-width w
+  // leaf(x, y, angle, length, half-width)
   function leaf(x, y, a, l, w) {
     return `<path d="M0 0C${r1(l * 0.3)} ${r1(-w)} ${r1(l * 0.72)} ${r1(-w * 0.85)} ${l} 0C${r1(l * 0.72)} ${r1(w * 0.85)} ${r1(l * 0.3)} ${r1(w)} 0 0Z" transform="translate(${r1(x)} ${r1(y)}) rotate(${r1(a)})"/>`;
   }
@@ -24,15 +22,14 @@
     return `<polygon points="${pts.join(" ")}"/>`;
   }
 
-  // One baroque corner (viewBox 0 0 120 120). The frame rule's corner sits at (20, 20);
-  // the top half is drawn once and mirrored across the diagonal for the side.
+  // corner, top half mirrored for side
   function cornerHalf() {
     const strokes = [
-      "M20 20C28 9 41 6 52 12C60 17 69 21 79 17C87 14 94 15 101 20L106 20", // main stem along the rule
-      "M52 12C55 25 46 35 36 33C28 31 29 22 36 23C40 24 40 28 37 28", // spiral under the stem
-      "M79 17C77 9 84 4 90 7C94 9 93 14 89 13", // small curl above
-      "M101 20C104 24 103 28 99 28", // tail where the rule starts
-      "M36 10C33 6 27 6 26 10", // tiny hook near the corner
+      "M20 20C28 9 41 6 52 12C60 17 69 21 79 17C87 14 94 15 101 20L106 20", // stem
+      "M52 12C55 25 46 35 36 33C28 31 29 22 36 23C40 24 40 28 37 28", // spiral
+      "M79 17C77 9 84 4 90 7C94 9 93 14 89 13", // curl
+      "M101 20C104 24 103 28 99 28", // tail
+      "M36 10C33 6 27 6 26 10", // hook
     ].map((d) => `<path d="${d}"/>`).join("");
     const leaves = [
       leaf(30, 12, -62, 11, 3.6),
@@ -61,7 +58,7 @@
     </symbol>`;
   }
 
-  // Laurel wreath with three stars (viewBox 0 0 100 96)
+  // laurel wreath
   function laurelSymbol() {
     const cx = 50, cy = 50, R = 31;
     const P = (t) => [cx + R * Math.cos(t * Math.PI / 180), cy + R * Math.sin(t * Math.PI / 180)];
@@ -71,7 +68,7 @@
     stem = `M${r1(sx)} ${r1(sy)}A${R} ${R} 0 0 1 ${r1(P(a1)[0])} ${r1(P(a1)[1])}`;
     for (let t = 108; t <= 236; t += 16) {
       const [x, y] = P(t);
-      const k = 1 - (t - 108) / 260; // leaves get a little smaller toward the tip
+      const k = 1 - (t - 108) / 260; // leaves shrink toward tip
       leaves += leaf(x, y, t + 52, 13 * k, 3.6 * k) + leaf(x, y, t + 128, 11.5 * k, 3.2 * k);
     }
     const [tx, ty] = P(a1);
@@ -87,7 +84,7 @@
     </symbol>`;
   }
 
-  // Generic red rosette seal (viewBox 0 0 100 100): serrated edge, ring of stars, star in the middle
+  // rosette seal
   function sealSymbol() {
     const pts = [];
     const n = 64;
@@ -137,7 +134,7 @@
   /* ---------------- helpers ---------------- */
   const MONTHS = { jan: "January", feb: "February", mar: "March", apr: "April", may: "May", jun: "June", jul: "July", aug: "August", sep: "September", sept: "September", oct: "October", nov: "November", dec: "December" };
   function month(m) { return MONTHS[String(m).slice(0, 4).toLowerCase()] || MONTHS[String(m).slice(0, 3).toLowerCase()] || null; }
-  // "Mar 2025 - Sep 2025" -> { from: "March 2025", to: "September 2025" }; "Jun 2027 - Present" -> { from, to: null }
+  // "Mar 2025 - Sep 2025" -> { from, to }
   function parseDates(s) {
     const m = String(s || "").trim().match(/^([A-Za-z]{3,9})\.?\s+(\d{4})\s*(?:-|–|—|to)\s*(?:([A-Za-z]{3,9})\.?\s+(\d{4})|(present|now|current|today))\s*$/i);
     if (!m) return null;
@@ -149,7 +146,7 @@
   }
   const use = (id, cls, extra = "") => `<svg class="${cls}" ${extra} aria-hidden="true" focusable="false"><use href="#${id}"/></svg>`;
 
-  /* ---------------- 04 Education: award certificates ---------------- */
+  /* ---------------- 04 education ---------------- */
   function eduHTML(e, i) {
     const corners = ["tl", "tr", "bl", "br"].map((c) => use("cc-corner", `ecert-corner ${c}`, 'viewBox="0 0 120 120"')).join("");
     const meta = [e.dates, e.place].filter(Boolean).map((t) => `<span>${esc(t)}</span>`).join('<span class="ecert-sep" aria-hidden="true"></span>');
@@ -167,7 +164,7 @@
     </article>`;
   }
 
-  /* ---------------- 03 Experience: employment certificates ---------------- */
+  /* ---------------- 03 experience ---------------- */
   function sentence(e) {
     const d = parseDates(e.dates);
     const org = `<strong>${esc(e.org)}</strong>`;
@@ -204,10 +201,7 @@
     </li>`;
   }
 
-  /* ---------------- render ----------------
-     Education is always a certificate. Experience is a framed certificate from tablet up;
-     phones (<= 720px) keep the original experience cards from app.js. Crossing the breakpoint
-     (rotate / resize) swaps the experience view. */
+  /* ---------------- render ---------------- */
   const PHONE = window.matchMedia("(max-width: 720px)");
   const edu = document.getElementById("educationList");
   const exp = document.getElementById("experienceList");
@@ -244,7 +238,7 @@
       injectSprite();
       edu.classList.add("ecert-grid");
       edu.innerHTML = S.education.map(eduHTML).join("");
-      // the reveal observer in app.js has already run, so watch the new certificates here
+      // reveal for new certificates
       watchReveal(".ecert.reveal");
     }
     renderExperience();

@@ -1,8 +1,4 @@
-/* letter.js - "Leave me a message": a letter visitors write on the site, sent to Atul's inbox.
-   Sending goes through Web3Forms (https://web3forms.com), which works on a static site
-   like GitHub Pages. The access key is the "form key" line in assets/maintenance/contact/contact.txt.
-   Without a key, Send opens the visitor's own mail app with the letter filled in.
-   app.js asks LETTER.html() for the markup (panel + contact section); this file handles sending. */
+/* letter form - web3forms, mailto fallback */
 (function () {
   "use strict";
   const S = window.SITE || {};
@@ -102,7 +98,7 @@
   window.LETTER = { html, hasKey: !!HAS_KEY };
 })();
 
-/* the letter in section 05, and focus the letter when the panel opens (not on touch, so no keyboard pops up) */
+/* contact letter, focus on open (not touch) */
 (function () {
   "use strict";
   if (!window.LETTER) return;

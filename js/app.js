@@ -1,5 +1,4 @@
-/* app.js - renders the page from window.SITE (content.js + assets/maintenance, merged by maintenance.js) and runs the overlays.
-   The 3D scene (scene.js) calls window.DESK.* when objects are clicked. */
+/* page render + overlays */
 (function () {
   "use strict";
   const S = window.SITE;
@@ -17,7 +16,7 @@
   };
 
   /* ---------------- Hero text ---------------- */
-  // kicker: the static text in index.html stays when hero.txt has none
+  // kicker, falls back to static text
   const heroKicker = $(".hero-kicker");
   if (heroKicker && S.hero.kicker) heroKicker.textContent = S.hero.kicker;
   $("#heroTitle").textContent = S.hero.title;
@@ -34,7 +33,7 @@
     </div>`;
   }
   if (window.BOOKS && typeof window.BOOKS.mount === "function") {
-    // projects section: a stack of books; opening one hands over to the card stack
+    // projects: book stack
     window.BOOKS.mount($("#crateList"), S.crates, S.projects, (id, rect) => openCrate(id, null, rect));
   } else $("#crateList").innerHTML = S.crates
     .map((c) => {
@@ -49,7 +48,7 @@
 
   /* ---------------- 02 Why hire (CRT) ---------------- */
   function sparkSVG() {
-    // decorative candlesticks, deterministic so it looks the same every load
+    // candlesticks, fixed pattern
     let v = 20, out = "";
     for (let i = 0; i < 18; i++) {
       const d = Math.sin(i * 1.7) * 4 + (i % 3 === 0 ? -2 : 2.2);
@@ -70,7 +69,7 @@
         .join("")}</div>
     </div></div>`;
   }
-  // section 02: the retro word-processor window (falls back to the old CRT panel)
+  // retro window, crt panel fallback
   if (window.RETRO && typeof window.RETRO.sectionHTML === "function") {
     $("#whyCrt").outerHTML = `<div id="whyCrt">${window.RETRO.sectionHTML()}</div>`;
     if (typeof window.RETRO.mountSection === "function") window.RETRO.mountSection(document.getElementById("whyCrt"));
@@ -81,7 +80,7 @@
   const rolesHTML = `<div class="roles">${S.roles.map((r) => `<span class="role">${esc(r)}</span>`).join("")}</div>`;
   $("#aboutBody").innerHTML =
     `<p class="about-lead">${esc(S.about.lead)}</p>` + S.about.body.map((p) => `<p>${esc(p)}</p>`).join("") + rolesHTML;
-  // section 03 portrait (the src in index.html stays if no photo is set)
+  // portrait, falls back to html src
   const portraitImg = $(".portrait img");
   if (portraitImg && S.photo) portraitImg.src = S.photo;
   const ABOUT_GREETING = S.about.greeting || "Hi, I'm Atul.";
@@ -105,7 +104,7 @@
     .join("");
 
   /* ---------------- 05 Contact ---------------- */
-  // headline from assets/maintenance/contact/contact.txt; the static text in index.html is the fallback
+  // contact headline
   const C = S.contact || {};
   if (C.headline || C.headlineAccent) {
     const h = $("#contact-h");
@@ -160,14 +159,14 @@
     const shut = () => (dlg === stackDlg ? closeStack() : dlg.close());
     dlg.addEventListener("click", (e) => {
       if (e.target.closest("[data-close]")) return shut();
-      // click on empty backdrop area closes
+      // backdrop click closes
       if (e.target === dlg || e.target.classList.contains("stack") || e.target.classList.contains("panel-body") || e.target.classList.contains("overlay-head")) shut();
     });
     dlg.addEventListener("cancel", (e) => { if (dlg === stackDlg) { e.preventDefault(); closeStack(); } });
   });
 
-  /* ---- cards fly out of the crate / book and flip up; reverse on close ---- */
-  let opened = null;          // { id, rect } of the crate or book the stack came out of
+  /* ---- cards fly out and flip ---- */
+  let opened = null;          // source crate/book { id, rect }
   let closing = false;
   const visibleCards = () => {
     const vh = window.innerHeight;
@@ -237,7 +236,7 @@
     const idx = Math.max(0, S.crates.findIndex((c) => c.id === id));
     currentCrate = idx;
     const c = S.crates[idx];
-    if (!c) return; // no books loaded (maintenance files missing)
+    if (!c) return; // no books loaded
     $("#stackTitle").textContent = c.title;
     const body = $("#stackBody");
     body.innerHTML = projectsIn(c.id).map(cardHTML).join("");
@@ -245,7 +244,7 @@
     $("#nextCrateBtn").innerHTML = `${esc(next.title)} <span aria-hidden="true">→</span>`;
     const fromOrigin = !!originRect && !reduceMotion && !focusProject;
     body.classList.toggle("flip", fromOrigin);
-    // remember where this stack came from (kept while stepping between crates)
+    // remember stack origin
     if (originRect || !stackDlg.open) opened = { id: c.id, rect: originRect || null };
     openDialog(stackDlg);
     body.scrollTop = 0;
@@ -268,7 +267,7 @@
     if (e.key === "ArrowRight") { e.preventDefault(); stepCrate(1); }
     if (e.key === "ArrowLeft") { e.preventDefault(); stepCrate(-1); }
   });
-  // horizontal swipe = next / previous crate
+  // swipe = next / prev crate
   let sx = 0, sy = 0;
   stackDlg.addEventListener("touchstart", (e) => { sx = e.touches[0].clientX; sy = e.touches[0].clientY; }, { passive: true });
   stackDlg.addEventListener("touchend", (e) => {
@@ -290,7 +289,7 @@
     }),
     why: () => ({ title: "Why hire Atul?", html: crtHTML() }),
     contact: () => window.LETTER ? ({
-      // the letter (js/letter.js); the old panel below is the fallback
+      // letter, old panel fallback
       title: "Leave a message",
       html: `<div class="panel-letter">${window.LETTER.html("panel")}
         <div class="contact-actions">${contactActionsHTML()}</div></div>`,
