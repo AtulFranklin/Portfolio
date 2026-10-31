@@ -513,6 +513,20 @@
   const glow = new THREE.PointLight("#FF9A3D", 1.2, 4, 2);
   scene.add(glow);
 
+  // Warm incandescent ceiling downlights (about 2700K), recessed above the frame: only their light is
+  // seen, so the room, floor, crates and walls read clearly. No shadows (the desk lamp keeps those).
+  const CEIL_Y = 4.3, CEIL_CD = 26;
+  const ceilingLights = [];
+  [[-2.3, -0.9], [0, -0.9], [2.3, -0.9], [-2.3, 1.5], [0, 1.5], [2.3, 1.5]].forEach(([x, z]) => {
+    const l = new THREE.SpotLight("#FFC38A", CEIL_CD * (z > 0 ? 1.15 : 1), 9, 1.05, 1, 2);
+    l.position.set(x, CEIL_Y, z);
+    l.target.position.set(x * 0.92, 0, z + 0.25);
+    scene.add(l, l.target);
+    ceilingLights.push(l);
+  });
+  // light from those fixtures bouncing off the ceiling and walls: lifts the deepest shadows a little
+  hemi.color.set("#4A4A5C"); hemi.groundColor.set("#2A1C12"); hemi.intensity = 1.0;
+
   /* ---------------- room ---------------- */
   const WALL_Z = -1.85, WIN = { x0: -2.7, x1: 2.7, y0: 1.0, y1: 3.4 };
   const WALL_T = 0.3, ROOM_X = 4.8, GLASS_Z = WALL_Z - 0.2;
@@ -2003,6 +2017,7 @@
       scene.environment = M.glass.envMap = pmrem.fromScene(new RoomEnvironment(renderer), 0.04).texture;
     } catch (_) {}
     hemi.intensity = 1.1; bounce.visible = false; glow.intensity = 0.5;
+    ceilingLights.forEach((l) => (l.visible = false));
     if (winLight) winLight.visible = false;
     const key2 = new THREE.DirectionalLight("#8C86C8", 1.0);
     key2.position.set(-2.5, 4, -6);

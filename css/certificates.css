@@ -4,7 +4,6 @@
 :root {
   --cert-gold: #B4862F;
   --cert-gold-soft: rgba(180, 134, 47, 0.55);
-  --cert-blackletter: "UnifrakturMaguntia", "Old English Text MT", "Times New Roman", serif;
   --cert-script: "Pinyon Script", "Great Vibes", "Snell Roundhand", "Apple Chancery", cursive;
   --cert-serif: "Cormorant Garamond", "Cormorant", Garamond, "Times New Roman", serif;
   --cert-paper: #FBF8F1;
@@ -90,16 +89,13 @@
   color: #8A6421;
 }
 .ecert-school {
-  margin: 1.2cqi 0 0;
-  font-family: var(--cert-blackletter);
-  font-weight: 400;
-  font-size: clamp(28px, 6.5cqi, 42px);
-  line-height: 1.06;
+  margin: 0;
+  font-family: var(--cert-serif);
+  font-weight: 700;
+  font-size: clamp(28px, 6.4cqi, 42px);
+  line-height: 1.08;
   letter-spacing: 0.005em;
-  color: #120F0B;
-  -webkit-text-stroke: 0.04em #C9A25A;
-  paint-order: stroke fill;
-  text-shadow: 0.03em 0.04em 0 rgba(185, 140, 60, 0.45);
+  color: #1C1710;
   text-wrap: balance;
 }
 .ecert-presented {
@@ -111,7 +107,7 @@
   color: var(--cert-ink-2);
 }
 .ecert-name {
-  margin: 0.4cqi 0 0;
+  margin: 3.4cqi 0 0;
   padding: 0 3cqi 0.6cqi;
   font-family: var(--cert-script);
   font-size: clamp(30px, 7cqi, 44px);
@@ -218,13 +214,13 @@
 }
 .xcert-org {
   margin: 0;
-  max-width: 26ch;
-  font-size: max(14px, 1.45cqi);
-  font-weight: 600;
+  max-width: 34ch;
+  font-size: max(15px, 1.75cqi);
+  font-weight: 700;
   line-height: 1.25;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: #3A3A40;
+  color: #2E2E33;
 }
 .xcert-title {
   margin: 0.2cqi 0 0;
@@ -238,7 +234,7 @@
 }
 .xcert-presented { margin: 5.2cqi 0 0; font-size: max(14px, 1.5cqi); color: #5D5D63; }
 .xcert-name {
-  margin: 0.4cqi 0 0;
+  margin: 5.6cqi 0 0;
   width: fit-content;
   min-width: 66%;
   max-width: 100%;
@@ -324,7 +320,7 @@
   .ecert-paper { --i: 4cqi; --c: 24cqi; min-height: 0; padding: calc(var(--i) + 12cqi) calc(var(--i) + 6cqi) calc(var(--i) + 8cqi); }
   .ecert-kicker { letter-spacing: 0.18em; }
   .ecert-name { white-space: normal; font-size: clamp(28px, 8.6cqi, 40px); padding: 0 2cqi 1cqi; }
-  .ecert-presented { margin-top: 5cqi; }
+  .ecert-name { margin-top: 5cqi; }
   .ecert-degree { margin-top: 4cqi; }
   .ecert-meta { flex-direction: column; row-gap: 4px; margin-top: 3cqi; }
   .ecert-sep { display: none; }
@@ -336,7 +332,7 @@
   .xcert-in { padding: 24px 20px 20px; outline-offset: -4px; }
   .xcert-head { flex-direction: column; gap: 18px; }
   .xcert-title { text-align: left; margin: 0; font-size: 15px; letter-spacing: 0.06em; }
-  .xcert-presented { margin-top: 18px; }
+  .xcert-name { margin-top: 18px; }
   .xcert-name { max-width: 100%; font-size: clamp(34px, 11cqi, 44px); padding-bottom: 6px; }
   .xcert-text { margin-top: 14px; }
   .xcert-points { margin-top: 14px; gap: 8px; }

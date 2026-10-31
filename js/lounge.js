@@ -1,5 +1,5 @@
 /* lounge.js - quiet lounge music in the desk area, desktop only.
-   - assets/lounge_music.mp3, looped, at 35% volume. Never loaded on phones / tablets.
+   - assets/lounge_music.mp3, looped, at 20% volume. Never loaded on phones / tablets.
    - Browsers block sound until the visitor interacts, so it starts on the first click or key press
      (or right away if the browser allows it). A visitor who mutes stays muted (remembered per browser).
    - The volume follows the scroll: full in the lounge (the 3D desk at the top), fading to silence
@@ -10,7 +10,7 @@
   if (!desktop) return;
 
   const SRC = "assets/lounge_music.mp3";
-  const MAX = 0.35;          // 35% volume in the lounge
+  const MAX = 0.2;           // 20% volume in the lounge
   const STORE = "lounge-muted";
   const hero = document.getElementById("top");
   const topbar = document.getElementById("topbar");

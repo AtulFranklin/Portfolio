@@ -147,12 +147,6 @@
     const b = month(m[3]);
     return b ? { from: `${a} ${m[2]}`, to: `${b} ${m[4]}` } : null;
   }
-  // "Whirlpool Corporation" -> "WC"; "Motherson Automotive Technologies & Engineering" -> "MA"
-  function initials(org) {
-    const skip = /^(of|and|the|for|at|&|ltd\.?|inc\.?|llc|co\.?|pvt\.?)$/i;
-    const words = String(org || "").split(/\s+/).filter((w) => w && !skip.test(w) && /[A-Za-z]/.test(w));
-    return (words.slice(0, 2).map((w) => w.replace(/[^A-Za-z]/g, "")[0] || "").join("") || "·").toUpperCase();
-  }
   const use = (id, cls, extra = "") => `<svg class="${cls}" ${extra} aria-hidden="true" focusable="false"><use href="#${id}"/></svg>`;
 
   /* ---------------- 04 Education: award certificates ---------------- */
@@ -163,9 +157,7 @@
       <div class="ecert-paper">
         <span class="ecert-rule" aria-hidden="true"></span>${corners}
         <div class="ecert-body">
-          <p class="ecert-kicker">Certificate of Education</p>
           <h3 class="ecert-school" id="ecert-h-${i}">${esc(e.school)}</h3>
-          <p class="ecert-presented">This certificate is presented to</p>
           <p class="ecert-name">${NAME}</p>
           ${e.degree ? `<p class="ecert-degree">${esc(e.degree)}</p>` : ""}
           ${meta ? `<p class="ecert-meta">${meta}</p>` : ""}
@@ -195,12 +187,9 @@
             <div class="xcert-in">
               <header class="xcert-head">
                 <div class="xcert-brand">
-                  <span class="xcert-mono" aria-hidden="true">${esc(initials(e.org))}</span>
                   <h4 class="xcert-org" id="xcert-h-${i}">${esc(e.org)}</h4>
                 </div>
-                <p class="xcert-title">Certificate of Employment</p>
               </header>
-              <p class="xcert-presented">This certificate is presented to</p>
               <p class="xcert-name">${NAME}</p>
               <p class="xcert-text">${sentence(e)}</p>
               ${points.length ? `<ul class="xcert-points" aria-label="Responsibilities">${points.map((p) => `<li>${esc(p)}</li>`).join("")}</ul>` : ""}
@@ -215,22 +204,18 @@
     </li>`;
   }
 
-  /* ---------------- render ---------------- */
-  function render() {
-    const edu = document.getElementById("educationList");
-    const exp = document.getElementById("experienceList");
-    if (!edu && !exp) return;
-    injectSprite();
-    if (edu && Array.isArray(S.education)) {
-      edu.classList.add("ecert-grid");
-      edu.innerHTML = S.education.map(eduHTML).join("");
-    }
-    if (exp && Array.isArray(S.experience)) {
-      exp.classList.add("xcert-list");
-      exp.innerHTML = S.experience.map(jobHTML).join("");
-    }
-    // the reveal observer in app.js has already run, so watch the new certificates here
-    const items = [...document.querySelectorAll(".ecert.reveal, .xcert.reveal")];
+  /* ---------------- render ----------------
+     Education is always a certificate. Experience is a framed certificate from tablet up;
+     phones (<= 720px) keep the original experience cards from app.js. Crossing the breakpoint
+     (rotate / resize) swaps the experience view. */
+  const PHONE = window.matchMedia("(max-width: 720px)");
+  const edu = document.getElementById("educationList");
+  const exp = document.getElementById("experienceList");
+  const plainExp = exp ? exp.innerHTML : "";
+  let expMode = null;
+
+  function watchReveal(sel) {
+    const items = [...document.querySelectorAll(sel)];
     if (!("IntersectionObserver" in window)) { items.forEach((el) => el.classList.add("in")); return; }
     const io = new IntersectionObserver(
       (entries) => entries.forEach((en) => { if (en.isIntersecting) { en.target.classList.add("in"); io.unobserve(en.target); } }),
@@ -238,6 +223,34 @@
     );
     items.forEach((el) => io.observe(el));
   }
+  function renderExperience() {
+    if (!exp || !Array.isArray(S.experience)) return;
+    const want = PHONE.matches ? "plain" : "cert";
+    if (want === expMode) return;
+    expMode = want;
+    if (want === "plain") {
+      exp.classList.remove("xcert-list");
+      exp.innerHTML = plainExp;
+      watchReveal("#experienceList .reveal:not(.in)");
+    } else {
+      injectSprite();
+      exp.classList.add("xcert-list");
+      exp.innerHTML = S.experience.map(jobHTML).join("");
+      watchReveal("#experienceList .xcert.reveal");
+    }
+  }
+  function render() {
+    if (edu && Array.isArray(S.education)) {
+      injectSprite();
+      edu.classList.add("ecert-grid");
+      edu.innerHTML = S.education.map(eduHTML).join("");
+      // the reveal observer in app.js has already run, so watch the new certificates here
+      watchReveal(".ecert.reveal");
+    }
+    renderExperience();
+  }
 
   try { render(); } catch (err) { console.error("[certificates] could not render", err); }
+  const onChange = () => { try { renderExperience(); } catch (err) { console.error("[certificates] could not render", err); } };
+  if (PHONE.addEventListener) PHONE.addEventListener("change", onChange); else if (PHONE.addListener) PHONE.addListener(onChange);
 })();
