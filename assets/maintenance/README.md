@@ -1,7 +1,6 @@
 # Updating the website
 
 Everything I update often lives in this folder as plain text files.
-Edit a file, save it, push to GitHub - done. No code, no build step.
 
 ## What each folder controls
 
