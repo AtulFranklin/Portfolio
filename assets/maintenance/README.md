@@ -18,6 +18,7 @@ Everything I update often lives in this folder as plain text files.
 | `education-and-skills/certifications.txt` | Certificates |
 | `why-hire-me/why-hire-me.txt` | The "why hire me" cards |
 | `contact/contact.txt` | Email, profile links, resume, contact headline and message, and the `form key` that lets the Leave a message letter send to my inbox |
+| `domain-linker.txt` | The website domain (just the name, e.g. `atulabraham.site`) - copied into every file that needs it |
 
 Every .txt file starts with a short note and a copy-paste example.
 
@@ -58,6 +59,19 @@ Every .txt file starts with a short note and a copy-paste example.
 
 - Hide a whole book: remove its line from `projects/books.txt`, or put `#` in front of it. The folder stays, so it can come back later.
 - Hide one project (or job, card, certificate): put `#` at the start of each of its lines.
+
+
+## Change the domain
+
+1. Put the new domain in `domain-linker.txt` (just the name, e.g. `newname.dev`).
+2. Double-click `link-domain.command` in the website folder (`preview.command` and every commit also run it). It updates `CNAME`, `robots.txt`, `sitemap.xml` and the links in `index.html`.
+3. Push.
+4. Outside the code:
+   - DNS for the new domain: same records as the old one (4 GitHub `A` records + `www` CNAME to `atulfranklin.github.io`).
+   - GitHub repo > Settings > Pages: check the custom domain shows the new one, tick Enforce HTTPS once it's ready.
+   - Google Search Console: add the new domain, verify, submit `https://<new domain>/sitemap.xml`, then on the old property use Settings > Change of address.
+   - Update the website link on LinkedIn, GitHub, résumé and email signature.
+   - Keep the old domain pointing at the site for a few months if possible.
 
 ## Preview before pushing
 

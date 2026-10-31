@@ -6,6 +6,7 @@ window.SITE = {
   place: "Hoboken, NJ, USA",
   photo: "assets/photo.jpg",
   resume: "assets/Atul_Abraham_Resume.pdf", // fallback, real value in contact.txt
+  rev: 0x7d0,
 
   hero: {
     title: "Atul's Portfolio",

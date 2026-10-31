@@ -513,6 +513,14 @@
     scene.add(l, l.target);
     ceilingLights.push(l);
   });
+  // chandelier, light only
+  const CHAND = { x: 0.1, y: 3.7, z: 0.5 };
+  [[0, 0, 22], [-0.35, 0.2, 6], [0.35, 0.2, 6], [0, -0.35, 6]].forEach(([dx, dz, cd]) => {
+    const l = new THREE.PointLight("#FFB670", cd, 11, 2);
+    l.position.set(CHAND.x + dx, CHAND.y, CHAND.z + dz);
+    scene.add(l);
+    ceilingLights.push(l);
+  });
   // ceiling bounce fill
   hemi.color.set("#4A4A5C"); hemi.groundColor.set("#2A1C12"); hemi.intensity = 1.0;
 

@@ -8,7 +8,7 @@
   var ABOUT_DIR = ROOT + "about-me/";
   var HERO_FILE = ROOT + "hero/hero.txt";
   var ABOUT_FILE = ABOUT_DIR + "about-me.txt";
-  var SCRIPTS = ["js/books.js", "js/retro.js", "js/app.js", "js/certificates.js", "js/letter.js", "js/lounge.js", "js/scene.js"];
+  var SCRIPTS = ["js/books.js", "js/retro.js", "js/app.js", "js/stats.js", "js/certificates.js", "js/letter.js", "js/lounge.js", "js/scene.js"];
   var DEFAULT_COLOR = "#F5B041";
   var ICONS = ["fintech", "apps", "tools", "engineering", "star"];
   var FETCH_TIMEOUT_MS = 10000;

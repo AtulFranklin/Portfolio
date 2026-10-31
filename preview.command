@@ -17,6 +17,11 @@ while lsof -nP -iTCP:"$PORT" -sTCP:LISTEN >/dev/null 2>&1; do
   PORT=$((PORT + 1))
 done
 
+# domain sync
+# turn on the commit hook (once per computer)
+git rev-parse --git-dir >/dev/null 2>&1 && git config core.hooksPath .githooks
+python3 tools/link-domain.py
+
 URL="http://127.0.0.1:$PORT/"
 echo "Previewing $(pwd)"
 echo "Open $URL - press Ctrl+C or close this window to stop."
