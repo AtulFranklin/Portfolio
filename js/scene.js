@@ -17,9 +17,11 @@
   }
 
   // webgl check
+  let GL2 = false;
   try {
     const c = document.createElement("canvas");
-    if (!(c.getContext("webgl2") || c.getContext("webgl"))) return fail();
+    GL2 = !!c.getContext("webgl2");
+    if (!(GL2 || c.getContext("webgl"))) return fail();
   } catch (_) { return fail(); }
 
   // phones use the flat grid instead
@@ -29,7 +31,7 @@
 
   const params = new URLSearchParams(location.search);
   const DEBUG = params.has("debug");
-  const FXQ = params.get("fx");          // 0 = no fx, 1-3 = fixed quality
+  const FXQ = params.get("fx");          // 0 = no fx, 1-4 = fixed quality
   const tStart = performance.now();
 
   let THREE, RoundedBoxGeometry, mergeGeometries;
@@ -50,20 +52,16 @@
       .then((m) => { RectAreaLightUniformsLib = m.RectAreaLightUniformsLib; })
       .catch(() => {}),
   ];
-  if (!SNAP && FXQ !== "0") {
+  // msaa targets need webgl2
+  if (!SNAP && FXQ !== "0" && GL2) {
     optional.push(Promise.all([
       import("three/addons/postprocessing/EffectComposer.js"),
       import("three/addons/postprocessing/RenderPass.js"),
       import("three/addons/postprocessing/GTAOPass.js"),
       import("three/addons/postprocessing/UnrealBloomPass.js"),
       import("three/addons/postprocessing/OutputPass.js"),
-      import("three/addons/postprocessing/SMAAPass.js"),
-      import("three/addons/postprocessing/ShaderPass.js"),
     ]).then((m) => {
-      PP = {
-        EffectComposer: m[0].EffectComposer, RenderPass: m[1].RenderPass, GTAOPass: m[2].GTAOPass,
-        UnrealBloomPass: m[3].UnrealBloomPass, OutputPass: m[4].OutputPass, SMAAPass: m[5].SMAAPass, ShaderPass: m[6].ShaderPass,
-      };
+      PP = { EffectComposer: m[0].EffectComposer, RenderPass: m[1].RenderPass, GTAOPass: m[2].GTAOPass, UnrealBloomPass: m[3].UnrealBloomPass, OutputPass: m[4].OutputPass };
     }).catch((e) => { console.warn("Post-processing unavailable, rendering directly", e); }));
   }
 
@@ -361,18 +359,18 @@
   /* ---------------- renderer / scene / camera ---------------- */
   const mobile = window.matchMedia("(max-width: 720px)").matches;
   const useFX = !!PP;
-  // smaa handles aa when post fx is on
+  // msaa scene target when post fx is on
   const renderer = new THREE.WebGLRenderer({ antialias: !useFX, powerPreference: "high-performance", alpha: !!SNAP, preserveDrawingBuffer: !!SNAP });
   const DPR = window.devicePixelRatio || 1;
   // pixel ratio per quality level
-  const prFor = (lvl) => Math.min(DPR, mobile ? 1.5 : !useFX ? 1.75 : lvl >= 2 ? 1.5 : 1.25);
-  renderer.setPixelRatio(prFor(3));
+  const prFor = (lvl) => Math.min(DPR, mobile ? 1.5 : !useFX ? 1.75 : lvl >= 4 ? 2 : 1.5);
+  renderer.setPixelRatio(prFor(4));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.1;
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-  renderer.shadowMap.autoUpdate = false;        // updated once per frame in draw()
+  renderer.shadowMap.autoUpdate = false;        // redrawn on demand in draw()
   host.appendChild(renderer.domElement);
   if (RectAreaLightUniformsLib) RectAreaLightUniformsLib.init();
 
@@ -1488,7 +1486,7 @@
   lampLight.position.copy(lampWorld);
   lampLight.target.position.copy(lampAim);
   let lampOn = true, lampLevel = 1;
-  function setLamp(on) { lampOn = on; }
+  function setLamp(on) { lampOn = on; shadowDirty = true; }
 
   /* ---- crates on the floor ---- */
   const crateGroups = [];
@@ -1623,18 +1621,22 @@
   }
   window.addEventListener("desk:crateclose", () => { crateGroups.forEach((e) => (e.slipTarget = 0)); });
   function animateSlips(dt) {
+    let moved = false;
     for (const e of crateGroups) {
-      if (Math.abs(e.slipTarget - e.slipT) < 0.001 && e.slipT === e.slipTarget) continue;
+      if (e.slipT === e.slipTarget) continue;
+      moved = true;
       e.slipT += (e.slipTarget - e.slipT) * Math.min(1, dt * (e.slipTarget ? 9 : 6));
       if (Math.abs(e.slipTarget - e.slipT) < 0.002) e.slipT = e.slipTarget;
-      const t = e.slipT, slips = e.group.userData.slips || [], n = slips.length;
-      slips.forEach((sl, k) => {
-        const b = sl.userData.base, f = n - 1 - k;     // front slip lifts highest
+      const t = e.slipT, slips = e.group.userData.slips;
+      if (!slips) continue;
+      for (let k = 0, n = slips.length; k < n; k++) {
+        const sl = slips[k], b = sl.userData.base, f = n - 1 - k;     // front slip lifts highest
         sl.position.y = b.y + t * (0.2 + f * 0.05);
         sl.position.z = b.z + t * (0.05 - f * 0.012);
         sl.rotation.x = b.rx + t * (0.55 - f * 0.12);
-      });
+      }
     }
+    return moved;
   }
 
   /* ---------------- room env map (lamp on / off) ---------------- */
@@ -1691,39 +1693,40 @@
   const envOn = buildEnv(true), envOff = buildEnv(false);
   scene.environment = M.glass.envMap = winGlassMat.envMap = envOn;
 
-  /* ---------------- post fx: ao, bloom, smaa ---------------- */
-  let composer = null, gtaoPass = null, bloomPass = null;
-  let fxLevel = useFX ? Math.max(1, Math.min(3, +FXQ || 3)) : 0;
+  /* ---------------- post fx: ao, bloom, msaa ---------------- */
+  let composer = null, gtaoPass = null, bloomPass = null, rtScene = null, rtPost = null;
+  let fxLevel = useFX ? Math.max(1, Math.min(4, +FXQ || 4)) : 0;
   let autoFX = useFX && !FXQ;
   if (useFX) {
     try {
-      composer = new PP.EffectComposer(renderer);
+      // msaa instead of smaa
+      rtScene = new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, samples: Math.min(DPR >= 2 ? 2 : 4, renderer.capabilities.maxSamples || 0) });  // 2x msaa on retina
+      composer = new PP.EffectComposer(renderer, rtScene);
+      // only the scene buffer is msaa
+      composer.renderTarget2.dispose();
+      composer.renderTarget2 = rtPost = new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, depthBuffer: false });
       composer.addPass(new PP.RenderPass(scene, camera));
       gtaoPass = new PP.GTAOPass(scene, camera, 256, 256);
-      gtaoPass.updateGtaoMaterial({ radius: 0.3, distanceExponent: 1.6, thickness: 1, scale: 1.1, samples: 16 });
-      gtaoPass.updatePdMaterial({ lumaPhi: 10, depthPhi: 2, normalPhi: 3, radius: 6, rings: 2, samples: 12 });
+      gtaoPass.updateGtaoMaterial({ radius: 0.3, distanceExponent: 1.6, thickness: 1, scale: 1.1, samples: 8 });
+      gtaoPass.updatePdMaterial({ lumaPhi: 10, depthPhi: 2, normalPhi: 3, radius: 8, rings: 2, samples: 8 });
       gtaoPass.blendIntensity = 0.85;
-      const gSet = gtaoPass.setSize.bind(gtaoPass);              // AO at half resolution
+      const gSet = gtaoPass.setSize.bind(gtaoPass);              // AO at half res, quarter pixels
       gtaoPass.setSize = (w, h) => gSet(Math.max(1, Math.round(w / 2)), Math.max(1, Math.round(h / 2)));
       const gRender = gtaoPass.render.bind(gtaoPass);            // glass / decals stay out of the AO
       gtaoPass.render = (a, b, c, d, e) => { for (const o of aoHidden) o.visible = false; gRender(a, b, c, d, e); for (const o of aoHidden) o.visible = true; };
       composer.addPass(gtaoPass);
       bloomPass = new PP.UnrealBloomPass(new THREE.Vector2(256, 256), 0.45, 0.45, 2.6);
+      const bSet = bloomPass.setSize.bind(bloomPass);            // bloom capped at 1.5x res
+      bloomPass.setSize = (w, h) => { const k = Math.min(1, 1.5 / renderer.getPixelRatio()); bSet(Math.max(1, Math.round(w * k)), Math.max(1, Math.round(h * k))); };
       composer.addPass(bloomPass);
-      composer.addPass(new PP.OutputPass());
-      composer.addPass(new PP.SMAAPass(256, 256));
-      composer.addPass(new PP.ShaderPass({
-        uniforms: { tDiffuse: { value: null } },
-        vertexShader: "varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }",
-        fragmentShader: `uniform sampler2D tDiffuse; varying vec2 vUv;
-          void main() {
-            vec4 c = texture2D(tDiffuse, vUv);
-            float v = smoothstep(0.98, 0.38, length((vUv - 0.5) * vec2(1.0, 1.2)));
-            c.rgb *= mix(0.8, 1.0, v);
-            c.rgb += (fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453) - 0.5) / 255.0;
-            gl_FragColor = c;
-          }`,
-      }));
+      // vignette + dither folded into output
+      const outPass = new PP.OutputPass(), fs = outPass.material.fragmentShader, cut = fs.lastIndexOf("}");
+      outPass.material.fragmentShader = fs.slice(0, cut) + `
+        float vig = smoothstep(0.98, 0.38, length((vUv - 0.5) * vec2(1.0, 1.2)));
+        gl_FragColor.rgb *= mix(0.8, 1.0, vig);
+        gl_FragColor.rgb += (fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453) - 0.5) / 255.0;
+      }`;
+      composer.addPass(outPass);
     } catch (e) {
       console.warn("Post-processing setup failed, rendering directly", e);
       composer = null; fxLevel = 0; autoFX = false;
@@ -1740,10 +1743,15 @@
     skyBoost.value = level >= 2 ? 3 : 0;
     resize();
   }
+  let shadowDirty = true;
   function draw(dt) {
-    renderer.shadowMap.needsUpdate = true;      // once per frame (ao re-renders the scene)
-    if (composer) composer.render(dt);
-    else renderer.render(scene, camera);
+    // once per draw, ao re-renders the scene
+    if (shadowDirty) { renderer.shadowMap.needsUpdate = true; shadowDirty = false; }
+    if (composer) {
+      // scene always lands in the msaa buffer
+      composer.readBuffer = rtScene; composer.writeBuffer = rtPost;
+      composer.render(dt);
+    } else renderer.render(scene, camera);
   }
 
   /* ---------------- layout / resize ---------------- */
@@ -1754,7 +1762,12 @@
     const pr = prFor(fxLevel);
     if (renderer.getPixelRatio() !== pr) renderer.setPixelRatio(pr);
     renderer.setSize(W, H, false);
-    if (composer) { composer.setPixelRatio(pr); composer.setSize(W, H); }
+    if (composer) {
+      composer.setPixelRatio(pr); composer.setSize(W, H);
+      // skip msaa depth resolve
+      renderer.properties.get(rtScene).__ignoreDepthValues = true;
+    }
+    shadowDirty = true;
     const aspect = W / H;
     portrait = aspect < 0.9;
     camera.aspect = aspect;
@@ -1793,7 +1806,7 @@
   const ndc = new THREE.Vector2(-9, -9);
   const parallax = new THREE.Vector2(0, 0);
   const parallaxSmooth = new THREE.Vector2(0, 0);
-  let hovered = null, downAt = null;
+  let hovered = null, downAt = null, lastPointer = -1e9;
   const canvas = renderer.domElement;
   const hotMeshes = () => hotspots.map((h) => h.group);
 
@@ -1816,10 +1829,11 @@
   canvas.addEventListener("pointermove", (e) => {
     const r = canvas.getBoundingClientRect();
     parallax.set(((e.clientX - r.left) / r.width) * 2 - 1, ((e.clientY - r.top) / r.height) * 2 - 1);
+    lastPointer = performance.now();
     if (e.pointerType === "mouse") setHover(pick(e.clientX, e.clientY));
   });
   canvas.addEventListener("pointerleave", () => { setHover(null); parallax.set(0, 0); });
-  canvas.addEventListener("pointerdown", (e) => { downAt = [e.clientX, e.clientY]; });
+  canvas.addEventListener("pointerdown", (e) => { downAt = [e.clientX, e.clientY]; lastPointer = performance.now(); });
   canvas.addEventListener("pointerup", (e) => {
     if (!downAt) return;
     const moved = Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]);
@@ -1838,7 +1852,6 @@
   window.addEventListener("desk:modal", (e) => { modalOpen = e.detail; kick(); });
   document.addEventListener("visibilitychange", kick);
 
-  const clock = new THREE.Clock();
   let introT = reduce ? 1 : 0;
   const tmpV = new THREE.Vector3(), tmpL = new THREE.Vector3(), labelPos = new THREE.Vector3(), labelBox = new THREE.Box3();
   // quality governor: drop a level below ~40 fps
@@ -1858,22 +1871,36 @@
   }
   const easeOut = (x) => 1 - Math.pow(1 - x, 3);
 
-  function frame_() {
+  // 60 fps when active, 30 when idle
+  const STEP_ACTIVE = 1000 / 60, STEP_IDLE = 1000 / 30, SHADOW_STEP = 1000 / 15;
+  let lastDraw = -1e9, prevT = 0, elapsed = 0, shadowAt = -1e9, animBusy = true, wasActive = false, active = false;
+  let labelX = NaN, labelY = NaN;
+
+  function frame_(now) {
     if (!(visible && !modalOpen && !document.hidden)) { running = false; return; }
     requestAnimationFrame(frame_);
-    const rawDt = clock.getDelta(), dt = Math.min(rawDt, 0.05);
+    active = animBusy || hovered !== null || now - lastPointer < 1500;
+    const step = active ? STEP_ACTIVE : STEP_IDLE, gap = now - lastDraw;
+    if (gap < step - 2) return;
+    lastDraw = gap > step * 2 ? now : lastDraw + step;
+    const rawDt = prevT ? (now - prevT) / 1000 : 1 / 60, dt = Math.min(rawDt, 0.05);
+    prevT = now;
+    elapsed += rawDt;
     if (DEBUG) renderer.info.reset();
-    const t = clock.elapsedTime;
+    const t = elapsed;
+    let busy = false;
 
     // intro dolly
-    if (introT < 1) introT = Math.min(1, introT + dt / 2.4);
+    if (introT < 1) { introT = Math.min(1, introT + dt / 2.4); busy = true; }
     const k = easeOut(introT);
     tmpV.lerpVectors(camStart, camHome, k);
     // smooth the pointer
     if (!reduce) {
       const k = 1 - Math.exp(-dt * 2.2);
-      parallaxSmooth.x += (THREE.MathUtils.clamp(parallax.x, -1, 1) - parallaxSmooth.x) * k;
-      parallaxSmooth.y += (THREE.MathUtils.clamp(parallax.y, -1, 1) - parallaxSmooth.y) * k;
+      const tx = THREE.MathUtils.clamp(parallax.x, -1, 1), ty = THREE.MathUtils.clamp(parallax.y, -1, 1);
+      parallaxSmooth.x += (tx - parallaxSmooth.x) * k;
+      parallaxSmooth.y += (ty - parallaxSmooth.y) * k;
+      if (Math.abs(tx - parallaxSmooth.x) + Math.abs(ty - parallaxSmooth.y) > 0.002) busy = true;
     }
     const px = parallaxSmooth.x, py = parallaxSmooth.y;
     tmpV.x += px * 0.26; tmpV.y += -py * 0.1;
@@ -1884,14 +1911,20 @@
     // hover lift
     for (const h of hotspots) {
       const target = h === hovered && !h.noLift ? 1 : 0;
+      if (h.lift === target) continue;
       h.lift += (target - h.lift) * Math.min(1, dt * 10);
-      if (!h.noLift) h.group.position.y = h.baseY + h.lift * 0.035;
+      if (Math.abs(target - h.lift) < 0.001) h.lift = target;
+      if (!h.noLift) { h.group.position.y = h.baseY + h.lift * 0.035; shadowDirty = true; }
+      busy = true;
     }
 
-    animateSlips(dt);
+    if (animateSlips(dt)) { busy = true; shadowDirty = true; }
 
     // gear spin
     if (!reduce) gear.rotation.z -= dt * (hovered && hovered.group === gearGroup ? 1.6 : 0.45);
+    // gear shadow at 15 fps
+    if (!reduce && now - shadowAt >= SHADOW_STEP - 2) shadowDirty = true;
+    if (shadowDirty) shadowAt = now;
 
     // ticker scroll
     if (!reduce) tickerTex.offset.x = (tickerTex.offset.x + dt * 0.035) % 1;
@@ -1899,10 +1932,15 @@
     // CRT at ~12 fps, new candle every ~1.6 s
     crtTick += dt;
     if (crtTick > 0.08) { crtTick = 0; drawCRT(t); }
-    if (!reduce && Math.floor(t / 1.6) !== Math.floor((t - dt) / 1.6)) stepCandles();
+    if (!reduce && Math.floor(t / 1.6) !== Math.floor((t - rawDt) / 1.6)) stepCandles();
 
     // lamp fade
-    lampLevel += ((lampOn ? 1 : 0) - lampLevel) * Math.min(1, dt * 8);
+    const lt = lampOn ? 1 : 0;
+    if (lampLevel !== lt) {
+      lampLevel += (lt - lampLevel) * Math.min(1, dt * 8);
+      if (Math.abs(lt - lampLevel) < 0.001) lampLevel = lt;
+      busy = true;
+    }
     lampLight.intensity = LAMP_CD * lampLevel;
     fill.intensity = 3 + 6 * lampLevel;
     // hdr bulb + shade so only they bloom
@@ -1920,21 +1958,24 @@
     if (hovered) {
       const box = labelBox.setFromObject(hovered.group);
       labelPos.set((box.min.x + box.max.x) / 2, box.max.y, (box.min.z + box.max.z) / 2).project(camera);
-      labelEl.style.left = ((labelPos.x + 1) / 2) * W + "px";
-      labelEl.style.top = ((1 - labelPos.y) / 2) * H + "px";
+      const lx = Math.round(((labelPos.x + 1) / 2) * W), ly = Math.round(((1 - labelPos.y) / 2) * H);
+      if (lx !== labelX || ly !== labelY) { labelX = lx; labelY = ly; labelEl.style.left = lx + "px"; labelEl.style.top = ly + "px"; }
     }
 
     draw(dt);
-    governor(rawDt);
+    // only time 60 fps frames
+    if (active && wasActive) governor(rawDt);
+    wasActive = active;
+    animBusy = busy;
     frames++;
   }
   let frames = 0;
   if (DEBUG) renderer.info.autoReset = false;
-  if (DEBUG) window.__deskDebug = () => ({ frames, fxLevel, lampOn, lampLevel: +lampLevel.toFixed(3), pr: renderer.getPixelRatio(), calls: renderer.info.render.calls, tris: renderer.info.render.triangles, textures: renderer.info.memory.textures, geometries: renderer.info.memory.geometries, programs: renderer.info.programs.length, meshes: (() => { let m = 0, g = 0, cast = 0; scene.traverse((o) => { if (o.isMesh && o.visible) { const n = Array.isArray(o.material) ? o.geometry.groups.length : 1; m++; g += n; if (o.castShadow) cast += n; } }); return { m, g, cast }; })() });
+  if (DEBUG) window.__deskDebug = () => ({ frames, active, fxLevel, lampOn, lampLevel: +lampLevel.toFixed(3), pr: renderer.getPixelRatio(), calls: renderer.info.render.calls, tris: renderer.info.render.triangles, textures: renderer.info.memory.textures, geometries: renderer.info.memory.geometries, programs: renderer.info.programs.length, meshes: (() => { let m = 0, g = 0, cast = 0; scene.traverse((o) => { if (o.isMesh && o.visible) { const n = Array.isArray(o.material) ? o.geometry.groups.length : 1; m++; g += n; if (o.castShadow) cast += n; } }); return { m, g, cast }; })() });
   function kick() {
     if (running || SNAP || !ready) return;
     if (visible && !modalOpen && !document.hidden) {
-      running = true; clock.getDelta();
+      running = true; prevT = 0; lastDraw = -1e9; wasActive = false;
       perf.n = 0; perf.sum = 0; perf.skip = Math.max(perf.skip, 20);
       requestAnimationFrame(frame_);
     }
