@@ -1,6 +1,6 @@
 # Updating the website
 
-Everything you update often lives in this folder as plain text files.
+Everything I update often lives in this folder as plain text files.
 Edit a file, save it, push to GitHub - done. No code, no build step.
 
 ## What each folder controls
@@ -12,13 +12,13 @@ Edit a file, save it, push to GitHub - done. No code, no build step.
 | `projects/books.txt` | Which project books are on the desk, and their order |
 | `projects/<book>/book.txt` | A book's cover: title, blurb, colour, emblem |
 | `projects/<book>/projects.txt` | The projects inside that book (plus their photos in the same folder) |
-| `projects/_new-book-template/` | A blank book to copy when you want a new one |
+| `projects/_new-book-template/` | A blank book to copy for a new one |
 | `experience/experience.txt` | Jobs and internships |
 | `education-and-skills/education.txt` | Schools and degrees |
 | `education-and-skills/skills.txt` | Skill rows (Category: items) |
 | `education-and-skills/certifications.txt` | Certificates |
 | `why-hire-me/why-hire-me.txt` | The "why hire me" cards |
-| `contact/contact.txt` | Email, profile links, resume, contact headline and message, and the `form key` that lets the Leave a message letter send to your inbox |
+| `contact/contact.txt` | Email, profile links, resume, contact headline and message, and the `form key` that lets the Leave a message letter send to my inbox |
 
 Every .txt file starts with a short note and a copy-paste example.
 
@@ -37,9 +37,9 @@ Every .txt file starts with a short note and a copy-paste example.
 
 - `hero/hero.txt` has three fields: `kicker` (small line above the title), `title` and `tagline`.
 - `about-me/about-me.txt`: `greeting` (the panel heading), `photo`, `lead` (the first, larger paragraph), one `paragraph:` line per body paragraph in order, and `roles` (role cards, separated by commas).
-- To add a paragraph, add another `paragraph:` line where you want it. To remove one, delete its line or put `#` in front.
+- To add a paragraph, add another `paragraph:` line where it should go. To remove one, delete its line or put `#` in front.
 - New photo: drop it in the `about-me` folder and write its file name after `photo:` (or keep `photo: assets/photo.jpg` and replace that file).
-- If a field is left empty, the site keeps its built-in text for it and the preview banner tells you.
+- If a field is left empty, the site keeps its built-in text for it and the preview banner flags it.
 
 ## Add a project
 
@@ -52,17 +52,17 @@ Every .txt file starts with a short note and a copy-paste example.
 
 1. Copy the `projects/_new-book-template` folder and rename the copy, for example `projects/games`. Use lowercase and hyphens, no spaces.
 2. In the new folder, fill in `book.txt`: title, blurb, a `color` (hex code like `#B48CFF`) and an `icon` (one of: fintech, apps, tools, engineering, star).
-3. Add your projects to its `projects.txt` and drop the photos in the folder.
-4. Add the folder name (`games`) to `projects/books.txt` on the line where you want it to appear.
+3. Add the projects to its `projects.txt` and drop the photos in the folder.
+4. Add the folder name (`games`) to `projects/books.txt` on the line where it should appear.
 
 ## Hide something
 
-- Hide a whole book: remove its line from `projects/books.txt`, or put `#` in front of it. The folder stays, so you can bring it back later.
+- Hide a whole book: remove its line from `projects/books.txt`, or put `#` in front of it. The folder stays, so it can come back later.
 - Hide one project (or job, card, certificate): put `#` at the start of each of its lines.
 
-## Preview before you push
+## Preview before pushing
 
-- Easiest: double-click `preview.command` in the website folder. It starts a small local server and opens the site in your browser.
+- Easiest: double-click `preview.command` in the website folder. It starts a small local server and opens the site in the browser.
 - Or in Terminal, inside the website folder: `python3 -m http.server 8000`, then open http://localhost:8000
 - Opening `index.html` directly will not load these files - use one of the options above.
 - If a file has a problem, the preview shows a small banner naming the file.

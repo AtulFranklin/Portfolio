@@ -5,10 +5,9 @@
 # headline:         the big contact line
 # headline accent:  the coloured words at the end of the headline
 # message:          the first line in the Leave a message panel
-# form key:         Web3Forms access key - lets the Leave a message letter send straight to your inbox.
-#                   Get a free key at https://web3forms.com (enter your email, the key is emailed to you),
-#                   then remove the # in front of the form key line at the bottom and paste it there.
-#                   Without a key, Send opens the visitor's own mail app with the message filled in.
+# form key:         Web3Forms access key - sends the Leave a message letter to my inbox.
+#                   New key: web3forms.com, sign up with my email, paste it on the form key line.
+#                   No key = Send opens the sender's mail app instead.
 #
 # Example line:
 # email: me@example.com
