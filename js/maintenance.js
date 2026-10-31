@@ -10,7 +10,7 @@
       why hire me, contact), parses them and writes the results into
       window.SITE in exactly the shapes the rest of the code expects. Hero and
       about me fields that are missing or empty keep the content.js value.
-   3. Then it loads books.js, retro.js, app.js and scene.js, in that order.
+   3. Then it loads books.js, retro.js, app.js, certificates.js, letter.js, lounge.js and scene.js, in that order.
 
    If a file is missing or broken, the console says which one and the rest of
    the site still loads. On localhost a small banner lists the problems, and
@@ -31,7 +31,7 @@
   var ABOUT_DIR = ROOT + "about-me/";
   var HERO_FILE = ROOT + "hero/hero.txt";
   var ABOUT_FILE = ABOUT_DIR + "about-me.txt";
-  var SCRIPTS = ["js/books.js", "js/retro.js", "js/app.js", "js/scene.js"];
+  var SCRIPTS = ["js/books.js", "js/retro.js", "js/app.js", "js/certificates.js", "js/letter.js", "js/lounge.js", "js/scene.js"];
   var DEFAULT_COLOR = "#F5B041";
   var ICONS = ["fintech", "apps", "tools", "engineering", "star"];
   var FETCH_TIMEOUT_MS = 10000;
@@ -46,7 +46,7 @@
     education: { keys: ["school", "degree", "place", "dates"] },
     certifications: { keys: ["name", "issuer", "date"] },
     whyHire: { keys: ["heading", "stat", "label", "text"] },
-    contact: { keys: ["email", "linkedin", "github", "studio", "resume", "headline", "headline accent", "message"] },
+    contact: { keys: ["email", "linkedin", "github", "studio", "resume", "headline", "headline accent", "message", "form key"] },
     hero: { keys: ["kicker", "title", "tagline"] },
     about: { keys: ["greeting", "photo", "lead", "paragraph", "roles"], repeat: ["paragraph"] },
   };
@@ -455,7 +455,7 @@
         studio: str(c.studio),
       };
       if (str(c.resume)) S.resume = str(c.resume);
-      S.contact = { headline: str(c.headline), headlineAccent: str(c["headline accent"]), message: str(c.message) };
+      S.contact = { headline: str(c.headline), headlineAccent: str(c["headline accent"]), message: str(c.message), formKey: str(c["form key"]) };
     }
   }
 
@@ -466,7 +466,7 @@
     });
     S.links = S.links || {};
     ["email", "linkedin", "github", "studio"].forEach(function (k) { if (S.links[k] == null) S.links[k] = ""; });
-    S.contact = S.contact || { headline: "", headlineAccent: "", message: "" };
+    S.contact = S.contact || { headline: "", headlineAccent: "", message: "", formKey: "" };
     S.hero = S.hero || { kicker: "", title: "", tagline: "" };
     S.about = S.about || { greeting: "", lead: "", body: [] };
     if (!Array.isArray(S.about.body)) S.about.body = [];

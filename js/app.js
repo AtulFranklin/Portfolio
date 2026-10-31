@@ -289,7 +289,12 @@
         </div></div></div>`,
     }),
     why: () => ({ title: "Why hire Atul?", html: crtHTML() }),
-    contact: () => ({
+    contact: () => window.LETTER ? ({
+      // the letter (js/letter.js); the old panel below is the fallback
+      title: "Leave a message",
+      html: `<div class="panel-letter">${window.LETTER.html("panel")}
+        <div class="contact-actions">${contactActionsHTML()}</div></div>`,
+    }) : ({
       title: "Leave a message",
       html: `<div class="panel panel-contact"><h3>Let's talk.</h3>
         <p class="lead">${esc(CONTACT_LEAD)}</p>

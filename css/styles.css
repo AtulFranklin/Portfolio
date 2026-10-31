@@ -247,7 +247,7 @@ section[id] { scroll-margin-top: 0; }
   border-radius: var(--r-lg); width: 100%; height: auto; aspect-ratio: 4 / 5; object-fit: cover; object-position: center 25%;
   box-shadow: var(--shadow-card); filter: saturate(.92);
 }
-.portrait figcaption { color: var(--text-3); margin-top: 14px; }
+.portrait figcaption { color: var(--text-3); margin-top: 14px; text-align: center; }
 
 .timeline { display: grid; gap: 16px; }
 .job { display: grid; grid-template-columns: 220px 1fr; gap: 32px; padding: 32px; border-radius: var(--r-lg); border: 1px solid var(--line); background: var(--ink-1); }
@@ -428,3 +428,101 @@ body.modal-open { overflow: hidden; }
   *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }
   .reveal { opacity: 1; transform: none; }
 }
+
+/* ---------- Leave me a message (letter) ---------- */
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.contact-grid { display: grid; grid-template-columns: 1fr minmax(0, 520px); gap: 56px; align-items: center; }
+.contact-main { position: relative; }
+.contact-letter { position: relative; }
+.letter { position: relative; --lp: 30px; }
+.letter-paper {
+  position: relative; color: var(--paper-ink); border-radius: 6px; padding: 30px 30px 24px;
+  background:
+    linear-gradient(to right, transparent 46px, rgba(255, 107, 107, .28) 46px, rgba(255, 107, 107, .28) 47.5px, transparent 47.5px),
+    radial-gradient(120% 90% at 0% 0%, rgba(255,255,255,.55), rgba(255,255,255,0) 55%),
+    var(--paper);
+  box-shadow: 0 1px 0 rgba(255,255,255,.5) inset, 0 30px 60px -24px rgba(0,0,0,.75), 0 6px 16px -8px rgba(0,0,0,.5);
+  transform: rotate(-.6deg);
+  transition: transform .4s var(--ease);
+}
+.contact-letter .letter-paper:focus-within, .contact-letter .letter-paper:hover { transform: rotate(0deg); }
+/* a second sheet peeking out behind (on the wrapper, so it stays under the tilted sheet) */
+.letter { isolation: isolate; }
+.letter::before {
+  content: ""; position: absolute; inset: 8px -8px -8px 8px; z-index: -1; border-radius: 6px;
+  background: #E2D9C6; transform: rotate(1.4deg); box-shadow: 0 18px 40px -20px rgba(0,0,0,.7);
+}
+.panel-letter .letter::before { transform: rotate(.9deg); }
+.letter-title { font-size: clamp(26px, 3vw, 32px); font-weight: 700; letter-spacing: -0.025em; line-height: 1.1; padding-left: var(--lp); padding-right: 74px; }
+.letter-stamp {
+  position: absolute; top: 20px; right: 20px; width: 56px; height: 68px; display: grid; place-content: center; text-align: center;
+  background: var(--amber); color: var(--amber-ink); transform: rotate(4deg);
+  outline: 4px dotted var(--paper); outline-offset: -2px; /* perforated edge */
+  box-shadow: 0 2px 6px -2px rgba(0,0,0,.35);
+}
+.letter-stamp::after { content: ""; position: absolute; inset: 7px; border: 1px solid rgba(26,18,6,.45); }
+.letter-stamp span { font-weight: 700; font-size: 20px; letter-spacing: -0.02em; line-height: 1; }
+.letter-stamp small { font-family: var(--mono); font-size: 7px; letter-spacing: .12em; text-transform: uppercase; margin-top: 4px; }
+.letter-form { margin-top: 16px; display: grid; gap: 10px; }
+.letter-form textarea, .letter-form input[type="text"], .letter-form input[type="email"] {
+  width: 100%; border: 0; outline: none; background: transparent; color: var(--paper-ink); font: inherit; font-size: 17px;
+  padding: 0 4px 0 var(--lp); border-radius: 0;
+}
+.letter-form textarea {
+  resize: vertical; min-height: calc(32px * 6); line-height: 32px;
+  background: repeating-linear-gradient(to bottom, transparent 0, transparent 31px, rgba(22,19,14,.14) 31px, rgba(22,19,14,.14) 32px);
+  background-attachment: local;
+}
+.letter-form textarea::placeholder { color: var(--paper-ink-2); opacity: .85; font-style: italic; }
+.letter-from { display: grid; grid-template-columns: 1fr 1.5fr; gap: 12px; padding-left: var(--lp); }
+.letter-form .letter-from input[name] { padding: 8px 2px; border-bottom: 1px solid rgba(22,19,14,.22); font-size: 15px; transition: border-color .2s; }
+.letter-form .letter-from input:focus { border-color: #8A4F00; }
+.letter-form input::placeholder { color: var(--paper-ink-2); opacity: .8; }
+.letter-form textarea:focus-visible { box-shadow: none; }
+.letter-paper:focus-within { box-shadow: 0 0 0 2px rgba(245,176,65,.65), 0 30px 60px -24px rgba(0,0,0,.75); }
+.letter-trap { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+.letter-send { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 16px; margin-top: 8px; padding-left: var(--lp); }
+.letter-send .btn svg { width: 16px; height: 16px; margin-left: -4px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linejoin: round; }
+.letter-send .btn:disabled { opacity: .55; cursor: wait; }
+.letter-status { margin: 0; font-size: 14px; color: var(--paper-ink-2); min-height: 1em; }
+.letter-status.is-error { color: #B42318; }
+.letter-status.is-ok { color: #1F7A4D; }
+.letter-mail { margin-left: auto; font-size: 13px; color: var(--paper-ink-2); font-family: var(--mono); }
+.letter-mail:hover { color: #8A4F00; }
+.letter-form.is-sent textarea { animation: letterSent 1.2s var(--ease); }
+@keyframes letterSent { 0% { opacity: 1; transform: none; } 40% { opacity: 0; transform: translateY(-14px); } 100% { opacity: 1; transform: none; } }
+/* in the panel overlay */
+.panel-letter { animation: cardIn .5s var(--ease) both; }
+.panel-letter .letter-paper { transform: none; padding: 34px 34px 28px; }
+.panel-letter > .contact-actions { justify-content: center; margin-top: 26px; }
+@media (max-width: 960px) {
+  .contact-grid { grid-template-columns: 1fr; gap: 48px; }
+  .contact-letter { max-width: 560px; }
+}
+@media (max-width: 720px) {
+  .letter { --lp: 20px; }
+  .letter-paper, .panel-letter .letter-paper { padding: 22px 16px 20px; background:
+    linear-gradient(to right, transparent 26px, rgba(255, 107, 107, .28) 26px, rgba(255, 107, 107, .28) 27.5px, transparent 27.5px), var(--paper); }
+  .letter-from { grid-template-columns: 1fr; gap: 6px; }
+  .letter-title { padding-right: 64px; }
+  .letter-stamp { width: 48px; height: 58px; top: 14px; right: 14px; }
+  .letter-mail { margin-left: 0; }
+}
+
+/* ---------- Lounge music speaker (desktop only, js/lounge.js) ---------- */
+.sound-btn {
+  position: absolute; transform: translateX(-50%); width: 38px; height: 38px; border-radius: var(--r-pill); padding: 0;
+  display: grid; place-items: center; cursor: pointer; color: var(--text-2);
+  background: rgba(10, 12, 16, .55); border: 1px solid var(--line-2);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  transition: color .2s var(--ease), border-color .2s var(--ease), background .2s var(--ease), opacity .25s linear, visibility 0s;
+}
+.sound-btn:hover { color: var(--amber); border-color: var(--amber); }
+.sound-btn:focus-visible { outline: 2px solid var(--amber); outline-offset: 3px; }
+.sound-btn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.sound-btn.is-on { color: var(--amber); }
+.sound-btn.is-on .w1 { animation: soundWave 1.6s ease-in-out infinite; }
+.sound-btn.is-on .w2 { animation: soundWave 1.6s ease-in-out .25s infinite; }
+@keyframes soundWave { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
+.sound-btn.is-away { visibility: hidden; pointer-events: none; transition: opacity .25s linear, visibility 0s .25s; }
+@media (max-width: 720px) { .sound-btn { display: none; } }

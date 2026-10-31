@@ -18,7 +18,7 @@ Edit a file, save it, push to GitHub - done. No code, no build step.
 | `education-and-skills/skills.txt` | Skill rows (Category: items) |
 | `education-and-skills/certifications.txt` | Certificates |
 | `why-hire-me/why-hire-me.txt` | The "why hire me" cards |
-| `contact/contact.txt` | Email, profile links, resume, contact headline and message |
+| `contact/contact.txt` | Email, profile links, resume, contact headline and message, and the `form key` that lets the Leave a message letter send to your inbox |
 
 Every .txt file starts with a short note and a copy-paste example.
 

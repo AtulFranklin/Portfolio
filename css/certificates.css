@@ -1,0 +1,346 @@
+/* certificates.css - Education (04) as award certificates, Experience (03) as framed employment certificates.
+   Markup comes from js/certificates.js. Ornaments are inline SVG symbols (#cc-corner, #cc-laurel, #cc-seal). */
+
+:root {
+  --cert-gold: #B4862F;
+  --cert-gold-soft: rgba(180, 134, 47, 0.55);
+  --cert-blackletter: "UnifrakturMaguntia", "Old English Text MT", "Times New Roman", serif;
+  --cert-script: "Pinyon Script", "Great Vibes", "Snell Roundhand", "Apple Chancery", cursive;
+  --cert-serif: "Cormorant Garamond", "Cormorant", Garamond, "Times New Roman", serif;
+  --cert-paper: #FBF8F1;
+  --cert-ink: #16130E;
+  --cert-ink-2: #5A5347;
+  --cert-navy-ink: #1B2340;
+  /* faint paper fibre, used on both certificate papers */
+  --cert-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .35  0 0 0 0 .31  0 0 0 0 .25  0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.16'/%3E%3C/svg%3E");
+}
+
+/* =========================================================
+   04 EDUCATION - award certificates
+   ========================================================= */
+.edu-grid.ecert-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px; align-items: stretch; }
+
+.ecert {
+  container-type: inline-size;
+  margin: 0;
+  border-radius: 4px;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.06) inset, 0 30px 60px -28px rgba(0, 0, 0, 0.75), 0 10px 22px -12px rgba(0, 0, 0, 0.55);
+}
+.ecert-paper {
+  position: relative;
+  height: 100%;
+  min-height: 75cqi;               /* landscape, about 4:3 like the template; grows if the text needs it */
+  --i: 4.4cqi;                     /* inset of the gold rule */
+  --c: 21cqi;                      /* size of a corner flourish */
+  padding: calc(var(--i) + 6.5cqi) calc(var(--i) + 7cqi) calc(var(--i) + 2.6cqi);
+  background:
+    radial-gradient(120% 90% at 50% 45%, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0) 70%),
+    var(--cert-grain),
+    var(--cert-paper);
+  color: var(--cert-ink);
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+  overflow: hidden;
+}
+/* the thin gold rule: four edges that start where the corner flourishes end */
+.ecert-rule, .ecert-rule::before, .ecert-rule::after { position: absolute; pointer-events: none; }
+.ecert-rule { inset: 0; }
+.ecert-rule::before, .ecert-rule::after { content: ""; border-color: var(--cert-gold); border-style: solid; border-width: 0; }
+.ecert-rule::before { /* top + bottom */
+  left: calc(var(--i) + var(--c) * 0.72); right: calc(var(--i) + var(--c) * 0.72);
+  top: var(--i); bottom: var(--i);
+  border-top-width: 2px; border-bottom-width: 2px;
+}
+.ecert-rule::after { /* left + right */
+  top: calc(var(--i) + var(--c) * 0.72); bottom: calc(var(--i) + var(--c) * 0.72);
+  left: var(--i); right: var(--i);
+  border-left-width: 2px; border-right-width: 2px;
+}
+.ecert-corner {
+  position: absolute;
+  width: var(--c); height: var(--c);
+  /* the flourish's own rule corner sits at 20/120 of its box */
+  --o: calc(var(--i) - var(--c) * 0.1667 + 1px);
+  pointer-events: none;
+  overflow: visible;
+}
+.ecert-corner.tl { top: var(--o); left: var(--o); }
+.ecert-corner.tr { top: var(--o); right: var(--o); transform: scaleX(-1); }
+.ecert-corner.bl { bottom: var(--o); left: var(--o); transform: scaleY(-1); }
+.ecert-corner.br { bottom: var(--o); right: var(--o); transform: scale(-1, -1); }
+
+.ecert-body {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+}
+.ecert-kicker {
+  margin: 0;
+  font-family: var(--cert-serif);
+  font-weight: 600;
+  font-size: max(14px, 2.5cqi);
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: #8A6421;
+}
+.ecert-school {
+  margin: 1.2cqi 0 0;
+  font-family: var(--cert-blackletter);
+  font-weight: 400;
+  font-size: clamp(28px, 6.5cqi, 42px);
+  line-height: 1.06;
+  letter-spacing: 0.005em;
+  color: #120F0B;
+  -webkit-text-stroke: 0.04em #C9A25A;
+  paint-order: stroke fill;
+  text-shadow: 0.03em 0.04em 0 rgba(185, 140, 60, 0.45);
+  text-wrap: balance;
+}
+.ecert-presented {
+  margin: 2.6cqi 0 0;
+  font-family: var(--cert-serif);
+  font-style: italic;
+  font-weight: 500;
+  font-size: max(15px, 3.1cqi);
+  color: var(--cert-ink-2);
+}
+.ecert-name {
+  margin: 0.4cqi 0 0;
+  padding: 0 3cqi 0.6cqi;
+  font-family: var(--cert-script);
+  font-size: clamp(30px, 7cqi, 44px);
+  line-height: 1.3;
+  white-space: nowrap;
+  color: var(--cert-navy-ink);
+  border-bottom: 1px solid var(--cert-gold-soft);
+  max-width: 100%;
+}
+.ecert-degree {
+  margin: 2.2cqi 0 0;
+  font-family: var(--cert-serif);
+  font-weight: 600;
+  font-size: clamp(18px, 3.7cqi, 23px);
+  line-height: 1.25;
+  color: var(--cert-ink);
+  text-wrap: balance;
+}
+.ecert-meta {
+  margin: 1.6cqi 0 0;
+  display: flex; flex-wrap: wrap; justify-content: center; align-items: center;
+  column-gap: 10px; row-gap: 2px;
+  font-family: var(--cert-serif);
+  font-weight: 600;
+  font-size: max(14px, 2.6cqi);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--cert-ink-2);
+}
+.ecert-sep { width: 5px; height: 5px; background: var(--cert-gold); transform: rotate(45deg); flex: none; }
+.ecert-laurel {
+  display: block;
+  width: clamp(54px, 12.5cqi, 80px);
+  aspect-ratio: 100 / 96;
+  margin-top: 2.4cqi;
+  overflow: visible;
+}
+
+/* =========================================================
+   03 EXPERIENCE - framed employment certificates
+   ========================================================= */
+.timeline.xcert-list { display: grid; gap: 56px; margin: 0; padding: 0; list-style: none; }
+.xcert { list-style: none; }
+.xcert-frame {
+  container-type: inline-size;
+  position: relative;
+  /* black picture frame with a slight bevel */
+  padding: clamp(10px, 2.6%, 30px);
+  background: linear-gradient(145deg, #2A2A2E 0%, #0C0C0E 22%, #050506 70%, #1C1C20 100%);
+  border-radius: 3px;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.06),
+    inset 2px 2px 0 rgba(255, 255, 255, 0.07),
+    inset -2px -2px 0 rgba(0, 0, 0, 0.6),
+    0 2px 0 rgba(0, 0, 0, 0.4),
+    0 40px 70px -30px rgba(0, 0, 0, 0.9),
+    0 18px 30px -18px rgba(0, 0, 0, 0.7);
+  transition: transform 0.5s var(--ease, ease), box-shadow 0.5s var(--ease, ease);
+}
+.xcert-mat {
+  /* dark navy mat with a faint weave */
+  padding: clamp(12px, 3.4%, 40px);
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .7  0 0 0 0 .8  0 0 0 0 1  0 0 0 .5 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.12'/%3E%3C/svg%3E"),
+    linear-gradient(160deg, #17243A, #0E1828 60%, #0B1422);
+  box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.65), inset 0 -1px 0 rgba(255, 255, 255, 0.04);
+}
+.xcert-paper {
+  container-type: inline-size;
+  position: relative;
+  background:
+    radial-gradient(130% 100% at 30% 20%, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0) 65%),
+    var(--cert-grain),
+    #F7F5EF;
+  color: #2B2B30;
+  padding: 1.6cqi;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(0, 0, 0, 0.25);
+}
+.xcert-in {
+  /* thin inner rule like the template */
+  position: relative;
+  min-height: calc(62cqi);         /* landscape on wide screens */
+  border: 1px solid rgba(43, 43, 48, 0.45);
+  outline: 1px solid rgba(43, 43, 48, 0.12);
+  outline-offset: -5px;
+  padding: 5.4cqi 6.2cqi 4.6cqi;
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font);
+}
+.xcert-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; }
+.xcert-brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.xcert-mono {
+  flex: none;
+  display: grid; place-items: center;
+  width: clamp(36px, 4.6cqi, 46px); aspect-ratio: 1;
+  border-radius: 6px 6px 6px 2px;
+  background: linear-gradient(150deg, #E8734B, #C9532F);
+  color: #FFF6EE;
+  font-weight: 700;
+  font-size: clamp(14px, 1.9cqi, 18px);
+  letter-spacing: 0.02em;
+  box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.12);
+}
+.xcert-org {
+  margin: 0;
+  max-width: 26ch;
+  font-size: max(14px, 1.45cqi);
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #3A3A40;
+}
+.xcert-title {
+  margin: 0.2cqi 0 0;
+  flex: none;
+  font-size: clamp(15px, 2.55cqi, 26px);
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: #57575E;
+  text-align: right;
+}
+.xcert-presented { margin: 5.2cqi 0 0; font-size: max(14px, 1.5cqi); color: #5D5D63; }
+.xcert-name {
+  margin: 0.4cqi 0 0;
+  width: fit-content;
+  min-width: 66%;
+  max-width: 100%;
+  padding: 0 4cqi 0.4cqi 0;
+  font-family: var(--cert-script);
+  font-size: clamp(38px, 6.6cqi, 66px);
+  line-height: 1.3;
+  color: var(--cert-navy-ink);
+  border-bottom: 1px solid rgba(43, 43, 48, 0.35);
+}
+.xcert-text {
+  margin: 2.2cqi 0 0;
+  max-width: 72ch;
+  font-size: clamp(14px, 1.6cqi, 16.5px);
+  line-height: 1.6;
+  color: #4A4A50;
+  text-wrap: pretty;
+}
+.xcert-text strong { font-weight: 600; color: #26262B; }
+.xcert-points {
+  margin: 2cqi 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 6px;
+  max-width: 78ch;
+}
+.xcert-points li {
+  position: relative;
+  padding-left: 18px;
+  font-size: clamp(14px, 1.45cqi, 15px);
+  line-height: 1.55;
+  color: #55555B;
+}
+.xcert-points li::before {
+  content: "";
+  position: absolute; left: 2px; top: 0.62em;
+  width: 5px; height: 5px;
+  background: #C9532F;
+  transform: rotate(45deg);
+}
+.xcert-foot {
+  margin-top: auto;
+  padding-top: 3cqi;
+  display: flex; justify-content: space-between; align-items: flex-end; gap: 16px;
+}
+.xcert-place { margin: 0; font-size: max(14px, 1.3cqi); color: #55555B; }
+.xcert-place .k { font-weight: 600; color: #3A3A40; }
+.xcert-place .bar { margin: 0 8px; color: #9A9AA0; }
+.xcert-seal {
+  flex: none;
+  width: clamp(64px, 10.5cqi, 112px); aspect-ratio: 1;
+  margin: -2cqi -0.6cqi -1cqi 0;
+  filter: drop-shadow(0 2px 2px rgba(120, 30, 15, 0.35));
+  overflow: visible;
+}
+
+/* hover: a subtle lift (pointer devices, motion allowed) */
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .ecert { transition: transform 0.5s var(--ease, ease), box-shadow 0.5s var(--ease, ease); }
+  .ecert.in:hover { transform: translateY(-4px); box-shadow: 0 1px 0 rgba(255, 255, 255, 0.06) inset, 0 40px 70px -28px rgba(0, 0, 0, 0.85), 0 14px 26px -12px rgba(0, 0, 0, 0.6); }
+  .xcert.in .xcert-frame:hover {
+    transform: translateY(-4px);
+    box-shadow:
+      inset 0 0 0 1px rgba(255, 255, 255, 0.06), inset 2px 2px 0 rgba(255, 255, 255, 0.07), inset -2px -2px 0 rgba(0, 0, 0, 0.6),
+      0 2px 0 rgba(0, 0, 0, 0.4), 0 52px 80px -30px rgba(0, 0, 0, 0.95), 0 24px 36px -18px rgba(0, 0, 0, 0.75);
+  }
+}
+
+/* =========================================================
+   tablet
+   ========================================================= */
+@media (max-width: 960px) {
+  .edu-grid.ecert-grid { grid-template-columns: minmax(0, 1fr); gap: 28px; max-width: 640px; margin-left: auto; margin-right: auto; }
+  .xcert-in { min-height: 0; }
+}
+
+/* =========================================================
+   phone: certificates become portrait cards
+   ========================================================= */
+@media (max-width: 720px) {
+  .timeline.xcert-list { gap: 36px; }
+  .ecert-paper { --i: 4cqi; --c: 24cqi; min-height: 0; padding: calc(var(--i) + 12cqi) calc(var(--i) + 6cqi) calc(var(--i) + 8cqi); }
+  .ecert-kicker { letter-spacing: 0.18em; }
+  .ecert-name { white-space: normal; font-size: clamp(28px, 8.6cqi, 40px); padding: 0 2cqi 1cqi; }
+  .ecert-presented { margin-top: 5cqi; }
+  .ecert-degree { margin-top: 4cqi; }
+  .ecert-meta { flex-direction: column; row-gap: 4px; margin-top: 3cqi; }
+  .ecert-sep { display: none; }
+  .ecert-laurel { margin-top: 5cqi; width: 64px; }
+
+  .xcert-frame { padding: 10px; }
+  .xcert-mat { padding: 12px; }
+  .xcert-paper { padding: 6px; }
+  .xcert-in { padding: 24px 20px 20px; outline-offset: -4px; }
+  .xcert-head { flex-direction: column; gap: 18px; }
+  .xcert-title { text-align: left; margin: 0; font-size: 15px; letter-spacing: 0.06em; }
+  .xcert-presented { margin-top: 18px; }
+  .xcert-name { max-width: 100%; font-size: clamp(34px, 11cqi, 44px); padding-bottom: 6px; }
+  .xcert-text { margin-top: 14px; }
+  .xcert-points { margin-top: 14px; gap: 8px; }
+  .xcert-foot { padding-top: 20px; align-items: center; }
+  .xcert-place { white-space: nowrap; }
+  .xcert-seal { width: 60px; margin: 0; }
+}

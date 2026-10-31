@@ -17,9 +17,12 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <!-- certificate fonts (sections 03 + 04): blackletter, script name, serif lines -->
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Pinyon+Script&family=UnifrakturMaguntia&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/styles.css" />
   <link rel="stylesheet" href="css/books.css" />
   <link rel="stylesheet" href="css/retro.css" />
+  <link rel="stylesheet" href="css/certificates.css" />
   <script type="importmap">
     {
       "imports": {
@@ -133,7 +136,7 @@
         </div>
         <figure class="portrait">
           <img src="assets/photo.jpg" alt="Portrait of Atul Abraham" width="853" height="1280" loading="lazy" />
-          <figcaption class="mono">Atul Franklin Abraham · Hoboken</figcaption>
+          <figcaption class="mono">Atul Franklin Abraham</figcaption>
         </figure>
       </div>
       <div class="wrap">
@@ -163,10 +166,13 @@
 
     <!-- ============ 05 CONTACT ============ -->
     <section class="section contact" id="contact" aria-labelledby="contact-h">
-      <div class="wrap">
-        <p class="num mono">05</p>
-        <h2 id="contact-h" class="contact-h">Looking for an intern who ships? <span>Let's talk.</span></h2>
-        <div class="contact-actions" id="contactActions"></div>
+      <div class="wrap contact-grid">
+        <div class="contact-main">
+          <p class="num mono">05</p>
+          <h2 id="contact-h" class="contact-h">Looking for an intern who ships? <span>Let's talk.</span></h2>
+          <div class="contact-actions" id="contactActions"></div>
+        </div>
+        <div class="contact-letter" id="contactLetter"></div>
       </div>
     </section>
   </main>
