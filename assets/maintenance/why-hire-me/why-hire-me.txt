@@ -12,35 +12,42 @@
 # label: shipped this year
 # text: One or two sentences that back up the stat.
 
-heading: Simulated options pricing, built into a trading simulator
+heading: I've already built a trading engine
 stat: Black-Scholes
-label: in a trading engine
-text: Built a paper-trading simulator with 5x intraday leverage, margin tracking, auto square-off, an option chain with delta, PCR and max pain, and a data fallback chain.
+label: option pricing in my own simulator
+text: Trade on Paper prices options, tracks margin on 5x leverage, squares off positions on time and switches data sources when one fails. It's the kind of system where a small bug means a wrong P&L, so I built it to keep working when a part of it doesn't.
 
 ---
 
-heading: I trade, so I know the user
+heading: I already know the trader's side of the screen
 stat: F&O
 label: stocks · intraday · futures & options
-text: I trade stocks, intraday and F&O myself, so the tools I build come from real trading needs: leverage, margin, option Greeks, stop losses and daily risk limits.
+text: I trade myself, so margin, leverage, option Greeks and stop losses aren't things I'd be learning on the job. I can talk to traders in their terms and build what they actually need.
 
 ---
 
-heading: Beyond trading, a fast learner who ships
-stat: AI + UX
-label: iterative learning · AI-assisted dev · UX sense
-text: I learn by building and iterating, I'm proficient with AI-assisted development and I think about the user experience first, so I'm just as useful on general software work as on trading tools.
+heading: I learn fast because I build to learn
+stat: 9
+label: apps and tools built in 2026
+text: A trading simulator, a productivity suite, a reminders app, a Bible reader, two games, two offline AI apps and a browser extension, across Android, iOS, desktop and the web. Each one meant picking up something new, and each one went from idea to a working product.
 
 ---
 
-heading: Comfortable on 5 operating systems
-stat: 5 OS
-label: Windows · macOS · Linux · Android · iOS
-text: I ship apps end to end in Flutter for Android and iOS (an 8-module productivity suite with native notifications, charts, themes and backup/restore) and I'm experienced with Windows, macOS and Linux.
+heading: AI makes me faster, not careless
+stat: On-device
+label: LLMs running offline on a phone
+text: I use AI-assisted development every day, and I've also built on the models directly: Gemma and Qwen running fully offline on Android. I know where these tools are strong and where they need checking, so I move fast without shipping blind.
 
 ---
 
-heading: Half the maintenance, gone
+heading: I've already made a real team faster
 stat: >50%
-label: less time on BOM upkeep
-text: Automated bill-of-materials price tracking at Whirlpool with Google Apps Script, cutting monthly maintenance work by more than half.
+label: less time on BOM upkeep at Whirlpool
+text: I automated bill-of-materials price tracking with Google Apps Script and cut the monthly work by more than half. I also learned how changes get approved across marketing, process and quality teams, which is a big part of shipping inside a company.
+
+---
+
+heading: An engineer's habits, now in code
+stat: ME + CS
+label: mechanical engineering, then computer science
+text: Mechanical engineering trained me to model systems, find where they fail and validate before anything ships. I bring that to software: think about edge cases early, test against reality and keep things simple enough to maintain.
