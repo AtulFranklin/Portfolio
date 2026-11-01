@@ -335,11 +335,6 @@
   $("#allProjectsBtn").addEventListener("click", () => openPanel("list"));
 
   /* ---------------- Scroll UI ---------------- */
-  const topbar = $("#topbar");
-  const onScroll = () => topbar.classList.toggle("scrolled", window.scrollY > 40);
-  window.addEventListener("scroll", onScroll, { passive: true });
-  onScroll();
-
   const dots = $$(".dots a");
   const sections = dots.map((d) => document.getElementById(d.dataset.dot));
   const spy = new IntersectionObserver(
