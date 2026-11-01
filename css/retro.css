@@ -399,6 +399,7 @@ button.rt-wbtn:active { box-shadow: var(--rt-sunken); }
 }
 .rt-page .rt-doc-p { margin: 0; color: var(--rt-paper-ink); }
 .rt-page .rt-doc-close { margin-top: 24px; }
+.rt-page .rt-doc-note { margin-top: 24px; }
 .rt-page .rt-doc-sign { margin: 18px 0 0; font-weight: 700; }
 .rt-page a { color: var(--rt-link); text-decoration: underline; text-underline-offset: 2px; }
 .rt-page a:hover { color: #0b2470; }

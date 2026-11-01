@@ -280,12 +280,12 @@
       title: "About me",
       html: `<div class="panel panel-about">
         <img src="${esc(S.photo)}" alt="Portrait of Atul Abraham" width="853" height="1280">
-        <div><h3>${esc(ABOUT_GREETING)}</h3><p class="lead">${esc(S.about.lead)}</p>${S.about.body.map((p) => `<p>${esc(p)}</p>`).join("")}
+        <h3>${esc(ABOUT_GREETING)}</h3><p class="lead">${esc(S.about.lead)}</p>${S.about.body.map((p) => `<p>${esc(p)}</p>`).join("")}
         ${rolesHTML}
         <div class="contact-actions" style="margin-top:22px">
           <a class="btn btn-primary btn-sm" href="${esc(S.resume)}" target="_blank" rel="noopener">${ICON.doc}Résumé</a>
           <a class="btn btn-secondary btn-sm" href="#experience" data-close>Experience ↓</a>
-        </div></div></div>`,
+        </div></div>`,
     }),
     why: () => ({ title: "Why hire Atul?", html: crtHTML() }),
     contact: () => window.LETTER ? ({

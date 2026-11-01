@@ -334,6 +334,7 @@
         '<p class="rt-doc-p">' + esc(w.text) + "</p>";
     }).join("");
     var lead = S.about && S.about.lead ? '<p class="rt-doc-lead">' + esc(S.about.lead) + "</p>" : "";
+    var note = S.whyNote ? '<p class="rt-doc-p rt-doc-note">' + esc(S.whyNote) + "</p>" : "";
     var email = LINKS.email
       ? 'write to me at <a href="' + esc(mailHref()) + '">' + esc(LINKS.email) + "</a>"
       : "write to me";
@@ -343,7 +344,7 @@
     return '<article class="rt-page">' +
       '<p class="rt-doc-date">' + esc(S.place || "") + "<br>" + esc(todayLine()) + "</p>" +
       "<h" + h + ' class="rt-doc-title">Why hire ' + esc(fullName()) + "</h" + h + ">" +
-      lead + items +
+      lead + items + note +
       '<p class="rt-doc-p rt-doc-close">Thanks for reading. If any of this fits what your team needs, ' + email + resume + ".</p>" +
       '<p class="rt-doc-sign">' + esc(fullName()) + '<span class="rt-caret" aria-hidden="true"></span></p>' +
       "</article>";

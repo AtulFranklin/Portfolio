@@ -237,12 +237,13 @@ section[id] { scroll-margin-top: 0; }
 .proof p { color: var(--text-2); margin-top: 12px; font-size: 16px; max-width: 46ch; }
 
 /* ---------- About ---------- */
-.about-grid { display: grid; grid-template-columns: 1.25fr 0.75fr; gap: 64px; align-items: start; }
+/* text wraps the photo, full width below it */
+.about-grid { display: flow-root; }
 .about-lead { font-size: 22px; line-height: 1.5; margin-top: 28px; color: var(--text); max-width: 34ch; letter-spacing: -0.01em; }
-.about-text p:not(.num):not(.about-lead) { margin-top: 18px; color: var(--text-2); max-width: 62ch; }
+.about-text p:not(.num):not(.about-lead) { margin-top: 18px; color: var(--text-2); }
 .roles { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 28px; }
 .role { padding: 6px 12px; border-radius: var(--r-pill); border: 1px solid var(--line-2); color: var(--text-2); font-size: 14px; font-weight: 500; }
-.portrait { margin: 0; position: sticky; top: 100px; }
+.portrait { margin: 0 0 32px 64px; float: right; width: 36%; }
 .portrait img {
   border-radius: var(--r-lg); width: 100%; height: auto; aspect-ratio: 4 / 5; object-fit: cover; object-position: center 25%;
   box-shadow: var(--shadow-card); filter: saturate(.92);
@@ -342,8 +343,9 @@ section[id] { scroll-margin-top: 0; }
 .panel h3 { font-size: clamp(28px, 4vw, 40px); letter-spacing: -0.03em; line-height: 1.05; font-weight: 700; }
 .panel p { margin-top: 14px; color: var(--paper-ink-2); }
 .panel .lead { color: var(--paper-ink); font-size: 19px; }
-.panel-about { display: grid; grid-template-columns: 200px 1fr; gap: 28px; align-items: start; }
-.panel-about img { width: 100%; height: auto; border-radius: 14px; aspect-ratio: 4/5; object-fit: cover; object-position: center 25%; }
+/* panel text wraps the photo too */
+.panel-about { display: flow-root; }
+.panel-about img { float: left; width: 200px; margin: 6px 28px 16px 0; height: auto; border-radius: 14px; aspect-ratio: 4/5; object-fit: cover; object-position: center 25%; }
 .panel .roles .role { border-color: rgba(22,19,14,.18); color: var(--paper-ink-2); }
 .panel .btn-secondary { color: var(--paper-ink); border-color: rgba(22,19,14,.25); }
 .panel .btn-secondary:hover { color: #8A4F00; border-color: #8A4F00; }
@@ -365,8 +367,9 @@ body.modal-open { overflow: hidden; }
 /* ---------- Responsive ---------- */
 @media (max-width: 960px) {
   :root { --section-y: 96px; }
-  .about-grid { grid-template-columns: 1fr; gap: 40px; }
-  .portrait { position: static; max-width: 360px; }
+  .about-text { display: flex; flex-direction: column; }
+  .about-text #aboutBody { order: 2; }
+  .portrait { order: 1; float: none; width: auto; max-width: 360px; margin: 32px 0 8px; }
   .job { grid-template-columns: 1fr; gap: 12px; }
   .two-col { grid-template-columns: 1fr; gap: 0; }
   .crates { grid-template-columns: 1fr; }
@@ -391,8 +394,7 @@ body.modal-open { overflow: hidden; }
   .crate-row .ct { display: block; font-size: 20px; }
   .crate-row .cb { display: block; font-size: 15px; }
   .panel { padding: 22px; }
-  .panel-about { grid-template-columns: 1fr; }
-  .panel-about img { max-width: 220px; max-height: 60vh; }
+  .panel-about img { float: none; display: block; width: 100%; max-width: 220px; max-height: 60vh; margin: 0 0 20px; }
   .card-body { padding: 18px 20px 22px; }
   .card .blurb { font-size: 16px; }
   .overlay-foot .hint { display: none; }

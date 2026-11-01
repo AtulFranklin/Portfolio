@@ -34,9 +34,9 @@ text: A trading simulator, a productivity suite, a reminders app, a Bible reader
 ---
 
 heading: AI makes me faster, not careless
-stat: On-device
-label: LLMs running offline on a phone
-text: I use AI-assisted development every day, and I've also built on the models directly: Gemma and Qwen running fully offline on Android. I know where these tools are strong and where they need checking, so I move fast without shipping blind.
+stat: Frontier AI
+label: AI-assisted dev · top frontier models
+text: I use AI-assisted development every day and I'm experienced with the top frontier models, from planning and building to reviewing code. I know where these tools are strong and where they need checking, so I move fast without shipping blind.
 
 ---
 
@@ -47,7 +47,7 @@ text: I automated bill-of-materials price tracking with Google Apps Script and c
 
 ---
 
-heading: An engineer's habits, now in code
+heading: Efficient engineering principles
 stat: ME + CS
 label: mechanical engineering, then computer science
 text: Mechanical engineering trained me to model systems, find where they fail and validate before anything ships. I bring that to software: think about edge cases early, test against reality and keep things simple enough to maintain.

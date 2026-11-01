@@ -1,0 +1,9 @@
+# WHY HIRE ME CLOSING - the last paragraph of the why hire me letter,
+# right above "Thanks for reading" (one entry only).
+#
+# note:   one paragraph (can wrap onto the next lines)
+#
+# Example line:
+# note: One more thing I want every reader to know.
+
+note: Most of my work so far has been in financial and trading systems, but I'm just as ready for general software development. Building software where a wrong number costs real money has taught me to care about accuracy, edge cases and reliability, and that carries over to whatever your team is building.

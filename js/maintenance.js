@@ -22,6 +22,7 @@
     education: { keys: ["school", "degree", "place", "dates"] },
     certifications: { keys: ["name", "issuer", "date"] },
     whyHire: { keys: ["heading", "stat", "label", "text"] },
+    whyNote: { keys: ["note"] },
     contact: { keys: ["email", "linkedin", "github", "studio", "resume", "headline", "headline accent", "message", "form key"] },
     hero: { keys: ["kicker", "title", "tagline"] },
     about: { keys: ["greeting", "photo", "lead", "paragraph", "roles"], repeat: ["paragraph"] },
@@ -360,6 +361,7 @@
       skills: getText(ROOT + "education-and-skills/skills.txt"),
       certifications: getText(ROOT + "education-and-skills/certifications.txt"),
       whyHire: getText(ROOT + "why-hire-me/why-hire-me.txt"),
+      whyNote: getText(ROOT + "why-hire-me/closing.txt"),
       contact: getText(ROOT + "contact/contact.txt"),
       hero: getText(HERO_FILE),
       about: getText(ABOUT_FILE),
@@ -417,6 +419,8 @@
     }
     var why = blocks(ROOT + "why-hire-me/why-hire-me.txt", t.whyHire, FORMATS.whyHire, ["heading", "stat", "text"]);
     if (why) S.whyHire = why.map(buildWhy);
+    var wn = single(ROOT + "why-hire-me/closing.txt", t.whyNote, FORMATS.whyNote);
+    if (wn && str(wn.note).trim()) S.whyNote = str(wn.note).trim();
     var c = single(ROOT + "contact/contact.txt", t.contact, FORMATS.contact);
     if (c) {
       S.links = {

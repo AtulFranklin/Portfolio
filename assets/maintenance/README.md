@@ -17,6 +17,7 @@ Everything I update often lives in this folder as plain text files.
 | `education-and-skills/skills.txt` | Skill rows (Category: items) |
 | `education-and-skills/certifications.txt` | Certificates |
 | `why-hire-me/why-hire-me.txt` | The "why hire me" cards |
+| `why-hire-me/closing.txt` | The last paragraph of the why hire me letter, above "Thanks for reading" |
 | `contact/contact.txt` | Email, profile links, resume, contact headline and message, and the `form key` that lets the Leave a message letter send to my inbox |
 | `domain-linker.txt` | The website domain (just the name, e.g. `atulabraham.site`) - copied into every file that needs it |
 
