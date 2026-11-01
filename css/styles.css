@@ -369,7 +369,7 @@ body.modal-open { overflow: hidden; }
   :root { --section-y: 96px; }
   .about-text { display: flex; flex-direction: column; }
   .about-text #aboutBody { order: 2; }
-  .portrait { order: 1; float: none; width: auto; max-width: 360px; margin: 32px 0 8px; }
+  .portrait { order: 1; float: none; width: 100%; max-width: 360px; margin: 32px auto 8px; align-self: center; }
   .job { grid-template-columns: 1fr; gap: 12px; }
   .two-col { grid-template-columns: 1fr; gap: 0; }
   .crates { grid-template-columns: 1fr; }
@@ -394,7 +394,7 @@ body.modal-open { overflow: hidden; }
   .crate-row .ct { display: block; font-size: 20px; }
   .crate-row .cb { display: block; font-size: 15px; }
   .panel { padding: 22px; }
-  .panel-about img { float: none; display: block; width: 100%; max-width: 220px; max-height: 60vh; margin: 0 0 20px; }
+  .panel-about img { float: none; display: block; width: 100%; max-width: 220px; max-height: 60vh; margin: 0 auto 20px; }
   .card-body { padding: 18px 20px 22px; }
   .card .blurb { font-size: 16px; }
   .overlay-foot .hint { display: none; }
