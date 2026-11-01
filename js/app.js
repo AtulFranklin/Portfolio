@@ -284,6 +284,7 @@
         ${rolesHTML}
         <div class="contact-actions" style="margin-top:22px">
           <a class="btn btn-primary btn-sm" href="${esc(S.resume)}" target="_blank" rel="noopener">${ICON.doc}Résumé</a>
+          <button type="button" class="btn btn-secondary btn-sm" data-open="contact">${ICON.mail}Contact me</button>
           <a class="btn btn-secondary btn-sm" href="#experience" data-close>Experience ↓</a>
         </div></div>`,
     }),
