@@ -1157,7 +1157,21 @@
     knob1.rotation.x = Math.PI / 2; knob1.position.set(0.22, 0.13, 0.255);
     const led = new THREE.Mesh(new THREE.CircleGeometry(0.007, 20), new THREE.MeshBasicMaterial({ color: C.up }));
     led.position.set(0.17, 0.13, 0.252);
-    crt.add(body, back, bezel, screen, crtGlass, stand, knob1, led);
+    // chin badge
+    const BADGE_FONT = '"Helvetica Neue", Helvetica, Arial, sans-serif';
+    const badgeTex = canvasTex(1024, 128, (g, w, h) => {
+      g.font = `700 64px ${BADGE_FONT}`; g.textBaseline = "middle"; g.fillStyle = "#7f765f";
+      let x = 6;
+      for (const ch of "ATUL-OS") { g.fillText(ch, x, h / 2); x += g.measureText(ch).width + 21; }
+      g.font = `400 64px ${BADGE_FONT}`; x += 22;
+      for (const ch of "2.6") { g.fillText(ch, x, h / 2); x += g.measureText(ch).width + 6; }
+    });
+    const badge = new THREE.Mesh(new THREE.PlaneGeometry(0.148, 0.0185), new THREE.MeshStandardMaterial({ map: badgeTex, transparent: true, roughness: 0.6, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }));
+    badge.position.set(-0.252 + 0.074, 0.126, 0.2503);
+    badge.castShadow = badge.receiveShadow = false;
+    badge.renderOrder = 1;
+    aoHidden.push(badge);
+    crt.add(body, back, bezel, screen, crtGlass, stand, knob1, led, badge);
     place(crt, "crt");
   }
   hot(crt, "Why hire Atul?", () => DESK.openPanel("why"));
@@ -1747,31 +1761,63 @@
   const parallaxSmooth = new THREE.Vector2(0, 0);
   let hovered = null, downAt = null, lastPointer = -1e9;
   const canvas = renderer.domElement;
-  const hotMeshes = () => hotspots.map((h) => h.group);
+  /* ---- static hit boxes ---- */
+  const HIT_PAD = 0.008, HIT_PAD_FLAT = 0.022, HIT_HOVER = 0.007, HIT_LIFT = 0.035;
+  const hitMat = new THREE.MeshBasicMaterial({ visible: false, side: THREE.DoubleSide });
+  const hitMeshes = [];
+  function hitGeo(b, c, pad, padY, up) {
+    const g = new THREE.BoxGeometry(b.max.x - b.min.x + 2 * pad, b.max.y - b.min.y + 2 * padY + up, b.max.z - b.min.z + 2 * pad);
+    g.translate((b.min.x + b.max.x) / 2 - c.x, (b.min.y + b.max.y) / 2 + up / 2 - c.y, (b.min.z + b.max.z) / 2 - c.z);
+    return g;
+  }
+  function buildHitBoxes() {
+    for (const h of hotspots) {
+      const g = h.group, ry = g.rotation.y, boxes = [];
+      // box at rest, unturned
+      g.rotation.y = 0; g.updateMatrixWorld(true);
+      if (h.noLift) g.traverse((o) => { if (o.isMesh) boxes.push(new THREE.Box3().setFromObject(o, true)); });
+      else boxes.push(new THREE.Box3().setFromObject(g, true));
+      g.rotation.y = ry; g.updateMatrixWorld(true);
+      h.hit = boxes.map((b) => {
+        const flat = b.max.y - b.min.y < 0.05, padY = flat ? HIT_PAD_FLAT : HIT_PAD, up = h.noLift ? 0 : HIT_LIFT;
+        const m = new THREE.Mesh(hitGeo(b, g.position, HIT_PAD, padY, 0), hitMat);
+        m.userData = { hot: h, geoN: m.geometry, geoH: hitGeo(b, g.position, HIT_PAD + HIT_HOVER, padY + HIT_HOVER, up) };
+        m.position.copy(g.position); m.rotation.y = ry;
+        m.castShadow = m.receiveShadow = false;
+        m.updateMatrix(); m.matrixAutoUpdate = false;
+        scene.add(m); m.updateMatrixWorld(true);
+        hitMeshes.push(m);
+        return m;
+      });
+    }
+  }
+  if (!SNAP) buildHitBoxes();
 
   function pick(clientX, clientY) {
     const r = canvas.getBoundingClientRect();
     ndc.set(((clientX - r.left) / r.width) * 2 - 1, -((clientY - r.top) / r.height) * 2 + 1);
     ray.setFromCamera(ndc, camera);
-    const hit = ray.intersectObjects(hotMeshes(), true)[0];
-    if (!hit) return null;
-    let o = hit.object;
-    while (o && !o.userData.hot) o = o.parent;
-    return o ? o.userData.hot : null;
+    const hit = ray.intersectObjects(hitMeshes, false)[0];
+    return hit ? hit.object.userData.hot : null;
   }
   function setHover(h) {
+    if (h === hovered) return;
+    // wider box while hovered
+    if (hovered && hovered.hit) for (const m of hovered.hit) m.geometry = m.userData.geoN;
+    if (h && h.hit) for (const m of h.hit) m.geometry = m.userData.geoH;
     hovered = h;
     canvas.style.cursor = h ? "pointer" : "default";
     labelEl.classList.toggle("on", !!h);
     if (h) labelEl.textContent = h.label;
   }
+  let ptrIn = false, ptrX = 0, ptrY = 0, repickAt = 0;
   canvas.addEventListener("pointermove", (e) => {
     const r = canvas.getBoundingClientRect();
     parallax.set(((e.clientX - r.left) / r.width) * 2 - 1, ((e.clientY - r.top) / r.height) * 2 - 1);
     lastPointer = performance.now();
-    if (e.pointerType === "mouse") setHover(pick(e.clientX, e.clientY));
+    if (e.pointerType === "mouse") { ptrIn = true; ptrX = e.clientX; ptrY = e.clientY; setHover(pick(ptrX, ptrY)); }
   });
-  canvas.addEventListener("pointerleave", () => { setHover(null); parallax.set(0, 0); });
+  canvas.addEventListener("pointerleave", () => { ptrIn = false; setHover(null); parallax.set(0, 0); });
   canvas.addEventListener("pointerdown", (e) => { downAt = [e.clientX, e.clientY]; lastPointer = performance.now(); });
   canvas.addEventListener("pointerup", (e) => {
     if (!downAt) return;
@@ -1892,6 +1938,8 @@
     }
 
     draw(dt);
+    // camera drifts under a still mouse
+    if (ptrIn && now - repickAt >= 100) { repickAt = now; setHover(pick(ptrX, ptrY)); }
     // only time 60 fps frames
     if (active && wasActive) governor(rawDt);
     wasActive = active;

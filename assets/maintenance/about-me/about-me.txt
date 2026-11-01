@@ -16,6 +16,6 @@ greeting: Hi, I'm Atul.
 photo: assets/photo.jpg
 lead: I'm doing my MS in Computer Science at Stevens Institute of Technology in Hoboken, and most of what I build comes from the markets: trading tools, fintech apps and the systems behind them.
 paragraph: I trade stocks, intraday and futures & options. Trade on Paper started as a way to practise Indian markets without risking money and grew into a full simulator: 5x intraday leverage, margin tracking, auto square-off, a Black-Scholes option chain, an automated scalping engine and day-trade and momentum dashboards.
-paragraph: Alongside it I have shipped a productivity suite on Android and iOS, an offline Bible reader, a transport strategy game and two offline AI apps.
-paragraph: Before CS I studied mechanical engineering at VIT Chennai, where an internship at Whirlpool had me automating bill-of-materials price tracking with Google Apps Script. Now I'm looking for internships in trading systems, fintech and software engineering.
+paragraph: Alongside it I have designed a productivity suite on Android and iOS, an offline Bible reader, a transport strategy game and two offline AI apps.
+paragraph: I came to software from mechanical engineering, so I think in systems and like automating the slow parts: at Whirlpool that meant building a bill-of-materials price tracker that cut the monthly upkeep by more than half. If you're building trading systems, fintech or software that has to work, let's talk.
 roles: Software Engineer, Fintech Builder, Trader, Flutter Developer

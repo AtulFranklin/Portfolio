@@ -26,6 +26,13 @@ text: I trade stocks, intraday and F&O myself, so the tools I build come from re
 
 ---
 
+heading: Beyond trading, a fast learner who ships
+stat: AI + UX
+label: iterative learning · AI-assisted dev · UX sense
+text: I learn by building and iterating, I'm proficient with AI-assisted development and I think about the user experience first, so I'm just as useful on general software work as on trading tools.
+
+---
+
 heading: Comfortable on 5 operating systems
 stat: 5 OS
 label: Windows · macOS · Linux · Android · iOS
