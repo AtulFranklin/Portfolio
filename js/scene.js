@@ -1140,38 +1140,50 @@
   const crtScreenMat = new THREE.MeshBasicMaterial({ map: crtTex, toneMapped: false });
   let crtGlass;
   {
-    const body = new THREE.Mesh(new RoundedBoxGeometry(0.62, 0.5, 0.5, 7, 0.05), M.beige);
+    // same body as the atul-os computer
+    const caseMat = new THREE.MeshStandardMaterial({ color: "#CECBC0", roughness: 0.5, normalMap: T.micro, normalScale: v2(0.1) });
+    const caseDark = new THREE.MeshStandardMaterial({ color: "#B6B1A3", roughness: 0.58, normalMap: T.micro, normalScale: v2(0.1) });
+    const bezelMat = new THREE.MeshStandardMaterial({ color: "#2B2924", roughness: 0.7 });
+    const body = new THREE.Mesh(new RoundedBoxGeometry(0.62, 0.5, 0.5, 6, 0.028), caseMat);
     body.position.y = 0.33;
-    const back = new THREE.Mesh(new RoundedBoxGeometry(0.46, 0.38, 0.22, 5, 0.04), M.beige);
+    const back = new THREE.Mesh(new RoundedBoxGeometry(0.46, 0.38, 0.22, 5, 0.03), caseMat);
     back.position.set(0, 0.32, -0.3);
-    const bezel = new THREE.Mesh(new RoundedBoxGeometry(0.54, 0.42, 0.02, 4, 0.012), M.beigeDark);
-    bezel.position.set(0, 0.35, 0.252);
-    const screen = new THREE.Mesh(new THREE.PlaneGeometry(0.46, 0.345), crtScreenMat);
-    screen.position.set(0, 0.355, 0.265);
-    crtGlass = new THREE.Mesh(new THREE.PlaneGeometry(0.46, 0.345), M.glass);   // reflections on the tube face
-    crtGlass.position.set(0, 0.355, 0.2665);
+    // dark inner bezel
+    const bezel = new THREE.Mesh(new RoundedBoxGeometry(0.579, 0.438, 0.012, 3, 0.01), bezelMat);
+    bezel.position.set(0, 0.336, 0.247);
+    const screen = new THREE.Mesh(new THREE.PlaneGeometry(0.556, 0.417), crtScreenMat);
+    screen.position.set(0, 0.336, 0.2535);
+    crtGlass = new THREE.Mesh(new THREE.PlaneGeometry(0.556, 0.417), M.glass);   // reflections on the tube face
+    crtGlass.position.set(0, 0.336, 0.254);
     crtGlass.renderOrder = 2;
-    const stand = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.2, 0.08, 56), M.beigeDark);
+    const stand = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.2, 0.08, 56), caseDark);
     stand.position.y = 0.04;
-    const knob1 = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.02, 24), M.black);
-    knob1.rotation.x = Math.PI / 2; knob1.position.set(0.22, 0.13, 0.255);
-    const led = new THREE.Mesh(new THREE.CircleGeometry(0.007, 20), new THREE.MeshBasicMaterial({ color: C.up }));
-    led.position.set(0.17, 0.13, 0.252);
-    // chin badge
+    // chin: badge, vents, led, power button
+    const CHIN_Y = 0.1;
     const BADGE_FONT = '"Helvetica Neue", Helvetica, Arial, sans-serif';
     const badgeTex = canvasTex(1024, 128, (g, w, h) => {
-      g.font = `700 64px ${BADGE_FONT}`; g.textBaseline = "middle"; g.fillStyle = "#7f765f";
+      g.font = `700 64px ${BADGE_FONT}`; g.textBaseline = "middle"; g.fillStyle = "#8D846F";
       let x = 6;
       for (const ch of "ATUL-OS") { g.fillText(ch, x, h / 2); x += g.measureText(ch).width + 21; }
       g.font = `400 64px ${BADGE_FONT}`; x += 22;
       for (const ch of "2.6") { g.fillText(ch, x, h / 2); x += g.measureText(ch).width + 6; }
     });
-    const badge = new THREE.Mesh(new THREE.PlaneGeometry(0.148, 0.0185), new THREE.MeshStandardMaterial({ map: badgeTex, transparent: true, roughness: 0.6, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }));
-    badge.position.set(-0.252 + 0.074, 0.126, 0.2503);
-    badge.castShadow = badge.receiveShadow = false;
-    badge.renderOrder = 1;
-    aoHidden.push(badge);
-    crt.add(body, back, bezel, screen, crtGlass, stand, knob1, led, badge);
+    const decal = (map, w, h) => new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshStandardMaterial({ map, transparent: true, roughness: 0.6, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }));
+    const badge = decal(badgeTex, 0.08, 0.01);
+    badge.position.set(-0.287 + 0.04, CHIN_Y, 0.2503);
+    const ventTex = canvasTex(512, 32, (g, w, h) => {
+      for (let x = 0; x < w; x += 18) { g.fillStyle = "#A9A08A"; g.fillRect(x, 0, 5, h); g.fillStyle = "#ECE6D6"; g.fillRect(x + 5, 0, 2, h); }
+    });
+    const vents = decal(ventTex, 0.127, 0.009);
+    vents.position.set(0.171, CHIN_Y, 0.2503);
+    [badge, vents].forEach((m) => { m.castShadow = m.receiveShadow = false; m.renderOrder = 1; aoHidden.push(m); });
+    const led = new THREE.Mesh(new THREE.CircleGeometry(0.0035, 20), new THREE.MeshBasicMaterial({ color: "#7DD36A" }));
+    led.position.set(0.248, CHIN_Y, 0.2505);
+    const knob1 = new THREE.Mesh(new RoundedBoxGeometry(0.026, 0.015, 0.008, 2, 0.003), new THREE.MeshStandardMaterial({ color: "#CBC3AE", roughness: 0.5 }));
+    knob1.position.set(0.273, CHIN_Y, 0.251);
+    const slot = new THREE.Mesh(new THREE.PlaneGeometry(0.009, 0.0025), new THREE.MeshStandardMaterial({ color: "#9D937B", roughness: 0.7 }));
+    slot.position.set(0.273, CHIN_Y, 0.2552);
+    crt.add(body, back, bezel, screen, crtGlass, stand, knob1, slot, led, badge, vents);
     place(crt, "crt");
   }
   hot(crt, "Why hire Atul?", () => DESK.openPanel("why"));

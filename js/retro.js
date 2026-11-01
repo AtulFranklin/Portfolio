@@ -485,8 +485,9 @@
       '<div class="rt-recess"><div class="rt-screen" data-stage="' + stage + '">' + inner + "</div></div>" +
       '<div class="rt-chin">' +
       '<span class="rt-badge" aria-hidden="true">ATUL-OS <em>2.6</em></span>' +
+      '<span class="rt-vents" aria-hidden="true"></span>' +
       '<span class="rt-led" aria-hidden="true"></span>' +
-      '<button type="button" class="rt-power" data-rt-act="' + power + '" aria-label="' + (power === "power" ? "Power button" : "Shut down") + '"></button>' +
+      '<button type="button" class="rt-power" data-rt-act="' + power + '" aria-label="' + (power === "power" ? "Power button" : "Shut down") + '"><span aria-hidden="true"></span></button>' +
       "</div></div>";
   }
 
