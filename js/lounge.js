@@ -5,7 +5,7 @@
   if (!desktop) return;
 
   const SRC = "assets/lounge_music.mp3";
-  const MAX = 0.2;           // 20% volume in the lounge
+  const MAX = 0.15;          // 15% volume in the lounge
   const STORE = "lounge-muted";
   const hero = document.getElementById("top");
   const topbar = document.getElementById("topbar");
