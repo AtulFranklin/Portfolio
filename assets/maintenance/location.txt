@@ -1,0 +1,17 @@
+# LOCATION - where I am right now (one entry only).
+# Shows top-left under my name, in the footer and on the retro computer letter.
+# Also drives the weather and local time under my name.
+#
+# place:  City, State, Country (required)
+# lat:    latitude for the weather, e.g. 40.7440 (optional)
+# lon:    longitude for the weather, e.g. -74.0324 (optional)
+#
+# Leave lat and lon out to look the spot up from place.
+# education.txt keeps each school's own place.
+#
+# Copy-paste example (remove the # at the start of each line):
+# place: Hoboken, NJ, USA
+# lat: 40.7440
+# lon: -74.0324
+
+place: Hoboken, NJ, USA

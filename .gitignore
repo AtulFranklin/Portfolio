@@ -13,3 +13,6 @@ Thumbs.db
 GODADDY-SETUP.txt
 SEO-PLAN.md
 atulabraham.site.txt
+
+# python cache
+__pycache__/

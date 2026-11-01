@@ -8,7 +8,8 @@
   var ABOUT_DIR = ROOT + "about-me/";
   var HERO_FILE = ROOT + "hero/hero.txt";
   var ABOUT_FILE = ABOUT_DIR + "about-me.txt";
-  var SCRIPTS = ["js/books.js", "js/retro.js", "js/app.js", "js/stats.js", "js/certificates.js", "js/letter.js", "js/lounge.js", "js/scene.js"];
+  var LOCATION_FILE = ROOT + "location.txt";
+  var SCRIPTS = ["js/books.js", "js/retro.js", "js/app.js", "js/stats.js", "js/weather.js", "js/certificates.js", "js/letter.js", "js/lounge.js", "js/scene.js"];
   var DEFAULT_COLOR = "#F5B041";
   var ICONS = ["fintech", "apps", "tools", "engineering", "star"];
   var FETCH_TIMEOUT_MS = 10000;
@@ -26,6 +27,7 @@
     contact: { keys: ["email", "linkedin", "github", "studio", "resume", "headline", "headline accent", "message", "form key"] },
     hero: { keys: ["kicker", "title", "tagline"] },
     about: { keys: ["greeting", "photo", "lead", "paragraph", "roles"], repeat: ["paragraph"] },
+    location: { keys: ["place", "lat", "lon"] },
   };
 
   /* ---- text helpers ---- */
@@ -248,6 +250,29 @@
       roles: splitTags(e.roles),
     };
   }
+  // number in -max..max, empty = null
+  function parseCoord(v, max) {
+    var s = str(v).trim();
+    if (!s) return { value: null, ok: true };
+    var n = Number(s);
+    if (!/^[-+]?\d+(\.\d+)?$/.test(s) || !isFinite(n) || Math.abs(n) > max) return { value: null, ok: false };
+    return { value: n, ok: true };
+  }
+  /* location: place + optional lat/lon pair */
+  function buildLocation(e) {
+    e = e || {};
+    var lat = parseCoord(e.lat, 90);
+    var lon = parseCoord(e.lon, 180);
+    var pairOk = (lat.value == null) === (lon.value == null);
+    return {
+      place: str(e.place).trim(),
+      lat: pairOk ? lat.value : null,
+      lon: pairOk ? lon.value : null,
+      _latOk: lat.ok,
+      _lonOk: lon.ok,
+      _pairOk: pairOk,
+    };
+  }
 
   var API = {
     FORMATS: FORMATS,
@@ -262,6 +287,7 @@
     buildProject: buildProject,
     buildHero: buildHero,
     buildAbout: buildAbout,
+    buildLocation: buildLocation,
   };
 
   // Node: export parsers only
@@ -365,6 +391,7 @@
       contact: getText(ROOT + "contact/contact.txt"),
       hero: getText(HERO_FILE),
       about: getText(ABOUT_FILE),
+      location: getText(LOCATION_FILE),
     };
     var names = Object.keys(files);
     return Promise.all([books].concat(names.map(function (k) { return files[k]; }))).then(function (res) {
@@ -398,10 +425,23 @@
     if (a.roles.length) S.roles = a.roles; else missing("roles");
   }
 
+  function applyLocation(text) {
+    var e = single(LOCATION_FILE, text, FORMATS.location);
+    if (!e) return;
+    var l = buildLocation(e);
+    if (!l._latOk) report(LOCATION_FILE, "lat is not a number between -90 and 90, ignored", "warn");
+    if (!l._lonOk) report(LOCATION_FILE, "lon is not a number between -180 and 180, ignored", "warn");
+    else if (l._latOk && !l._pairOk) report(LOCATION_FILE, "lat and lon go together, looking the spot up from place", "warn");
+    if (l.place) S.place = l.place;
+    else report(LOCATION_FILE, "place is empty, using the value from js/content.js", "warn");
+    S.location = { place: str(S.place), lat: l.lat, lon: l.lon };
+  }
+
   // write loaded data into window.SITE
   function apply(books, t) {
     applyHero(t.hero);
     applyAbout(t.about);
+    applyLocation(t.location);
     if (books) {
       S.crates = books.map(function (b) { return b.crate; });
       S.projects = [].concat.apply([], books.map(function (b) { return b.projects; }));
@@ -446,6 +486,16 @@
     S.about = S.about || { greeting: "", lead: "", body: [] };
     if (!Array.isArray(S.about.body)) S.about.body = [];
     if (S.resume == null) S.resume = "";
+    if (!S.location || typeof S.location !== "object") S.location = { place: str(S.place), lat: null, lon: null };
+    if (!S.location.place) S.location.place = str(S.place);
+    if (typeof S.location.lat !== "number" || typeof S.location.lon !== "number") S.location.lat = S.location.lon = null;
+  }
+
+  // place text in brand + footer
+  function fillPlace() {
+    if (!S.place) return;
+    var els = document.querySelectorAll("[data-place]");
+    for (var i = 0; i < els.length; i++) els[i].textContent = S.place;
   }
 
   // load site scripts in order (async=false keeps order)
@@ -523,6 +573,7 @@
     if (started) return;
     started = true;
     try { ensureDefaults(); } catch (_) { /* keep going */ }
+    try { fillPlace(); } catch (_) { /* keep going */ }
     try { resolveReady(S); } catch (_) { /* keep going */ }
     try { loadScripts(); } catch (err) { console.error("[maintenance] could not start the site scripts", err); }
     try { maybeBanner(); } catch (_) { /* banner is optional */ }

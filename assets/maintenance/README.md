@@ -19,6 +19,7 @@ Everything I update often lives in this folder as plain text files.
 | `why-hire-me/why-hire-me.txt` | The "why hire me" cards |
 | `why-hire-me/closing.txt` | The last paragraph of the why hire me letter, above "Thanks for reading" |
 | `contact/contact.txt` | Email, profile links, resume, contact headline and message, and the `form key` that lets the Leave a message letter send to my inbox |
+| `location.txt` | Where I am: the place under my name (top-left), in the footer and on the retro computer letter, plus the weather and local time under my name |
 | `domain-linker.txt` | The website domain (just the name, e.g. `atulabraham.site`) - copied into every file that needs it |
 
 Every .txt file starts with a short note and a copy-paste example.
@@ -61,6 +62,14 @@ Every .txt file starts with a short note and a copy-paste example.
 - Hide a whole book: remove its line from `projects/books.txt`, or put `#` in front of it. The folder stays, so it can come back later.
 - Hide one project (or job, card, certificate): put `#` at the start of each of its lines.
 
+## Change the location
+
+1. Open `location.txt` and change `place:` (City, State, Country, e.g. `place: Jersey City, NJ, USA`).
+2. Optional: add `lat:` and `lon:` lines for an exact weather spot. Leave them out and the site looks the place up by name.
+3. Preview or commit. `preview.command`, `link-domain.command` and every commit copy the place into `index.html` and `js/content.js`.
+4. The weather and local time under my name follow the new place on their own.
+
+`education.txt` keeps each school's own `place:`, so changing my location doesn't move my schools.
 
 ## Change the domain
 
