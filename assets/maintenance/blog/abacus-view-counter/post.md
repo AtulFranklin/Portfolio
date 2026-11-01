@@ -3,7 +3,7 @@ date: 2026-10-28
 summary: My portfolio is static HTML on GitHub Pages with no backend. Abacus gives me a free view counter with one fetch call, here's how I set it up.
 tags: javascript, html, github-pages, web
 ---
-My site is plain HTML on GitHub Pages, so there's no server of my own to count visits. I didn't want a full analytics dashboard either, just a small "views" number under my name. Abacus is a free counting API that does exactly that: you call a URL, it adds one and sends back the new number.
+My site is mainly HTML and JS, so there's no server of my own to count visits. I didn't want a full analytics dashboard either, just a small "views" number under my name. Abacus is a free counting API that does exactly that: you call a URL, it adds one and sends back the new number.
 
 ## How Abacus works
 

@@ -20,7 +20,7 @@ CONTACT = ROOT / "assets/maintenance/contact/contact.txt"
 
 NAME = "Atul Abraham"
 FULL_NAME = "Atul Franklin Abraham"
-BLOG_LEAD = "Notes on things I build and fix."
+BLOG_LEAD = "Notes on things I build as well as my other hobbies."
 PLACE_FALLBACK = "Hoboken, NJ, USA"
 RESUME_FALLBACK = "assets/Atul_Abraham_Resume.pdf"
 FIELDS = ("title", "date", "summary", "tags", "draft")
