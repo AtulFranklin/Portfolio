@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # blog build: assets/maintenance/blog/<slug>/post.md -> blog/
+import hashlib
 import html
 import json
 import math
@@ -431,6 +432,12 @@ def ld_json(data):
 
 
 # ---- page shell ----
+# file hash for cache busting
+def ver(rel):
+    f = ROOT / rel
+    return hashlib.md5(f.read_bytes()).hexdigest()[:8] if f.exists() else "1"
+
+
 
 def page(c, title, desc, url, og_type, image, ld, main, current, scripts="", extra_meta=""):
     nav_cur = ' aria-current="page"' if current == "page" else ' aria-current="true"'
@@ -472,8 +479,8 @@ def page(c, title, desc, url, og_type, image, ld, main, current, scripts="", ext
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/css/styles.css" />
-  <link rel="stylesheet" href="/css/blog.css" />
+  <link rel="stylesheet" href="/css/styles.css?v={ver("css/styles.css")}" />
+  <link rel="stylesheet" href="/css/blog.css?v={ver("css/blog.css")}" />
 {scripts}</head>
 <body class="blog-page">
   <a class="skip" href="#main">Skip to content</a>
@@ -615,7 +622,7 @@ def build_post(c, p, posts):
     if not p["tags"]:
         del ld["keywords"]
     extra = "".join(f'  <meta property="article:tag" content="{esc(t)}" />\n' for t in p["tags"])
-    scripts = '  <script src="/js/blog.js" defer></script>\n'
+    scripts = f'  <script src="/js/blog.js?v={ver("js/blog.js")}" defer></script>\n'
     html_ = page(c, f"{p['title']} - {NAME}", summary, url, "article", image, ld, main, "true", scripts, extra)
     return html_, md.copies
 
