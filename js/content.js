@@ -11,17 +11,18 @@ window.SITE = {
   hero: {
     title: "Atul's Portfolio",
     tagline:
-      "I’m a mechanical engineer turned software developer, currently pursuing an MS in Computer Science at Stevens Institute of Technology. I build trading tools, AI tools, and applications.",
+      "I’m a Computer Science master’s student at Stevens Institute of Technology and I trade stocks, intraday and F&O. I build trading tools, fintech apps and offline AI tools.",
   },
 
-  roles: ["Software Engineer", "Fintech Builder", "Flutter Developer", "Mechanical Engineer"],
+  roles: ["Software Engineer", "Fintech Builder", "Trader", "Flutter Developer"],
 
   about: {
     lead:
-      "I studied mechanical engineering at VIT Chennai, spent my internships on factory floors in quality and cost engineering, and kept finding that the part I enjoyed most was writing the script that made the spreadsheet do the work.",
+      "I'm doing my MS in Computer Science at Stevens Institute of Technology in Hoboken, and most of what I build comes from the markets: trading tools, fintech apps and the systems behind them.",
     body: [
-      "At Whirlpool I automated bill-of-materials price tracking with Google Apps Script and cut the monthly upkeep by more than half. That was the turn: since then I have shipped a paper-trading simulator for Indian markets, a productivity suite on Android and iOS, an offline Bible reader, a transport strategy game and two offline AI apps.",
-      "Now I am doing my MS in Computer Science at Stevens Institute of Technology in Hoboken, looking for internships in fintech, trading systems and software engineering.",
+      "I trade stocks, intraday and futures & options. Trade on Paper started as a way to practise Indian markets without risking money and grew into a full simulator: 5x intraday leverage, margin tracking, auto square-off, a Black-Scholes option chain, an automated scalping engine and day-trade and momentum dashboards.",
+      "Alongside it I have shipped a productivity suite on Android and iOS, an offline Bible reader, a transport strategy game and two offline AI apps.",
+      "Before CS I studied mechanical engineering at VIT Chennai, where an internship at Whirlpool had me automating bill-of-materials price tracking with Google Apps Script. Now I'm looking for internships in trading systems, fintech and software engineering.",
     ],
   },
 

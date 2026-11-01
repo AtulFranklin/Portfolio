@@ -819,7 +819,7 @@
       ["(c) 2026 " + fullName() + ". All rights reserved.", 50],
       ["", 20],
       ["@mem", 40],
-      ["CPU 0: mechanical engineer, retooled for code", 60],
+      ["CPU 0: trader, MS CS at Stevens", 60],
       ["Probing devices", 50],
       ["  sd0  B.TECH   VIT Chennai, 2025 ..", 40, " ok"],
       ["  sd1  MS CS    Stevens, 2028 ......", 40, " spinning up"],

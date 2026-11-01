@@ -7,6 +7,6 @@
 # Example line:
 # kicker: Open to SWE & fintech internships
 
-kicker: Open to SWE & fintech internships
+kicker: Open to SWE, fintech & trading internships
 title: Atul's Portfolio
-tagline: I’m a mechanical engineer turned software developer, currently pursuing an MS in Computer Science at Stevens Institute of Technology. I build trading tools, AI tools, and applications.
+tagline: I’m a Computer Science master’s student at Stevens Institute of Technology and I trade stocks, intraday and F&O. I build trading tools, fintech apps and offline AI tools.

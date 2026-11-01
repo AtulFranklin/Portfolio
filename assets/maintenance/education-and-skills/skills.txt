@@ -7,9 +7,10 @@
 # Copy-paste example (remove the # at the start):
 # Databases: PostgreSQL, SQLite
 
-Languages: Python, Java, Dart, SQL, HTML/CSS, Google Apps Script
 Trading: Experienced in stock, intraday, and futures & derivatives (F&O) trading
-Platforms: Windows, macOS, Linux, Android, iOS
+Languages: Python, Java, Dart, SQL, HTML/CSS, Google Apps Script
 Mobile & cloud: Flutter, Firebase, Kotlin (Android), Riverpod
-Tools: Git, Microsoft 365, Google Workspace, SOLIDWORKS, ANSYS Workbench
-Ways of working: Agile, UI/UX design, quality management, technical documentation, AI-assisted development
+Platforms: Windows, macOS, Linux, Android, iOS
+Tools: Git, Microsoft 365, Google Workspace
+Ways of working: Agile, UI/UX design, technical documentation, AI-assisted development
+Engineering: SOLIDWORKS, ANSYS Workbench, quality management
