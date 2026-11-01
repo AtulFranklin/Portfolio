@@ -47,6 +47,8 @@
     .join("");
 
   /* ---------------- 02 Why hire (CRT) ---------------- */
+  const WHY_TITLE = String(S.whyTitle || "").trim() || "Why hire Atul?";
+  const WHY_PROMPT = WHY_TITLE.toLowerCase().replace(/[^\p{L}\p{N}\s_]+/gu, "").trim().replace(/\s+/g, "_") || "why_hire_atul";
   function sparkSVG() {
     // candlesticks, fixed pattern
     let v = 20, out = "";
@@ -63,7 +65,7 @@
   }
   function crtHTML() {
     return `<div class="crt"><div class="crt-screen">
-      <div class="crt-top mono"><span>&gt; why_hire_atul<span class="cursor"></span></span>${sparkSVG()}</div>
+      <div class="crt-top mono"><span>&gt; ${esc(WHY_PROMPT)}<span class="cursor"></span></span>${sparkSVG()}</div>
       <div class="crt-grid">${S.whyHire
         .map((w) => `<div class="proof"><div class="stat">${esc(w.stat)}</div><span class="label mono">${esc(w.label)}</span><p>${esc(w.text)}</p></div>`)
         .join("")}</div>
@@ -288,7 +290,7 @@
           <a class="btn btn-secondary btn-sm" href="#experience" data-close>Experience ↓</a>
         </div></div>`,
     }),
-    why: () => ({ title: "Why hire Atul?", html: crtHTML() }),
+    why: () => ({ title: WHY_TITLE, html: crtHTML() }),
     contact: () => window.LETTER ? ({
       // letter, old panel fallback
       title: "Leave a message",

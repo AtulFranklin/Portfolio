@@ -22,7 +22,7 @@
     experience: { keys: ["org", "role", "place", "dates", "points"], list: "points" },
     education: { keys: ["school", "degree", "place", "dates"] },
     certifications: { keys: ["name", "issuer", "date"] },
-    whyHire: { keys: ["heading", "stat", "label", "text"] },
+    whyHire: { keys: ["title", "heading", "stat", "label", "text"] },
     whyNote: { keys: ["note"] },
     contact: { keys: ["email", "linkedin", "github", "studio", "resume", "headline", "headline accent", "message", "form key"] },
     hero: { keys: ["kicker", "title", "tagline"] },
@@ -235,6 +235,16 @@
   }
   function buildCert(e) { return [str(e.name), str(e.issuer), str(e.date)]; }
   function buildWhy(e) { return { heading: str(e.heading), stat: str(e.stat), label: str(e.label), text: str(e.text) }; }
+  // settings block = title only, not a card
+  function isWhySettings(e) {
+    return !!e && Object.prototype.hasOwnProperty.call(e, "title") &&
+      !["heading", "stat", "label", "text"].some(function (k) { return str(e[k]).trim(); });
+  }
+  // h2 text, adds the section dot
+  function whyHeading(title) {
+    var t = str(title).trim();
+    return /[?!.]$/.test(t) ? t : t + ".";
+  }
   /* hero/about: empty = not set, keeps content.js value */
   function buildHero(e) {
     e = e || {};
@@ -288,6 +298,8 @@
     buildHero: buildHero,
     buildAbout: buildAbout,
     buildLocation: buildLocation,
+    isWhySettings: isWhySettings,
+    whyHeading: whyHeading,
   };
 
   // Node: export parsers only
@@ -339,14 +351,18 @@
   }
 
   // parse block file, skip entries without required field
-  function blocks(path, text, format, required) {
+  // take(e) = true pulls an entry out (settings block)
+  function blocks(path, text, format, required, take) {
     if (text == null) return null;
     try {
       var res = parseBlocks(text, format);
       reportWarnings(path, res.warnings);
-      return res.entries.filter(function (e, i) {
+      var n = 0;
+      return res.entries.filter(function (e) {
+        if (take && take(e)) return false;
+        n++;
         var ok = required.some(function (k) { return str(e[k]).trim(); });
-        if (!ok) report(path, "entry " + (i + 1) + " has no " + required.join(" or ") + ", skipped", "warn");
+        if (!ok) report(path, "entry " + n + " has no " + required.join(" or ") + ", skipped", "warn");
         return ok;
       });
     } catch (err) {
@@ -437,6 +453,30 @@
     S.location = { place: str(S.place), lat: l.lat, lon: l.lon };
   }
 
+  /* ---- why hire: settings block + cards ---- */
+  function applyWhy(text) {
+    var path = ROOT + "why-hire-me/why-hire-me.txt";
+    var title = null;
+    var why = blocks(path, text, FORMATS.whyHire, ["heading", "stat", "text"], function (e) {
+      if (!isWhySettings(e)) return false;
+      if (title != null) report(path, 'a second "title:" block, only the first one is used', "warn");
+      else title = str(e.title).trim();
+      return true;
+    });
+    if (!why) return;
+    why.forEach(function (e) {
+      if (!Object.prototype.hasOwnProperty.call(e, "title")) return;
+      // title stuck to a card
+      if (title == null) {
+        title = str(e.title).trim();
+        report(path, 'put a --- line under "title:" so it sits in its own block above the first card', "warn");
+      } else report(path, '"title:" only goes in the block at the top, the one inside a card is ignored', "warn");
+    });
+    if (title) S.whyTitle = title;
+    else report(path, title == null ? 'no "title:" at the top, using the value from js/content.js' : "title is empty, using the value from js/content.js", "warn");
+    S.whyHire = why.map(buildWhy);
+  }
+
   // write loaded data into window.SITE
   function apply(books, t) {
     applyHero(t.hero);
@@ -457,8 +497,7 @@
       reportWarnings(ROOT + "education-and-skills/skills.txt", sk.warnings);
       S.skills = sk.rows;
     }
-    var why = blocks(ROOT + "why-hire-me/why-hire-me.txt", t.whyHire, FORMATS.whyHire, ["heading", "stat", "text"]);
-    if (why) S.whyHire = why.map(buildWhy);
+    applyWhy(t.whyHire);
     var wn = single(ROOT + "why-hire-me/closing.txt", t.whyNote, FORMATS.whyNote);
     if (wn && str(wn.note).trim()) S.whyNote = str(wn.note).trim();
     var c = single(ROOT + "contact/contact.txt", t.contact, FORMATS.contact);
@@ -486,6 +525,7 @@
     S.about = S.about || { greeting: "", lead: "", body: [] };
     if (!Array.isArray(S.about.body)) S.about.body = [];
     if (S.resume == null) S.resume = "";
+    S.whyTitle = str(S.whyTitle).trim() || "Why hire Atul?";
     if (!S.location || typeof S.location !== "object") S.location = { place: str(S.place), lat: null, lon: null };
     if (!S.location.place) S.location.place = str(S.place);
     if (typeof S.location.lat !== "number" || typeof S.location.lon !== "number") S.location.lat = S.location.lon = null;
@@ -496,6 +536,16 @@
     if (!S.place) return;
     var els = document.querySelectorAll("[data-place]");
     for (var i = 0; i < els.length; i++) els[i].textContent = S.place;
+  }
+
+  // why title in links, h2, dot label
+  function fillWhyTitle() {
+    var els = document.querySelectorAll("[data-why-title]");
+    for (var i = 0; i < els.length; i++) {
+      var v = els[i].getAttribute("data-why-title");
+      if (v === "label") els[i].setAttribute("aria-label", S.whyTitle);
+      else els[i].textContent = v === "heading" ? whyHeading(S.whyTitle) : S.whyTitle;
+    }
   }
 
   // load site scripts in order (async=false keeps order)
@@ -574,6 +624,7 @@
     started = true;
     try { ensureDefaults(); } catch (_) { /* keep going */ }
     try { fillPlace(); } catch (_) { /* keep going */ }
+    try { fillWhyTitle(); } catch (_) { /* keep going */ }
     try { resolveReady(S); } catch (_) { /* keep going */ }
     try { loadScripts(); } catch (err) { console.error("[maintenance] could not start the site scripts", err); }
     try { maybeBanner(); } catch (_) { /* banner is optional */ }

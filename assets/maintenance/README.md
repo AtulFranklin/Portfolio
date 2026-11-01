@@ -16,11 +16,12 @@ Everything I update often lives in this folder as plain text files.
 | `education-and-skills/education.txt` | Schools and degrees |
 | `education-and-skills/skills.txt` | Skill rows (Category: items) |
 | `education-and-skills/certifications.txt` | Certificates |
-| `why-hire-me/why-hire-me.txt` | The "why hire me" cards |
+| `why-hire-me/why-hire-me.txt` | The section title (`title:` in the first block - used on the desk links, the section heading, the retro computer document and the 3D computer screen), then the "why hire me" cards |
 | `why-hire-me/closing.txt` | The last paragraph of the why hire me letter, above "Thanks for reading" |
 | `contact/contact.txt` | Email, profile links, resume, contact headline and message, and the `form key` that lets the Leave a message letter send to my inbox |
 | `location.txt` | Where I am: the place under my name (top-left), in the footer and on the retro computer letter, plus the weather and local time under my name |
 | `domain-linker.txt` | The website domain (just the name, e.g. `atulabraham.site`) - copied into every file that needs it |
+| `blog/<post>/post.md` | Blog posts: one folder per post, the folder name is the web address (`/blog/<post>/`). `blog/_new-post-template/` is a blank post to copy |
 
 Every .txt file starts with a short note and a copy-paste example.
 
@@ -43,6 +44,13 @@ Every .txt file starts with a short note and a copy-paste example.
 - New photo: drop it in the `about-me` folder and write its file name after `photo:` (or keep `photo: assets/photo.jpg` and replace that file).
 - If a field is left empty, the site keeps its built-in text for it and the preview banner flags it.
 
+## Change the why hire me title
+
+- The first block of `why-hire-me/why-hire-me.txt` is `title: Why hire Atul?` followed by a `---` line. It is not a card.
+- That one line names the section everywhere: the desk links, the section heading, the retro computer document and window, and the 3D computer screen.
+- The section heading adds a full stop unless the title already ends in `?`, `!` or `.`. On the computer screens the last word goes on its own big line.
+- Leave it out or empty and the site uses "Why hire Atul?" (the preview banner flags it).
+
 ## Add a project
 
 1. Open the book's `projects.txt`, for example `projects/tools-and-ai/projects.txt`.
@@ -61,6 +69,16 @@ Every .txt file starts with a short note and a copy-paste example.
 
 - Hide a whole book: remove its line from `projects/books.txt`, or put `#` in front of it. The folder stays, so it can come back later.
 - Hide one project (or job, card, certificate): put `#` at the start of each of its lines.
+
+## Write a blog post
+
+1. Copy the `blog/_new-post-template` folder and rename the copy, for example `blog/my-first-post`. The folder name becomes the address `atulabraham.site/blog/my-first-post/`, so use lowercase and hyphens, no spaces.
+2. In `post.md`, fill in the header: `title`, `date` (YYYY-MM-DD), `summary` (one or two sentences for the list and Google) and `tags` (comma separated). Remove the `draft: yes` line when it's ready to go live.
+3. Below the `---` line, write the post in markdown: `## Heading`, `**bold**`, `*italic*`, `` `code` ``, `[link](https://address)`, `- list`, `1. list`, `> quote`. Code block: a line of three backticks plus the language (e.g. `python`), the code, then three backticks on their own line. In the header `#` lines are comments, below `---` a `#` starts a heading.
+4. Photos: drop them in the post folder and write `![what it shows](photo.jpg)`.
+5. Preview with `preview.command` (or just commit). Both rebuild the pages in `blog/` and add the post to `sitemap.xml`. Newest date shows first.
+
+Remove a post: delete its folder (or add `draft: yes` to hide it), then commit. The old page stays in the website's `blog/<post>/` folder until I delete that folder by hand - the build prints a reminder.
 
 ## Change the location
 

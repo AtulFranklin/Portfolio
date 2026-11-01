@@ -1,8 +1,11 @@
 #!/bin/bash
-# domain + location sync before every commit
+# domain + location sync, blog build before every commit
 cd "$(git rev-parse --show-toplevel)" || exit 0
 command -v python3 >/dev/null 2>&1 || exit 0
 python3 tools/link-domain.py || exit 1
 python3 tools/link-location.py || exit 1
 git add CNAME index.html sitemap.xml robots.txt js/content.js 2>/dev/null
+# blog pages
+python3 tools/build-blog.py || exit 1
+git add blog sitemap.xml 2>/dev/null
 exit 0

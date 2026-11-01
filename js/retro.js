@@ -6,7 +6,7 @@
   var S = window.SITE || {};
   var WHY = Array.isArray(S.whyHire) ? S.whyHire : [];
   var LINKS = S.links || {};
-  var DOC_NAME = "why_hire_atul.doc";
+  var DOC_NAME = (slug(whyTitle()) || "why_hire_atul") + ".doc";
 
   /* ---- helpers ---- */
   function esc(s) {
@@ -22,6 +22,7 @@
   function slug(s) { return String(s).toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, ""); }
   function fullName() { return S.name || "Atul Abraham"; }
   function firstName() { return fullName().split(" ")[0]; }
+  function whyTitle() { return String(S.whyTitle || "").trim() || "Why hire Atul?"; }
 
   /* ---- pixel art (svg paths / canvas rects) ---- */
   var PAL = {
@@ -342,8 +343,8 @@
       ? ', or open <a href="' + esc(S.resume) + '" target="_blank" rel="noopener">my resume (PDF)</a>'
       : "";
     return '<article class="rt-page">' +
-      '<p class="rt-doc-date">' + esc(S.place || "") + "<br>" + esc(todayLine()) + "</p>" +
-      "<h" + h + ' class="rt-doc-title">Why hire ' + esc(fullName()) + "</h" + h + ">" +
+      '<p class="rt-doc-date" data-nosnippet>' + esc(S.place || "") + "<br>" + esc(todayLine()) + "</p>" +
+      "<h" + h + ' class="rt-doc-title">' + esc(whyTitle()) + "</h" + h + ">" +
       lead + items + note +
       '<p class="rt-doc-p rt-doc-close">Thanks for reading. If any of this fits what your team needs, ' + email + resume + ".</p>" +
       '<p class="rt-doc-sign">' + esc(fullName()) + '<span class="rt-caret" aria-hidden="true"></span></p>' +
@@ -459,7 +460,7 @@
       '<span class="rt-mb-item rt-mb-strong">Desk</span><span class="rt-mb-item">File</span><span class="rt-mb-item rt-mb-x">Edit</span>' +
       '<span class="rt-mb-item rt-mb-x">View</span><span class="rt-mb-item rt-mb-x">Window</span></span>' +
       '<span class="rt-mb-right"><button type="button" class="rt-mb-item rt-mb-shut" data-rt-act="shutdown">Shut down</button>' +
-      '<span class="rt-clock" aria-hidden="true">' + esc(clockText()) + "</span></span>" +
+      '<span class="rt-clock" aria-hidden="true" data-nosnippet>' + esc(clockText()) + "</span></span>" +
       "</div>" +
       '<div class="rt-icons">' + iconsHTML + "</div>" +
       (o.inline ? '<p class="rt-desk-hint" aria-hidden="true">Double-click (or tap) ' + DOC_NAME + " to open it.</p>" : "") +
@@ -887,7 +888,7 @@
     var uid = newUid("rtd");
     dlg = document.createElement("dialog");
     dlg.className = "rt-dlg";
-    dlg.setAttribute("aria-label", "Why hire Atul - retro computer");
+    dlg.setAttribute("aria-label", whyTitle() + " - retro computer");
     dlg.innerHTML = '<div class="rt-room">' + monitorHTML("", "off", "shutdown") +
       '<p class="rt-sr rt-live" aria-live="polite"></p></div>';
     document.body.appendChild(dlg);
@@ -1046,13 +1047,36 @@
     g.fillStyle = "rgba(0,0,0,.45)"; g.fillRect(P[0] + 5, P[1] + 5, P[2], P[3]);
     g.fillStyle = "#ffffff"; g.fillRect(P[0], P[1], P[2], P[3]);
     g.fillStyle = "#111214";
-    g.font = "700 80px " + SERIF; g.textBaseline = "alphabetic";
-    g.fillText("WHY HIRE", P[0] + 26, P[1] + 84);
-    g.font = "700 104px " + SERIF;
-    g.fillText("ATUL?", P[0] + 26, P[1] + 184);
-    var aw = g.measureText("ATUL?").width;
+    /* title, last word on its own line */
+    var words = whyTitle().toUpperCase().split(/\s+/);
+    var big = words.pop(), top = words.join(" ");
+    var maxW = P[2] - 52;
+    g.textBaseline = "alphabetic";
+    var s1 = fitSize(g, top, 80, maxW);
+    if (s1 < 36 && words.length > 1) {
+      /* long title, two smaller lines */
+      var cut = 1, best = 1e9;
+      for (var i = 1; i < words.length; i++) {
+        var d = Math.abs(g.measureText(words.slice(0, i).join(" ")).width - g.measureText(words.slice(i).join(" ")).width);
+        if (d < best) { best = d; cut = i; }
+      }
+      var la = words.slice(0, cut).join(" "), lb = words.slice(cut).join(" ");
+      var sw = Math.min(42, fitSize(g, la, 80, maxW), fitSize(g, lb, 80, maxW));
+      g.font = "700 " + sw + "px " + SERIF;
+      g.fillText(la, P[0] + 26, P[1] + 84 - Math.round(sw * 1.1));
+      g.fillText(lb, P[0] + 26, P[1] + 84);
+    } else if (top) {
+      g.font = "700 " + s1 + "px " + SERIF;
+      g.fillText(top, P[0] + 26, P[1] + 84);
+    }
+    var s2 = fitSize(g, big, 104, maxW - 14);
+    g.font = "700 " + s2 + "px " + SERIF;
+    g.fillText(big, P[0] + 26, P[1] + 184);
+    var aw = g.measureText(big).width;
     DS.caretX = P[0] + 26 + aw + 8;
-    g.fillRect(P[0] + 28, P[1] + 194, aw - 4, 5);
+    DS.caretY = P[1] + 184 - Math.round(s2 * 0.75);
+    DS.caretH = Math.round(s2 * 0.81);
+    g.fillRect(P[0] + 28, P[1] + 194, Math.max(8, aw - 4), 5);
     g.font = "italic 21px " + SERIF; g.fillStyle = "#3a3c40";
     g.fillText(WHY.length + " reasons, one page.", P[0] + 28, P[1] + 262);
     /* status bar */
@@ -1071,6 +1095,12 @@
     DS.base = base; DS.fx = fx; DS.key = w + "x" + h;
   }
 
+  // biggest font size up to max that fits width
+  function fitSize(g, text, max, width) {
+    g.font = "700 " + max + "px " + SERIF;
+    return Math.min(max, Math.floor(max * width / Math.max(1, g.measureText(text).width)));
+  }
+
   function drawScreen(ctx, w, h, t) {
     w = w || 640; h = h || 480; t = t || 0;
     if (DS.key !== w + "x" + h) buildStatic(w, h);
@@ -1086,7 +1116,7 @@
     ctx.textAlign = "left";
     /* caret */
     var P = L3.page;
-    if (still || Math.floor(t * 1.8) % 2 === 0) { ctx.fillStyle = "#111214"; ctx.fillRect(DS.caretX || 400, P[1] + 106, 6, 84); }
+    if (still || Math.floor(t * 1.8) % 2 === 0) { ctx.fillStyle = "#111214"; ctx.fillRect(DS.caretX || 400, DS.caretY || P[1] + 106, 6, DS.caretH || 84); }
     /* OPEN button blink */
     var B = L3.btn, on = still || Math.floor(t * 1.4) % 2 === 0;
     ctx.fillStyle = "#111214"; ctx.fillRect(B[0] - 2, B[1] - 2, B[2] + 4, B[3] + 4);

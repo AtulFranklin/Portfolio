@@ -425,6 +425,10 @@ body.modal-open { overflow: hidden; }
   .m-obj span { font-size: 16px; font-weight: 600; letter-spacing: -0.01em; margin-top: 2px; }
   .m-obj-wide { grid-column: 1 / -1; }
   .m-obj-wide img { width: 78%; margin-bottom: -2%; }
+  /* blog tile, own row */
+  a.m-obj, a.m-obj:hover { color: var(--text); text-decoration: none; }
+  .m-obj-blog { grid-column: 1 / -1; justify-self: center; width: calc(50% - 5px); margin-top: 14px; }
+  .m-obj-blog img { width: 76%; margin: -4% 0 -6%; }
   .scroll-cue { position: relative; left: auto; bottom: auto; transform: none; margin: 30px auto 0; width: max-content; z-index: 2; }
 }
 

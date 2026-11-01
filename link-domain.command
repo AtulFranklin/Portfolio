@@ -6,4 +6,6 @@ git rev-parse --git-dir >/dev/null 2>&1 && git config core.hooksPath .githooks
 python3 tools/link-domain.py
 # location sync
 python3 tools/link-location.py
+# blog pages
+python3 tools/build-blog.py
 read -r -p "Press Return to close." _

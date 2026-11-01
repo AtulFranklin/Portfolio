@@ -77,8 +77,7 @@
         "url": "https://atulabraham.site/",
         "name": "Atul Abraham - Software Engineer & Fintech Builder",
         "isPartOf": { "@id": "https://atulabraham.site/#website" },
-        "mainEntity": { "@id": "https://atulabraham.site/#person" },
-        "dateModified": "2026-11-01T12:30:00-05:00"
+        "mainEntity": { "@id": "https://atulabraham.site/#person" }
       }
     ]
   }
@@ -109,12 +108,13 @@
     <a class="brand" href="#top" aria-label="Atul Abraham, back to top">
       <span class="brand-name">Atul Abraham</span>
       <span class="brand-meta mono" data-place>Hoboken, NJ, USA</span>
-      <span class="brand-wx mono" data-weather></span>
-      <span class="brand-views mono" data-views></span>
+      <span class="brand-wx mono" data-weather data-nosnippet></span>
+      <span class="brand-views mono" data-views data-nosnippet></span>
     </a>
     <nav class="topnav" aria-label="Main">
       <a href="#projects">Projects</a>
       <a href="#about">About</a>
+      <a href="blog/">Blog</a>
       <a class="btn btn-secondary btn-sm" data-resume href="assets/Atul_Abraham_Resume.pdf" target="_blank" rel="noopener">Résumé</a>
     </nav>
   </header>
@@ -123,7 +123,7 @@
   <nav class="dots" aria-label="Sections">
     <a href="#top" data-dot="top" tabindex="-1" aria-label="Desk"></a>
     <a href="#projects" data-dot="projects" tabindex="-1" aria-label="Projects"></a>
-    <a href="#why" data-dot="why" tabindex="-1" aria-label="Why hire me"></a>
+    <a href="#why" data-dot="why" tabindex="-1" aria-label="Why hire Atul?" data-why-title="label"></a>
     <a href="#about" data-dot="about" tabindex="-1" aria-label="About and experience"></a>
     <a href="#education" data-dot="education" tabindex="-1" aria-label="Education"></a>
     <a href="#contact" data-dot="contact" tabindex="-1" aria-label="Contact"></a>
@@ -142,7 +142,7 @@
         <p class="hero-tagline" id="heroTagline"></p>
         <ul class="hero-links">
           <li><button type="button" class="hero-link" data-open="about">About me</button></li>
-          <li><button type="button" class="hero-link" data-open="why">Why hire me</button></li>
+          <li><button type="button" class="hero-link" data-open="why" data-why-title>Why hire Atul?</button></li>
           <li><a class="hero-link" href="#projects">Projects</a></li>
           <li><button type="button" class="hero-link" data-open="contact">Leave a message</button></li>
         </ul>
@@ -152,7 +152,7 @@
       <div class="m-desk" aria-label="Desk objects">
         <button type="button" class="m-obj m-obj-wide" data-open="why">
           <img src="assets/mobile/crt.webp" alt="" width="550" height="550" loading="eager" />
-          <span>Why hire me</span>
+          <span data-why-title>Why hire Atul?</span>
         </button>
         <button type="button" class="m-obj" data-goto="experience">
           <img src="assets/mobile/roles.webp" alt="" width="550" height="550" loading="lazy" />
@@ -170,6 +170,10 @@
           <img src="assets/mobile/envelope.webp" alt="" width="550" height="550" loading="lazy" />
           <span>Leave a message</span>
         </button>
+        <a class="m-obj m-obj-blog" href="blog/">
+          <img src="assets/mobile/notebook.webp" alt="" width="550" height="550" loading="lazy" />
+          <span>Blog</span>
+        </a>
       </div>
 
       <p class="hero-hint mono" id="heroHint">Click anything on the desk</p>
@@ -192,7 +196,7 @@
     <section class="section section-alt" id="why" aria-labelledby="why-h">
       <div class="wrap">
         <p class="num mono">02</p>
-        <h2 id="why-h">Why hire me.</h2>
+        <h2 id="why-h" data-why-title="heading">Why hire Atul?</h2>
         <div class="crt" id="whyCrt"></div>
       </div>
     </section>

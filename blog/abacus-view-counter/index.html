@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Adding a free view counter to a plain HTML site with Abacus - Atul Abraham</title>
+  <meta name="description" content="My portfolio is static HTML on GitHub Pages with no backend. Abacus gives me a free view counter with one fetch call, here&#x27;s how I set it up." />
+  <meta name="author" content="Atul Franklin Abraham" />
+  <meta name="robots" content="index, follow, max-image-preview:large" />
+  <link rel="canonical" href="https://atulabraham.site/blog/abacus-view-counter/" />
+  <meta name="theme-color" content="#0A0C10" />
+  <meta name="color-scheme" content="dark" />
+  <!-- stop dark reader recolouring -->
+  <meta name="darkreader-lock" />
+  <meta property="og:type" content="article" />
+  <meta property="og:site_name" content="Atul Abraham" />
+  <meta property="og:url" content="https://atulabraham.site/blog/abacus-view-counter/" />
+  <meta property="og:title" content="Adding a free view counter to a plain HTML site with Abacus - Atul Abraham" />
+  <meta property="og:description" content="My portfolio is static HTML on GitHub Pages with no backend. Abacus gives me a free view counter with one fetch call, here&#x27;s how I set it up." />
+  <meta property="og:image" content="https://atulabraham.site/assets/photo.jpg" />
+  <meta property="article:tag" content="javascript" />
+  <meta property="article:tag" content="html" />
+  <meta property="article:tag" content="github-pages" />
+  <meta property="article:tag" content="web" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="Adding a free view counter to a plain HTML site with Abacus - Atul Abraham" />
+  <meta name="twitter:description" content="My portfolio is static HTML on GitHub Pages with no backend. Abacus gives me a free view counter with one fetch call, here&#x27;s how I set it up." />
+  <meta name="twitter:image" content="https://atulabraham.site/assets/photo.jpg" />
+  <!-- icons -->
+  <link rel="icon" href="/favicon-96.png?v=2" type="image/png" sizes="96x96" />
+  <link rel="icon" href="/favicon-48.png?v=2" type="image/png" sizes="48x48" />
+  <link rel="icon" href="/favicon.ico?v=2" sizes="16x16 32x32 48x48" />
+  <link rel="icon" href="/favicon.svg?v=2" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=2" sizes="180x180" />
+  <link rel="manifest" href="/site.webmanifest?v=2" />
+  <!-- structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "@id": "https://atulabraham.site/blog/abacus-view-counter/#post",
+    "headline": "Adding a free view counter to a plain HTML site with Abacus",
+    "description": "My portfolio is static HTML on GitHub Pages with no backend. Abacus gives me a free view counter with one fetch call, here's how I set it up.",
+    "url": "https://atulabraham.site/blog/abacus-view-counter/",
+    "mainEntityOfPage": "https://atulabraham.site/blog/abacus-view-counter/",
+    "image": "https://atulabraham.site/assets/photo.jpg",
+    "inLanguage": "en",
+    "isPartOf": {
+      "@id": "https://atulabraham.site/blog/#blog"
+    },
+    "author": {
+      "@type": "Person",
+      "@id": "https://atulabraham.site/#person",
+      "name": "Atul Abraham",
+      "url": "https://atulabraham.site/"
+    },
+    "publisher": {
+      "@type": "Person",
+      "@id": "https://atulabraham.site/#person",
+      "name": "Atul Abraham",
+      "url": "https://atulabraham.site/"
+    },
+    "keywords": "javascript, html, github-pages, web"
+  }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <link rel="stylesheet" href="/css/blog.css" />
+  <script src="/js/blog.js" defer></script>
+</head>
+<body class="blog-page">
+  <a class="skip" href="#main">Skip to content</a>
+
+  <!-- top bar -->
+  <header class="topbar topbar-blog" id="top">
+    <a class="brand" href="/" aria-label="Atul Abraham, home">
+      <span class="brand-name">Atul Abraham</span>
+      <span class="brand-meta mono">Hoboken, NJ, USA</span>
+    </a>
+    <nav class="topnav" aria-label="Main">
+      <a class="nav-home" href="/"><span aria-hidden="true">← </span>Desk</a>
+      <a href="/#projects">Projects</a>
+      <a href="/#about">About</a>
+      <a class="nav-on" href="/blog/" aria-current="true">Blog</a>
+      <a class="btn btn-secondary btn-sm" href="/assets/Atul_Abraham_Resume.pdf" target="_blank" rel="noopener">Résumé</a>
+    </nav>
+  </header>
+
+  <main id="main" tabindex="-1">
+    <article class="post">
+      <header class="post-head">
+        <a class="back mono" href="/blog/"><span aria-hidden="true">← </span>All posts</a>
+        <h1 class="post-title">Adding a free view counter to a plain HTML site with Abacus</h1>
+        <p class="post-meta mono"><span data-nosnippet>Oct 28, 2026</span><span class="sep" aria-hidden="true">·</span><span>4 min read</span></p>
+        <ul class="post-tags" aria-label="Tags"><li class="pill mono">javascript</li><li class="pill mono">html</li><li class="pill mono">github-pages</li><li class="pill mono">web</li></ul>
+      </header>
+      <div class="prose">
+<p>My site is plain HTML on GitHub Pages, so there's no server of my own to count visits. I didn't want a full analytics dashboard either, just a small "views" number under my name. Abacus is a free counting API that does exactly that: you call a URL, it adds one and sends back the new number.</p>
+<h2 id="how-abacus-works">How Abacus works</h2>
+<p>A counter is a namespace plus a key. The namespace is something unique to you (your domain is a good pick) and the key is what you're counting, like <code>views</code>.</p>
+<ul>
+<li><code>GET https://abacus.jasoncameron.dev/hit/&lt;namespace&gt;/&lt;key&gt;</code> adds 1 and returns <code>{"value": 1234}</code>. If the counter doesn't exist yet, it gets created.</li>
+<li><code>GET https://abacus.jasoncameron.dev/get/&lt;namespace&gt;/&lt;key&gt;</code> reads the number without adding to it.</li>
+</ul>
+<p>No sign up and no API key for these two, and CORS is on, so it works straight from the browser.</p>
+<h2 id="the-basic-version">The basic version</h2>
+<p>This is all it takes to have a working counter:</p>
+<div class="code">
+<div class="code-bar"><span class="code-lang mono">html</span></div>
+<pre><code class="language-html">&lt;span id="views"&gt;&lt;/span&gt;
+
+&lt;script&gt;
+  fetch("https://abacus.jasoncameron.dev/hit/my-site.com/views")
+    .then((r) =&gt; r.json())
+    .then((d) =&gt; {
+      document.getElementById("views").textContent = d.value.toLocaleString() + " views";
+    })
+    .catch(() =&gt; {});
+&lt;/script&gt;</code></pre>
+</div>
+<p>Every page load adds one and shows the total.</p>
+<h2 id="making-the-number-honest">Making the number honest</h2>
+<p>The basic version counts every refresh, including mine. A few things I added:</p>
+<ol>
+<li><strong>Count once per visit.</strong> After a hit I save a flag in <code>sessionStorage</code>. Reloads in the same tab call <code>/get</code> instead of <code>/hit</code>.</li>
+<li><strong>Don't count local previews.</strong> On <code>localhost</code> or <code>127.0.0.1</code> it only reads the number, so testing doesn't push it up.</li>
+<li><strong>Timeout.</strong> An <code>AbortController</code> cancels the request after 4 seconds, so a slow API never holds anything up.</li>
+<li><strong>Fallback.</strong> The last number I got is kept in <code>localStorage</code>. If the API is down, the site shows that instead of nothing.</li>
+<li><strong>Fade in when ready.</strong> The counter stays hidden until there's a number, so there's no flash of an empty or zero count.</li>
+</ol>
+<p>The core of it looks like this:</p>
+<div class="code">
+<div class="code-bar"><span class="code-lang mono">js</span></div>
+<pre><code class="language-js">const API = "https://abacus.jasoncameron.dev";
+const NS = "my-site.com";
+const KEY = "views";
+
+const el = document.getElementById("views");
+const isLocal = /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
+const action = !isLocal &amp;&amp; !sessionStorage.getItem("views-hit") ? "hit" : "get";
+
+function show(n) {
+  el.textContent = n.toLocaleString("en-US") + " views";
+  el.classList.add("ready");
+}
+
+const ctrl = new AbortController();
+setTimeout(() =&gt; ctrl.abort(), 4000);
+
+fetch(`${API}/${action}/${NS}/${KEY}`, { cache: "no-store", signal: ctrl.signal })
+  .then((r) =&gt; {
+    if (!r.ok) throw new Error(r.status);
+    return r.json();
+  })
+  .then((d) =&gt; {
+    if (action === "hit") sessionStorage.setItem("views-hit", "1");
+    localStorage.setItem("views-last", d.value);
+    show(d.value);
+  })
+  .catch(() =&gt; {
+    const last = +localStorage.getItem("views-last");
+    if (last) show(last);
+  });</code></pre>
+</div>
+<p>And the CSS for the fade:</p>
+<div class="code">
+<div class="code-bar"><span class="code-lang mono">css</span></div>
+<pre><code class="language-css">#views { opacity: 0; transition: opacity .4s; }
+#views.ready { opacity: .75; }</code></pre>
+</div>
+<h2 id="things-to-know">Things to know</h2>
+<ul>
+<li>Counters that get no hits for 6 months expire. On a live site that never really happens, since every visit resets the clock.</li>
+<li>There's a rate limit of about 30 requests per 10 seconds per IP. That's plenty for a counter, just don't call it in a loop.</li>
+<li>Anyone can call your counter URL, so treat the number as a fun stat, not real analytics. For real numbers I use Google Search Console.</li>
+<li>If you want to start from a set number or be able to reset it later, create the counter first with <code>/create/&lt;namespace&gt;/&lt;key&gt;?initializer=N</code>. That returns an admin key exactly once, so save it somewhere safe.</li>
+</ul>
+<h2 id="why-i-like-it">Why I like it</h2>
+<p>One fetch call, no backend, no cookies and no sign up, and it works on any static host. For a personal site that's all I need.</p>
+      </div>
+    </article>
+    <div class="post-end">
+      <section class="more" aria-labelledby="more-h">
+        <h2 class="more-h mono" id="more-h">More posts</h2>
+        <ol class="post-list post-list-sm">
+      <li>
+        <a class="post-row" href="/blog/flutter-release-runner/">
+          <span class="post-row-date mono" data-nosnippet>Nov 1, 2026</span>
+          <div class="post-row-main">
+            <h3 class="post-row-title">Running all my Flutter apps in release mode with one Python script</h3>
+            <p class="post-row-summary">I test a few Flutter apps on my phone every few days. Instead of opening each project and typing flutter run --release, a tiny Python script on my Mac runs them one after another.</p>
+            <div class="post-tags"><span class="pill mono">flutter</span><span class="pill mono">python</span><span class="pill mono">macos</span><span class="pill mono">automation</span></div>
+          </div>
+          <span class="post-row-go" aria-hidden="true">→</span>
+        </a>
+      </li>
+        </ol>
+        <a class="btn btn-secondary" href="/blog/">All posts <span aria-hidden="true">→</span></a>
+      </section>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap footer-row">
+      <span>Atul Franklin Abraham · Hoboken, NJ, USA</span>
+      <a href="#top">Back to top ↑</a>
+    </div>
+  </footer>
+</body>
+</html>

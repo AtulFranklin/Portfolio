@@ -1,6 +1,17 @@
-# WHY HIRE ME - the reason cards, top to bottom = order on the site.
+# WHY HIRE ME - the section title, then the reason cards, top to bottom = order on the site.
 # Put a line with three dashes --- between cards. Lines starting with # are ignored.
 #
+# The first block (above the first ---) is the title, not a card:
+# title:    the name of this section everywhere on the site - the desk links,
+#           the section heading, the retro computer document and the 3D computer screen.
+#           The heading gets a full stop added unless the title ends in ? ! or .
+#           On the computer screens the last word goes on its own big line.
+#
+# Copy-paste example for the title:
+# title: Why work with me?
+# ---
+#
+# Each card after that:
 # heading:  the card title
 # stat:     the big number or word, for example >50%
 # label:    the small line under the stat
@@ -11,6 +22,10 @@
 # stat: 3 apps
 # label: shipped this year
 # text: One or two sentences that back up the stat.
+
+title: Why hire Atul?
+
+---
 
 heading: I've already built a trading engine
 stat: Black-Scholes

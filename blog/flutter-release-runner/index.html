@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Running all my Flutter apps in release mode with one Python script - Atul Abraham</title>
+  <meta name="description" content="I test a few Flutter apps on my phone every few days. Instead of opening each project and typing flutter run --release, a tiny Python script on my Mac runs them one after another." />
+  <meta name="author" content="Atul Franklin Abraham" />
+  <meta name="robots" content="index, follow, max-image-preview:large" />
+  <link rel="canonical" href="https://atulabraham.site/blog/flutter-release-runner/" />
+  <meta name="theme-color" content="#0A0C10" />
+  <meta name="color-scheme" content="dark" />
+  <!-- stop dark reader recolouring -->
+  <meta name="darkreader-lock" />
+  <meta property="og:type" content="article" />
+  <meta property="og:site_name" content="Atul Abraham" />
+  <meta property="og:url" content="https://atulabraham.site/blog/flutter-release-runner/" />
+  <meta property="og:title" content="Running all my Flutter apps in release mode with one Python script - Atul Abraham" />
+  <meta property="og:description" content="I test a few Flutter apps on my phone every few days. Instead of opening each project and typing flutter run --release, a tiny Python script on my Mac runs them one after another." />
+  <meta property="og:image" content="https://atulabraham.site/assets/photo.jpg" />
+  <meta property="article:tag" content="flutter" />
+  <meta property="article:tag" content="python" />
+  <meta property="article:tag" content="macos" />
+  <meta property="article:tag" content="automation" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="Running all my Flutter apps in release mode with one Python script - Atul Abraham" />
+  <meta name="twitter:description" content="I test a few Flutter apps on my phone every few days. Instead of opening each project and typing flutter run --release, a tiny Python script on my Mac runs them one after another." />
+  <meta name="twitter:image" content="https://atulabraham.site/assets/photo.jpg" />
+  <!-- icons -->
+  <link rel="icon" href="/favicon-96.png?v=2" type="image/png" sizes="96x96" />
+  <link rel="icon" href="/favicon-48.png?v=2" type="image/png" sizes="48x48" />
+  <link rel="icon" href="/favicon.ico?v=2" sizes="16x16 32x32 48x48" />
+  <link rel="icon" href="/favicon.svg?v=2" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=2" sizes="180x180" />
+  <link rel="manifest" href="/site.webmanifest?v=2" />
+  <!-- structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "@id": "https://atulabraham.site/blog/flutter-release-runner/#post",
+    "headline": "Running all my Flutter apps in release mode with one Python script",
+    "description": "I test a few Flutter apps on my phone every few days. Instead of opening each project and typing flutter run --release, a tiny Python script on my Mac runs them one after another.",
+    "url": "https://atulabraham.site/blog/flutter-release-runner/",
+    "mainEntityOfPage": "https://atulabraham.site/blog/flutter-release-runner/",
+    "image": "https://atulabraham.site/assets/photo.jpg",
+    "inLanguage": "en",
+    "isPartOf": {
+      "@id": "https://atulabraham.site/blog/#blog"
+    },
+    "author": {
+      "@type": "Person",
+      "@id": "https://atulabraham.site/#person",
+      "name": "Atul Abraham",
+      "url": "https://atulabraham.site/"
+    },
+    "publisher": {
+      "@type": "Person",
+      "@id": "https://atulabraham.site/#person",
+      "name": "Atul Abraham",
+      "url": "https://atulabraham.site/"
+    },
+    "keywords": "flutter, python, macos, automation"
+  }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <link rel="stylesheet" href="/css/blog.css" />
+  <script src="/js/blog.js" defer></script>
+</head>
+<body class="blog-page">
+  <a class="skip" href="#main">Skip to content</a>
+
+  <!-- top bar -->
+  <header class="topbar topbar-blog" id="top">
+    <a class="brand" href="/" aria-label="Atul Abraham, home">
+      <span class="brand-name">Atul Abraham</span>
+      <span class="brand-meta mono">Hoboken, NJ, USA</span>
+    </a>
+    <nav class="topnav" aria-label="Main">
+      <a class="nav-home" href="/"><span aria-hidden="true">← </span>Desk</a>
+      <a href="/#projects">Projects</a>
+      <a href="/#about">About</a>
+      <a class="nav-on" href="/blog/" aria-current="true">Blog</a>
+      <a class="btn btn-secondary btn-sm" href="/assets/Atul_Abraham_Resume.pdf" target="_blank" rel="noopener">Résumé</a>
+    </nav>
+  </header>
+
+  <main id="main" tabindex="-1">
+    <article class="post">
+      <header class="post-head">
+        <a class="back mono" href="/blog/"><span aria-hidden="true">← </span>All posts</a>
+        <h1 class="post-title">Running all my Flutter apps in release mode with one Python script</h1>
+        <p class="post-meta mono"><span data-nosnippet>Nov 1, 2026</span><span class="sep" aria-hidden="true">·</span><span>3 min read</span></p>
+        <ul class="post-tags" aria-label="Tags"><li class="pill mono">flutter</li><li class="pill mono">python</li><li class="pill mono">macos</li><li class="pill mono">automation</li></ul>
+      </header>
+      <div class="prose">
+<p>I work on a few Flutter apps side by side: Bible Plus, Productivity Plus and Trade on Paper. Before I push changes I like to run each one in release mode on my phone, because release builds behave differently from debug. Performance is real, there's no hot reload, and some bugs only show up there.</p>
+<p>Doing that by hand means opening Terminal, going into the first project, running <code>flutter run --release</code>, testing, quitting, going into the next one and doing it all again. It isn't hard, just boring, and I kept skipping one of the apps.</p>
+<h2 id="the-idea">The idea</h2>
+<p>A small Python script keeps a list of my app folders and runs <code>flutter run --release</code> in each one, one after another. When I'm done with an app I quit it (q, or Ctrl+C) and the script moves on to the next one. That's the whole thing.</p>
+<h2 id="what-the-script-does">What the script does</h2>
+<ol>
+<li>Keeps a list of apps, a name and a folder for each.</li>
+<li>Finds the folder with <code>pubspec.yaml</code> in it. Some of my repos keep the Flutter project one folder down, so it checks one level deep too.</li>
+<li>Runs <code>flutter run --release</code> inside that folder with <code>subprocess</code>, so the Flutter output shows up live in the same Terminal window.</li>
+<li>Skips an app with a short note if its folder is missing or isn't a Flutter project, instead of crashing.</li>
+<li>Treats Ctrl+C as "next app" instead of stopping the whole script.</li>
+<li>Has an optional <code>DEVICE</code> setting to pin a device id from <code>flutter devices</code>. Left as <code>None</code>, Flutter picks whatever is plugged in.</li>
+</ol>
+<h2 id="the-core-of-it">The core of it</h2>
+<div class="code">
+<div class="code-bar"><span class="code-lang mono">python</span></div>
+<pre><code class="language-python">APPS = [
+    ("Bible Plus", "~/Documents/Projects/bible_plus"),
+    ("Productivity Plus", "~/Documents/Projects/Productivity-Plus-IOS"),
+    ("Trade on Paper", "~/Documents/Projects/trade_on_paper"),
+]
+
+for name, path in APPS:
+    root = find_flutter_root(os.path.expanduser(path))
+    if not root:
+        print(f"skipping {name}, no pubspec.yaml")
+        continue
+    try:
+        subprocess.run(["flutter", "run", "--release"], cwd=root)
+    except KeyboardInterrupt:
+        print(f"{name} interrupted, moving on")</code></pre>
+</div>
+<p><code>find_flutter_root</code> just checks the folder for <code>pubspec.yaml</code>, then each folder inside it, and returns the first match.</p>
+<h2 id="running-it-on-a-mac">Running it on a Mac</h2>
+<ul>
+<li>Save it as <code>run_apps.py</code>, then <code>chmod +x run_apps.py</code> once.</li>
+<li>Plug in the phone and run <code>./run_apps.py</code> (or <code>python3 run_apps.py</code>).</li>
+<li>Release mode doesn't run on the iOS Simulator, so this needs a real iPhone or an Android device.</li>
+<li>I added an alias in <code>~/.zshrc</code> so it's one word: <code>alias runapps="python3 ~/Development/run_apps.py"</code>.</li>
+</ul>
+<h2 id="why-it-s-worth-it">Why it's worth it</h2>
+<p>It saves a few minutes every round, I never forget an app, and adding a new app is one more line in the list.</p>
+<h2 id="what-i-might-add-next">What I might add next</h2>
+<ul>
+<li>Pass app names as arguments to run only some of them.</li>
+<li>Run <code>flutter pub get</code> before each app.</li>
+<li>Write a short log of which apps built and which failed.</li>
+</ul>
+      </div>
+    </article>
+    <div class="post-end">
+      <section class="more" aria-labelledby="more-h">
+        <h2 class="more-h mono" id="more-h">More posts</h2>
+        <ol class="post-list post-list-sm">
+      <li>
+        <a class="post-row" href="/blog/abacus-view-counter/">
+          <span class="post-row-date mono" data-nosnippet>Oct 28, 2026</span>
+          <div class="post-row-main">
+            <h3 class="post-row-title">Adding a free view counter to a plain HTML site with Abacus</h3>
+            <p class="post-row-summary">My portfolio is static HTML on GitHub Pages with no backend. Abacus gives me a free view counter with one fetch call, here&#x27;s how I set it up.</p>
+            <div class="post-tags"><span class="pill mono">javascript</span><span class="pill mono">html</span><span class="pill mono">github-pages</span><span class="pill mono">web</span></div>
+          </div>
+          <span class="post-row-go" aria-hidden="true">→</span>
+        </a>
+      </li>
+        </ol>
+        <a class="btn btn-secondary" href="/blog/">All posts <span aria-hidden="true">→</span></a>
+      </section>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap footer-row">
+      <span>Atul Franklin Abraham · Hoboken, NJ, USA</span>
+      <a href="#top">Back to top ↑</a>
+    </div>
+  </footer>
+</body>
+</html>

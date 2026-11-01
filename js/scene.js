@@ -60,8 +60,9 @@
       import("three/addons/postprocessing/GTAOPass.js"),
       import("three/addons/postprocessing/UnrealBloomPass.js"),
       import("three/addons/postprocessing/OutputPass.js"),
+      import("three/addons/postprocessing/ShaderPass.js"),
     ]).then((m) => {
-      PP = { EffectComposer: m[0].EffectComposer, RenderPass: m[1].RenderPass, GTAOPass: m[2].GTAOPass, UnrealBloomPass: m[3].UnrealBloomPass, OutputPass: m[4].OutputPass };
+      PP = { EffectComposer: m[0].EffectComposer, RenderPass: m[1].RenderPass, GTAOPass: m[2].GTAOPass, UnrealBloomPass: m[3].UnrealBloomPass, OutputPass: m[4].OutputPass, ShaderPass: m[5].ShaderPass };
     }).catch((e) => { console.warn("Post-processing unavailable, rendering directly", e); }));
   }
 
@@ -1078,6 +1079,7 @@
   // 1024 screen, crisp at close range
   const CRT_W = 1024, CRT_H = 768;
   const crtTex = canvasTex(CRT_W, CRT_H, () => {});
+  const WHY_TITLE = String(S.whyTitle || "").trim() || "Why hire Atul?";
   let crtKey = "";
   const candles = [];
   { let v = 0.5; for (let i = 0; i < 40; i++) { const o = v; v = Math.min(0.85, Math.max(0.15, v + (rnd() - 0.47) * 0.12)); candles.push([o, v]); } }
@@ -1100,9 +1102,13 @@
     g.fillStyle = "rgba(61,220,151,.75)"; g.font = `500 20px ${MONO}`; g.textBaseline = "top";
     g.fillText("ATUL.F", 34, 28);
     g.fillStyle = "#3DDC97"; g.fillText("▲ LIVE", w - 120, 28);
-    g.fillStyle = "#ECE7DD"; g.font = `700 64px ${FONT}`;
-    g.fillText("WHY HIRE", 34, 70);
-    g.fillStyle = "#F5B041"; g.fillText("Atul?", 34, 136);
+    // title, last word on its own line
+    const words = WHY_TITLE.split(/\s+/), last = words.pop(), first = words.join(" ").toUpperCase();
+    g.font = `700 64px ${FONT}`;
+    const fs = Math.min(64, Math.floor(64 * (w - 68) / Math.max(1, g.measureText(first).width, g.measureText(last).width)));
+    g.font = `700 ${fs}px ${FONT}`;
+    g.fillStyle = "#ECE7DD"; if (first) g.fillText(first, 34, 70);
+    g.fillStyle = "#F5B041"; g.fillText(last, 34, first ? 70 + fs * 1.03 : 70);
     // chart
     const cx = 34, cy = 236, cw = w - 68, ch = 160, n = candles.length, step = cw / n;
     g.strokeStyle = "rgba(61,220,151,.12)"; g.lineWidth = 1;
@@ -1186,7 +1192,7 @@
     crt.add(body, back, bezel, screen, crtGlass, stand, knob1, slot, led, badge, vents);
     place(crt, "crt");
   }
-  hot(crt, "Why hire Atul?", () => DESK.openPanel("why"));
+  hot(crt, WHY_TITLE, () => DESK.openPanel("why"));
   crtGlass.castShadow = crtGlass.receiveShadow = false;
   aoHidden.push(crtGlass);
   glow.position.set(LAY.crt[0], TOP + 0.36 * SCALE.crt, DESK_Z + LAY.crt[1] + 0.4 * SCALE.crt);
@@ -1425,38 +1431,65 @@
 
   /* ---- project books, one per crate ---- */
   const books = new THREE.Group();
+  const bookFoil = [];
   {
     const hex2hsl = (hex) => { const c = new THREE.Color(hex), o = {}; c.getHSL(o, THREE.SRGBColorSpace); return o; };
     // cloth colour as in books.js
-    const cloth = (hex, dl = 0) => { const { h, s } = hex2hsl(hex); return `hsl(${(h * 360).toFixed(1)} ${(Math.max(0.2, Math.min(0.46, s * 0.5)) * 100).toFixed(1)}% ${((0.27 + dl) * 100).toFixed(1)}%)`; };
+    const cloth = (hex, dl = 0) => { const { h, s } = hex2hsl(hex); return `hsl(${(h * 360).toFixed(1)}, ${(Math.max(0.2, Math.min(0.46, s * 0.5)) * 100).toFixed(1)}%, ${((0.27 + dl) * 100).toFixed(1)}%)`; };
     const FOIL = "#E8CD92";
-    const pages = canvasTex(256, 64, (g, w, h) => {
-      g.fillStyle = "#D8CCB0"; g.fillRect(0, 0, w, h);
-      for (let y = 0; y < h; y += 2) { g.fillStyle = `rgba(120,104,78,${0.12 + 0.12 * rnd()})`; g.fillRect(0, y, w, 1); }
+    // page edges, lines run along the book
+    const pages = canvasTex(512, 128, (g, w, h) => {
+      g.fillStyle = "#DCD0B4"; g.fillRect(0, 0, w, h);
+      for (let y = 0; y < h; y += 4) { g.fillStyle = `rgba(120,104,78,${0.1 + 0.1 * rnd()})`; g.fillRect(0, y + 1, w, 2); }
+      const sh = g.createLinearGradient(0, 0, 0, h);
+      sh.addColorStop(0, "rgba(60,48,30,.28)"); sh.addColorStop(0.18, "rgba(60,48,30,0)"); sh.addColorStop(0.82, "rgba(60,48,30,0)"); sh.addColorStop(1, "rgba(60,48,30,.28)");
+      g.fillStyle = sh; g.fillRect(0, 0, w, h);
     });
     const pageMat = new THREE.MeshStandardMaterial({ map: pages, roughness: 0.92 });
     const list = (S.crates || []).slice(0, 5);
+    // hardcover parts: boards, spine, page block
+    const BOARD = 0.0024, OVER = 0.0026, SPINE = 0.0052, GAP = 0.0005;
     let y = 0;
     list.forEach((c, i) => {
       const L = 0.24 - (i % 2) * 0.012, D = 0.16 + ((i + 1) % 3) * 0.006, T = 0.028 + (i % 3) * 0.003;   // hardcover size
       const col = cloth(c.color || "#F5B041");
-      const spine = canvasTex(1024, Math.round((1024 * T) / L), (g, w, h) => {
-        g.fillStyle = col; g.fillRect(0, 0, w, h);
-        for (let x = 0; x < w; x += 3) { g.fillStyle = "rgba(255,255,255,.03)"; g.fillRect(x, 0, 1, h); }
-        const sh = g.createLinearGradient(0, 0, 0, h);
-        sh.addColorStop(0, "rgba(255,255,255,.14)"); sh.addColorStop(0.4, "rgba(255,255,255,0)"); sh.addColorStop(1, "rgba(0,0,0,.34)");
-        g.fillStyle = sh; g.fillRect(0, 0, w, h);
-        g.fillStyle = FOIL;
-        [[34, 42], [w - 42, w - 34]].forEach(([a, b]) => { g.fillRect(a, h * 0.18, 3, h * 0.64); g.fillRect(b, h * 0.18, 3, h * 0.64); });
-        g.font = `600 ${Math.round(h * 0.46)}px ${FONT}`; g.textBaseline = "middle"; g.textAlign = "left";
+      const coverMat = new THREE.MeshStandardMaterial({ color: new THREE.Color().setStyle(col), roughness: 0.82 });
+      const bd = D - SPINE / 2, parts = [];
+      for (const sy of [-1, 1]) {
+        const b = new RoundedBoxGeometry(L, BOARD, bd, 3, BOARD * 0.45);
+        b.translate(0, sy * (T - BOARD) / 2, -D / 2 + bd / 2);
+        parts.push(b);
+      }
+      const sp = new RoundedBoxGeometry(L - 0.0004, T, SPINE, 4, SPINE * 0.48);
+      sp.translate(0, 0, D / 2 - SPINE / 2);
+      parts.push(sp);
+      const bk = new THREE.Group();
+      bk.add(new THREE.Mesh(mergeGeometries(parts), coverMat));
+      const pg = new THREE.Mesh(new THREE.BoxGeometry(L - 2 * OVER, T - 2 * BOARD + 0.0006, D - OVER - SPINE / 2), pageMat);
+      pg.position.z = (OVER - SPINE / 2) / 2 - 0.0001;
+      bk.add(pg);
+      // foil title on the flat of the spine
+      const fh = T - SPINE * 0.96, fl = L - SPINE, fw = 1024, fhp = Math.round((fw * fh) / fl), k = (fhp / fh) * T;
+      const foilDraw = (bg, ink) => (g, w, h) => {
+        g.fillStyle = bg; g.fillRect(0, 0, w, h);
+        g.fillStyle = ink;
+        [[34, 42], [w - 42, w - 34]].forEach(([a, b]) => { g.fillRect(a, h / 2 - k * 0.32, 3, k * 0.64); g.fillRect(b, h / 2 - k * 0.32, 3, k * 0.64); });
+        g.font = `600 ${Math.round(k * 0.46)}px ${FONT}`; g.textBaseline = "middle"; g.textAlign = "left";
         g.fillText(c.title || "", 76, h / 2 + 2, w - 160);
-      });
-      const coverMat = new THREE.MeshStandardMaterial({ color: new THREE.Color().setStyle(cloth(c.color || "#F5B041")), roughness: 0.85 });
-      const spineMat = new THREE.MeshStandardMaterial({ map: spine, roughness: 0.8 });
-      const bk = new THREE.Mesh(new THREE.BoxGeometry(L, T, D), [pageMat, pageMat, coverMat, coverMat, spineMat, pageMat]);
+      };
+      // g = roughness, b = metalness
+      const foilRM = canvasTex(fw, fhp, foilDraw("rgb(0,255,0)", "rgb(0,120,110)"));
+      foilRM.colorSpace = THREE.NoColorSpace;
+      const label = new THREE.Mesh(new THREE.PlaneGeometry(fl, fh), new THREE.MeshStandardMaterial({
+        map: canvasTex(fw, fhp, foilDraw(col, FOIL)), roughnessMap: foilRM, metalnessMap: foilRM, roughness: 0.82, metalness: 1,
+        polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2,
+      }));
+      label.position.z = D / 2;
+      bk.add(label);
+      bookFoil.push(label);
       bk.position.set((rnd() - 0.5) * 0.02, y + T / 2, (rnd() - 0.5) * 0.016);
       bk.rotation.y = (rnd() - 0.5) * 0.14;
-      y += T;
+      y += T + GAP;
       books.add(bk);
     });
     place(books, "books");
@@ -1465,6 +1498,7 @@
     const sec = document.getElementById("projects");
     if (sec) sec.scrollIntoView({ behavior: reduce ? "auto" : "smooth" });
   });
+  bookFoil.forEach((m) => { m.castShadow = false; });
 
   /* ---- desk lamp (click to toggle) ---- */
   function rod(a, b, r, mat) {
@@ -1594,18 +1628,45 @@
   scene.environment = M.glass.envMap = winGlassMat.envMap = envOff;
 
   /* ---------------- post fx: ao, bloom, msaa ---------------- */
-  let composer = null, gtaoPass = null, bloomPass = null, rtScene = null, rtPost = null;
+  let composer = null, gtaoPass = null, bloomPass = null, rtScene = null, rtPost = null, rtMid = null;
   let fxLevel = useFX ? Math.max(1, Math.min(4, +FXQ || 4)) : 0;
   let autoFX = useFX && !FXQ;
   if (useFX) {
     try {
       // msaa instead of smaa
-      rtScene = new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, samples: Math.min(DPR >= 2 ? 2 : 4, renderer.capabilities.maxSamples || 0) });  // 2x msaa on retina
+      rtScene = new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, samples: Math.min(4, renderer.capabilities.maxSamples || 0) });
       composer = new PP.EffectComposer(renderer, rtScene);
       // only the scene buffer is msaa
       composer.renderTarget2.dispose();
       composer.renderTarget2 = rtPost = new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, depthBuffer: false });
+      rtMid = rtPost.clone();
+      // squash hdr before the msaa resolve, else bright edges stay jagged
+      const squashed = new Set();
+      scene.traverse((o) => {
+        if (!o.material) return;
+        for (const m of [].concat(o.material)) {
+          if (squashed.has(m)) continue;
+          squashed.add(m);
+          const prev = m.onBeforeCompile, key = m.customProgramCacheKey();
+          m.onBeforeCompile = (sh, r) => {
+            prev.call(m, sh, r);
+            sh.fragmentShader = sh.fragmentShader.replace("#include <fog_fragment>", "#include <fog_fragment>\n  gl_FragColor.rgb /= 1.0 + max(gl_FragColor.r, max(gl_FragColor.g, gl_FragColor.b));");
+          };
+          m.customProgramCacheKey = () => "squash" + key;
+        }
+      });
       composer.addPass(new PP.RenderPass(scene, camera));
+      // undo the squash after the resolve
+      const unsquash = new PP.ShaderPass({
+        uniforms: { tDiffuse: { value: null } },
+        vertexShader: "varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }",
+        fragmentShader: "uniform sampler2D tDiffuse; varying vec2 vUv; void main() { vec4 c = texture2D(tDiffuse, vUv); c.rgb /= max(1.0 - max(c.r, max(c.g, c.b)), 1e-3); gl_FragColor = c; }",
+      });
+      // keep fullscreen passes off the msaa buffer
+      const uRender = unsquash.render.bind(unsquash);
+      unsquash.needsSwap = false;
+      unsquash.render = (r, w, rd, dt, mask) => { uRender(r, rtPost, rtScene, dt, mask); composer.readBuffer = rtPost; composer.writeBuffer = rtMid; };
+      composer.addPass(unsquash);
       gtaoPass = new PP.GTAOPass(scene, camera, 256, 256);
       gtaoPass.updateGtaoMaterial({ radius: 0.3, distanceExponent: 1.6, thickness: 1, scale: 1.1, samples: 8 });
       gtaoPass.updatePdMaterial({ lumaPhi: 10, depthPhi: 2, normalPhi: 3, radius: 8, rings: 2, samples: 8 });
@@ -1750,6 +1811,7 @@
     renderer.setSize(W, H, false);
     if (composer) {
       composer.setPixelRatio(pr); composer.setSize(W, H);
+      rtMid.setSize(rtPost.width, rtPost.height);
       // skip msaa depth resolve
       renderer.properties.get(rtScene).__ignoreDepthValues = true;
     }
@@ -2011,9 +2073,136 @@
     scene.add(g);
     return g;
   }
+  /* ---- notebook, snap only ---- */
+  async function buildNotebook() {
+    await Promise.race([Promise.all([document.fonts.load('600 64px "Geist"'), document.fonts.load('500 32px "Geist Mono"')]), new Promise((r) => setTimeout(r, 4000))]).catch(() => {});
+    const nb = new THREE.Group();
+    const NW = 0.15, NH = 0.21, NT = 0.017, BT = 0.0024, BEV = 0.0009, CR = 0.011;
+    const LEATHER = "#3F2416", FOIL = "#E8CD92";
+    // rounded plate in xz, y up
+    function plate(w, h, t, rL, rR, bevel) {
+      const sh = new THREE.Shape(), x0 = -w / 2, x1 = w / 2, y0 = -h / 2, y1 = h / 2;
+      sh.moveTo(x0 + rL, y0); sh.lineTo(x1 - rR, y0); sh.quadraticCurveTo(x1, y0, x1, y0 + rR);
+      sh.lineTo(x1, y1 - rR); sh.quadraticCurveTo(x1, y1, x1 - rR, y1); sh.lineTo(x0 + rL, y1);
+      sh.quadraticCurveTo(x0, y1, x0, y1 - rL); sh.lineTo(x0, y0 + rL); sh.quadraticCurveTo(x0, y0, x0 + rL, y0);
+      const g = new THREE.ExtrudeGeometry(sh, bevel
+        ? { depth: t - 2 * bevel, bevelEnabled: true, bevelThickness: bevel, bevelSize: bevel, bevelSegments: 4, curveSegments: 16 }
+        : { depth: t, bevelEnabled: false, curveSegments: 16 });
+      // lid uvs 0-1 over the plate
+      const p = g.attributes.position, uv = g.attributes.uv, lid = g.groups[0];
+      for (let i = lid.start; i < lid.start + lid.count; i++) uv.setXY(i, (p.getX(i) + w / 2 + bevel) / (w + 2 * bevel), (p.getY(i) + h / 2 + bevel) / (h + 2 * bevel));
+      g.translate(0, 0, bevel ? bevel : 0);
+      g.rotateX(-Math.PI / 2);
+      return g;
+    }
+    // cover art: grain, foil title
+    const coverTex = canvasTex(1024, Math.round(1024 * NH / NW), (g, w, h) => {
+      g.fillStyle = LEATHER; g.fillRect(0, 0, w, h);
+      const id = g.getImageData(0, 0, w, h), d = id.data;
+      for (let i = 0; i < d.length; i += 4) { const n = (Math.random() - 0.5) * 14; d[i] += n; d[i + 1] += n * 0.8; d[i + 2] += n * 0.6; }
+      g.putImageData(id, 0, 0);
+      const vg = g.createRadialGradient(w * 0.45, h * 0.4, w * 0.2, w / 2, h / 2, h * 0.75);
+      vg.addColorStop(0, "rgba(255,220,180,.05)"); vg.addColorStop(1, "rgba(0,0,0,.18)");
+      g.fillStyle = vg; g.fillRect(0, 0, w, h);
+      const deboss = (txt, x, y) => { g.fillStyle = "rgba(0,0,0,.35)"; g.fillText(txt, x, y - 2); g.fillStyle = FOIL; g.fillText(txt, x, y); };
+      g.textBaseline = "alphabetic"; g.textAlign = "left";
+      g.font = `600 228px ${FONT}`; deboss("Blog", 92, h - 300);
+      g.font = `500 44px ${MONO}`; deboss("ATUL ABRAHAM · NOTES", 100, h - 196);
+    });
+    // foil shines, leather stays soft
+    const coverRM = canvasTex(1024, Math.round(1024 * NH / NW), (g, w, h) => {
+      g.fillStyle = "rgb(0,170,0)"; g.fillRect(0, 0, w, h);
+      g.fillStyle = "rgb(0,90,150)"; g.textBaseline = "alphabetic"; g.textAlign = "left";
+      g.font = `600 228px ${FONT}`; g.fillText("Blog", 92, h - 300);
+      g.font = `500 44px ${MONO}`; g.fillText("ATUL ABRAHAM · NOTES", 100, h - 196);
+    });
+    coverRM.colorSpace = THREE.NoColorSpace;
+    // desk pad grain at the same scale
+    const grain = T.leatherN.clone();
+    grain.wrapS = grain.wrapT = THREE.RepeatWrapping; grain.repeat.set(NW / 0.8, NH / 0.4); grain.offset.set(0.35, 0.22); grain.needsUpdate = true;
+    const leatherMat = new THREE.MeshStandardMaterial({ color: LEATHER, roughness: 0.62 });
+    const coverMat = new THREE.MeshStandardMaterial({ map: coverTex, roughnessMap: coverRM, metalnessMap: coverRM, roughness: 1, metalness: 1, normalMap: grain, normalScale: v2(0.3) });
+    const bottom = new THREE.Mesh(plate(NW, NH, BT, 0.002, CR, BEV), leatherMat);
+    const top = new THREE.Mesh(plate(NW, NH, BT, 0.002, CR, BEV), [coverMat, leatherMat]);
+    top.position.y = NT - BT;
+    // page block, lines along the edge
+    const pageTex = canvasTex(256, 64, (g, w, h) => {
+      g.fillStyle = "#E6DCC6"; g.fillRect(0, 0, w, h);
+      for (let y = 0; y < h; y += 4) { g.fillStyle = "rgba(120,104,78,.16)"; g.fillRect(0, y + 1, w, 2); }
+    }, { repeat: true });
+    pageTex.repeat.set(4, 1 / 0.004);
+    const pageMat = new THREE.MeshStandardMaterial({ map: pageTex, roughness: 0.9 });
+    const pages = new THREE.Mesh(plate(NW - 0.007, NH - 0.005, NT - 2 * BT + 0.0004, 0.001, CR - 0.0025, 0), pageMat);
+    pages.position.set(0.001, BT - 0.0002, 0);
+    // rounded spine
+    const spine = new THREE.Mesh(new RoundedBoxGeometry(0.008, NT, NH + 2 * BEV - 0.0004, 4, 0.0039), leatherMat);
+    spine.position.set(-NW / 2 - BEV + 0.004, NT / 2, 0);
+    // elastic band
+    const bandMat = new THREE.MeshStandardMaterial({ color: "#1C1714", roughness: 0.55 });
+    const BX = NW / 2 - 0.016, BW = 0.0065, BTH = 0.0011;
+    const band = new THREE.Group();
+    const bandTop = new THREE.Mesh(new RoundedBoxGeometry(BW, BTH, NH + 2 * BEV + 0.0016, 2, BTH * 0.45), bandMat);
+    bandTop.position.set(BX, NT + BTH / 2, 0);
+    band.add(bandTop);
+    for (const sz of [-1, 1]) {
+      const end = new THREE.Mesh(new RoundedBoxGeometry(BW, NT + BTH * 2, BTH, 2, BTH * 0.45), bandMat);
+      end.position.set(BX, NT / 2, sz * (NH / 2 + BEV + BTH / 2));
+      band.add(end);
+    }
+    // ribbon bookmark out of the foot, v cut end
+    const RX = -0.035, path = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(RX, NT * 0.55, NH / 2 - 0.004), new THREE.Vector3(RX + 0.0005, NT * 0.52, NH / 2 + BEV + 0.0008),
+      new THREE.Vector3(RX + 0.0015, NT * 0.3, NH / 2 + 0.0045), new THREE.Vector3(RX + 0.003, 0.0004, NH / 2 + 0.012),
+      new THREE.Vector3(RX + 0.007, 0.0003, NH / 2 + 0.022), new THREE.Vector3(RX + 0.011, 0.0003, NH / 2 + 0.032),
+    ]);
+    const RW = 0.0028, SEG = 40, rp = [], ri = [], up = new THREE.Vector3(0, 1, 0), side = new THREE.Vector3();
+    for (let i = 0; i <= SEG; i++) {
+      const u = i / SEG, c = path.getPointAt(u), t = path.getTangentAt(u);
+      side.crossVectors(up, t).normalize().multiplyScalar(RW);
+      const notch = i === SEG ? -0.004 : 0, ct = c.clone().addScaledVector(t, notch);
+      rp.push(c.x + side.x, c.y + side.y, c.z + side.z, ct.x, ct.y, ct.z, c.x - side.x, c.y - side.y, c.z - side.z);
+      if (i) for (const k of [0, 1]) { const a = (i - 1) * 3 + k, b = i * 3 + k; ri.push(a, b, a + 1, a + 1, b, b + 1); }
+    }
+    const rg = new THREE.BufferGeometry();
+    rg.setAttribute("position", new THREE.Float32BufferAttribute(rp, 3)); rg.setIndex(ri); rg.computeVertexNormals();
+    const ribbon = new THREE.Mesh(rg, new THREE.MeshStandardMaterial({ color: "#7A1E1A", roughness: 0.5, side: THREE.DoubleSide }));
+    nb.add(bottom, top, pages, spine, band, ribbon);
+    // pen on the desk, beside the cover
+    const pen = new THREE.Group();
+    const penMat = new THREE.MeshStandardMaterial({ color: "#16171B", roughness: 0.3, metalness: 0.4 });
+    const PL = 0.136, PR = 0.0046;
+    const barrel = new THREE.Mesh(new THREE.CylinderGeometry(PR, PR, PL * 0.78, 40), penMat);
+    barrel.position.y = -PL * 0.06;
+    const capEnd = new THREE.Mesh(new THREE.SphereGeometry(PR, 40, 20, 0, Math.PI * 2, 0, Math.PI / 2), penMat);
+    capEnd.position.y = PL * 0.33;
+    const ring = new THREE.Mesh(new THREE.CylinderGeometry(PR * 1.03, PR * 1.03, 0.004, 40), M.brass);
+    ring.position.y = PL * 0.1;
+    const grip = new THREE.Mesh(new THREE.CylinderGeometry(PR, PR * 0.55, PL * 0.14, 40), penMat);
+    grip.position.y = -PL * 0.52;
+    const tip = new THREE.Mesh(new THREE.ConeGeometry(PR * 0.55, PL * 0.05, 32), M.brass);
+    tip.rotation.x = Math.PI; tip.position.y = -PL * 0.615;
+    const clip = new THREE.Mesh(new RoundedBoxGeometry(0.0024, PL * 0.36, 0.0016, 2, 0.0007), M.brass);
+    clip.position.set(0, PL * 0.17, PR + 0.0009);
+    pen.add(barrel, capEnd, ring, grip, tip, clip);
+    pen.rotation.set(Math.PI / 2, 0, 0);
+    const penHold = new THREE.Group();
+    penHold.add(pen);
+    penHold.rotation.y = -0.22;
+    penHold.position.set(NW / 2 + 0.024, PR + 0.0002, 0.012);
+    nb.add(penHold);
+    // soft contact shadows
+    const soft = new THREE.MeshBasicMaterial({ map: blobTex, color: 0x000000, transparent: true, depthWrite: false, opacity: 0.55 });
+    const blob = (w, d, x, z, ry) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(w, d), soft); m.rotation.set(-Math.PI / 2, 0, ry); m.position.set(x, 0.0003, z); m.renderOrder = -1; m.userData.noFit = true; nb.add(m); };
+    blob(NW * 1.25, NH * 1.2, -0.002, 0.004, 0);
+    blob(0.02, PL * 1.12, penHold.position.x, penHold.position.z, penHold.rotation.y);
+    nb.position.set(0, TOP, DESK_Z);
+    nb.traverse((o) => { if (o.isMesh && o.material !== soft) { o.castShadow = true; o.receiveShadow = true; } });
+    scene.add(nb);
+    return nb;
+  }
   async function snapObject(name) {
-    const targets = { crt, roles, frame, envelope, gear: gearGroup, phone, lamp };
-    const target = name === "nameplate" ? buildNameplate() : targets[name];
+    const targets = { crt, roles, frame, envelope, gear: gearGroup, phone, lamp, books };
+    const target = name === "nameplate" ? buildNameplate() : name === "notebook" ? await buildNotebook() : targets[name];
     if (!target) { window.__snap = "unknown"; return; }
     if (!target.parent) { target.traverse((o) => { if (o.isMesh) o.castShadow = o.receiveShadow = true; }); scene.add(target); }
     if (name === "crt" && window.RETRO && RETRO.drawScreen) { RETRO.drawScreen(crtTex.userData.ctx, CRT_W, CRT_H, 1.0); crtTex.needsUpdate = true; } else drawCRT(0.2);
@@ -2037,7 +2226,7 @@
     target.visible = true;
     target.position.y = TOP;
     // fixed snap angles
-    const SNAP_RY = { crt: 0.1, roles: 0.32, frame: -0.38, envelope: 0.18, gear: -0.25, phone: -0.5 };
+    const SNAP_RY = { crt: 0.1, roles: 0.32, frame: -0.38, envelope: 0.18, gear: -0.25, phone: -0.5, books: -0.55, notebook: 0.16 };
     if (name in SNAP_RY) target.rotation.y = SNAP_RY[name];
     target.scale.setScalar(1);
     if (name === "envelope") { target.rotation.x = 0.55; target.position.y = TOP + 0.04; }
@@ -2052,11 +2241,26 @@
     const S2 = 1100;
     renderer.setPixelRatio(1); renderer.setSize(S2, S2, false);
     camera.clearViewOffset(); camera.aspect = 1; camera.fov = 26; camera.updateProjectionMatrix();
-    const dir = new THREE.Vector3(0.18, 0.42, 1).normalize();
+    // notebook lies flat, so a higher camera
+    const dir = (name === "notebook" ? new THREE.Vector3(0.14, 1.05, 1) : new THREE.Vector3(0.18, 0.42, 1)).normalize();
     const r = Math.max(size.x, size.y, size.z) * 0.62;
     const dist = r / Math.sin(THREE.MathUtils.degToRad(camera.fov / 2));
     camera.position.copy(c).addScaledVector(dir, dist);
     camera.lookAt(c);
+    // fit projected outline, 86% of the frame
+    if (name === "notebook") {
+      camera.updateMatrixWorld(); target.updateMatrixWorld(true);
+      const v = new THREE.Vector3(), b = new THREE.Box2().makeEmpty(), v2d = new THREE.Vector2();
+      target.traverse((o) => {
+        if (!o.isMesh || o.userData.noFit) return;
+        const p = o.geometry.attributes.position;
+        for (let i = 0; i < p.count; i++) { v.fromBufferAttribute(p, i).applyMatrix4(o.matrixWorld).project(camera); b.expandByPoint(v2d.set(v.x, v.y)); }
+      });
+      const k = 0.86 / (Math.max(b.max.x - b.min.x, b.max.y - b.min.y) / 2), cx = (b.min.x + b.max.x) / 2, cy = (b.min.y + b.max.y) / 2;
+      camera.zoom = k;
+      camera.setViewOffset(S2, S2, (cx * k * S2) / 2, (-cy * k * S2) / 2, S2, S2);
+      camera.updateProjectionMatrix();
+    }
     loader.classList.add("done");
     await new Promise((res) => setTimeout(res, 2500)); // photo / covers load
     if (name === "crt" && window.RETRO && RETRO.drawScreen) { RETRO.drawScreen(crtTex.userData.ctx, CRT_W, CRT_H, 1.0); crtTex.needsUpdate = true; }

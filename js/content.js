@@ -28,6 +28,8 @@ window.SITE = {
     ],
   },
 
+  whyTitle: "Why hire Atul?",
+
   whyNote:
     "Most of my work so far has been in financial and trading systems, but I'm just as ready for general software development. Building software where a wrong number costs money has taught me to care about accuracy, edge cases and reliability, and that carries over to whatever your team is building.",
 
