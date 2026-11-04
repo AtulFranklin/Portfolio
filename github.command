@@ -26,16 +26,24 @@ echo "  1. New Features"
 echo "  2. Clean - Up"
 echo "  3. Full Revamp"
 echo "  4. Optimization"
+echo "  5. New Projects"
+echo "  6. Site Updation"
+echo "  7. New Blog"
+echo "  8. New Certifications / Experience"
 echo
 
 while true; do
-  read -r -p "Pick 1-4: " pick
+  read -r -p "Pick 1-8: " pick
   case "$pick" in
     1) MSG="New Features"; break ;;
     2) MSG="Clean - Up"; break ;;
     3) MSG="Full Revamp"; break ;;
     4) MSG="Optimization"; break ;;
-    *) echo "Type 1, 2, 3 or 4." ;;
+    5) MSG="New Projects"; break ;;
+    6) MSG="Site Updation"; break ;;
+    7) MSG="New Blog"; break ;;
+    8) MSG="New Certifications / Experience"; break ;;
+    *) echo "Type a number from 1 to 8." ;;
   esac
 done
 

@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>GitHub automation on a Mac: one double-click to commit and push - Atul Abraham</title>
+  <meta name="description" content="I push this site to GitHub a few times a day. A small github.command file in the repo turns git add, commit and push into a double-click and a number from 1 to 8." />
+  <meta name="author" content="Atul Franklin Abraham" />
+  <meta name="robots" content="index, follow, max-image-preview:large" />
+  <link rel="canonical" href="https://atulabraham.site/blog/github-automation-mac/" />
+  <meta name="theme-color" content="#0A0C10" />
+  <meta name="color-scheme" content="dark" />
+  <!-- stop dark reader recolouring -->
+  <meta name="darkreader-lock" />
+  <meta property="og:type" content="article" />
+  <meta property="og:site_name" content="Atul Abraham" />
+  <meta property="og:url" content="https://atulabraham.site/blog/github-automation-mac/" />
+  <meta property="og:title" content="GitHub automation on a Mac: one double-click to commit and push - Atul Abraham" />
+  <meta property="og:description" content="I push this site to GitHub a few times a day. A small github.command file in the repo turns git add, commit and push into a double-click and a number from 1 to 8." />
+  <meta property="og:image" content="https://atulabraham.site/assets/photo.jpg" />
+  <meta property="article:tag" content="git" />
+  <meta property="article:tag" content="github" />
+  <meta property="article:tag" content="macos" />
+  <meta property="article:tag" content="automation" />
+  <meta property="article:tag" content="bash" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="GitHub automation on a Mac: one double-click to commit and push - Atul Abraham" />
+  <meta name="twitter:description" content="I push this site to GitHub a few times a day. A small github.command file in the repo turns git add, commit and push into a double-click and a number from 1 to 8." />
+  <meta name="twitter:image" content="https://atulabraham.site/assets/photo.jpg" />
+  <!-- icons -->
+  <link rel="icon" href="/favicon-96.png?v=2" type="image/png" sizes="96x96" />
+  <link rel="icon" href="/favicon-48.png?v=2" type="image/png" sizes="48x48" />
+  <link rel="icon" href="/favicon.ico?v=2" sizes="16x16 32x32 48x48" />
+  <link rel="icon" href="/favicon.svg?v=2" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=2" sizes="180x180" />
+  <link rel="manifest" href="/site.webmanifest?v=2" />
+  <!-- structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "@id": "https://atulabraham.site/blog/github-automation-mac/#post",
+    "headline": "GitHub automation on a Mac: one double-click to commit and push",
+    "description": "I push this site to GitHub a few times a day. A small github.command file in the repo turns git add, commit and push into a double-click and a number from 1 to 8.",
+    "url": "https://atulabraham.site/blog/github-automation-mac/",
+    "mainEntityOfPage": "https://atulabraham.site/blog/github-automation-mac/",
+    "image": "https://atulabraham.site/assets/photo.jpg",
+    "inLanguage": "en",
+    "isPartOf": {
+      "@id": "https://atulabraham.site/blog/#blog"
+    },
+    "author": {
+      "@type": "Person",
+      "@id": "https://atulabraham.site/#person",
+      "name": "Atul Abraham",
+      "url": "https://atulabraham.site/"
+    },
+    "publisher": {
+      "@type": "Person",
+      "@id": "https://atulabraham.site/#person",
+      "name": "Atul Abraham",
+      "url": "https://atulabraham.site/"
+    },
+    "keywords": "git, github, macos, automation, bash"
+  }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/styles.css?v=91c79144" />
+  <link rel="stylesheet" href="/css/blog.css?v=f43b0033" />
+  <script src="/js/blog.js?v=d24cc059" defer></script>
+</head>
+<body class="blog-page">
+  <a class="skip" href="#main">Skip to content</a>
+
+  <!-- top bar -->
+  <header class="topbar topbar-blog" id="top">
+    <a class="brand" href="/" aria-label="Atul Abraham, home">
+      <span class="brand-name">Atul Abraham</span>
+      <span class="brand-meta mono">Hoboken, NJ, USA</span>
+    </a>
+    <nav class="topnav" aria-label="Main">
+      <a class="nav-home" href="/"><span aria-hidden="true">← </span>Desk</a>
+      <a href="/#projects">Projects</a>
+      <a href="/#about">About</a>
+      <a class="nav-on" href="/blog/" aria-current="true">Blog</a>
+      <a class="btn btn-secondary btn-sm" href="/assets/Atul_Abraham_Resume.pdf" target="_blank" rel="noopener">Résumé</a>
+    </nav>
+  </header>
+
+  <main id="main" tabindex="-1">
+    <article class="post">
+      <header class="post-head">
+        <a class="back mono" href="/blog/"><span aria-hidden="true">← </span>All posts</a>
+        <h1 class="post-title">GitHub automation on a Mac: one double-click to commit and push</h1>
+        <p class="post-meta mono"><span data-nosnippet>Nov 4, 2026</span><span class="sep" aria-hidden="true">·</span><span>3 min read</span></p>
+        <ul class="post-tags" aria-label="Tags"><li class="pill mono">git</li><li class="pill mono">github</li><li class="pill mono">macos</li><li class="pill mono">automation</li><li class="pill mono">bash</li></ul>
+      </header>
+      <div class="prose">
+<p>This site lives on GitHub Pages, so every change, from a new project to a typo fix, ends with the same three commands: <code>git add .</code>, <code>git commit -m "..."</code> and <code>git push</code>. I was typing them several times a day and making up a new commit message each time. Half of those messages were "update" or "fix", which told me nothing a week later.</p>
+<p>So I made it a double-click.</p>
+<h2 id="the-idea">The idea</h2>
+<p>macOS treats any file ending in <code>.command</code> as a shell script that opens in Terminal when you double-click it in Finder. The repo already had two of these, <code>preview.command</code> for a local preview and <code>link-domain.command</code> for the domain sync, so a third one for pushing fit right in.</p>
+<h2 id="what-github-command-does">What github.command does</h2>
+<ol>
+<li>Moves into the folder the file sits in, so it works from wherever Finder opens it.</li>
+<li>Turns on the repo's commit hook, which rebuilds the blog pages and syncs the domain and location before every commit.</li>
+<li>Shows which files changed.</li>
+<li>Stops early if nothing changed, and only pushes any commits that haven't gone up yet.</li>
+<li>Asks for the kind of change as a number from 1 to 8 and uses that as the commit message.</li>
+<li>Runs <code>git add .</code>, <code>git commit</code> and <code>git push</code>, then waits for Return so I can read what happened.</li>
+</ol>
+<h2 id="the-menu">The menu</h2>
+<p>These are the commit messages I use most:</p>
+<ol>
+<li>New Features</li>
+<li>Clean - Up</li>
+<li>Full Revamp</li>
+<li>Optimization</li>
+<li>New Projects</li>
+<li>Site Updation</li>
+<li>New Blog</li>
+<li>New Certifications / Experience</li>
+</ol>
+<p>Picking from a fixed list keeps the history readable. When I scroll back through the log I can tell straight away which commits were new projects, which were blog posts and which were performance work.</p>
+<h2 id="the-core-of-it">The core of it</h2>
+<div class="code">
+<div class="code-bar"><span class="code-lang mono">bash</span></div>
+<pre><code class="language-bash">#!/bin/bash
+cd "$(dirname "$0")" || exit 1
+
+while true; do
+  read -r -p "Pick 1-8: " pick
+  case "$pick" in
+    1) MSG="New Features"; break ;;
+    2) MSG="Clean - Up"; break ;;
+    3) MSG="Full Revamp"; break ;;
+    4) MSG="Optimization"; break ;;
+    5) MSG="New Projects"; break ;;
+    6) MSG="Site Updation"; break ;;
+    7) MSG="New Blog"; break ;;
+    8) MSG="New Certifications / Experience"; break ;;
+    *) echo "Type a number from 1 to 8." ;;
+  esac
+done
+
+git add . &amp;&amp; git commit -m "$MSG" &amp;&amp; git push
+read -r -p "Press Return to close." _</code></pre>
+</div>
+<p><code>cd "$(dirname "$0")"</code> is the line that matters most. Finder starts the script from your home folder, so without it git would run in the wrong place.</p>
+<h2 id="setting-one-up-on-a-mac">Setting one up on a Mac</h2>
+<ul>
+<li>Save the script as <code>github.command</code> in the root of the repo.</li>
+<li>Make it runnable once: <code>chmod +x github.command</code>.</li>
+<li>The first time you double-click it, macOS may block it because it came from outside the App Store. Right-click &gt; Open once, or allow it under System Settings &gt; Privacy &amp; Security.</li>
+<li>Git needs to be able to push without asking for a password. A credential helper or an SSH key handles that.</li>
+</ul>
+<h2 id="why-it-s-worth-it">Why it's worth it</h2>
+<p>It turns three commands into a double-click and one keypress. I never forget the push. The commit hook still runs every time, and my history reads like a changelog instead of a list of "update" messages.</p>
+<h2 id="what-i-might-add-next">What I might add next</h2>
+<ul>
+<li>A ninth option for a custom message.</li>
+<li>A <code>git pull --rebase</code> before pushing, in case I edited something from another machine.</li>
+<li>A note at the end with the GitHub Pages URL so I can open the live site right away.</li>
+</ul>
+      </div>
+    </article>
+    <div class="post-end">
+      <section class="more" aria-labelledby="more-h">
+        <h2 class="more-h mono" id="more-h">More posts</h2>
+        <ol class="post-list post-list-sm">
+      <li>
+        <a class="post-row" href="/blog/flutter-release-runner/">
+          <span class="post-row-date mono" data-nosnippet>Nov 1, 2026</span>
+          <div class="post-row-main">
+            <h3 class="post-row-title">Running all my Flutter apps in release mode with one Python script</h3>
+            <p class="post-row-summary">I test a few Flutter apps on my phone every few days. Instead of opening each project and typing flutter run --release, a tiny Python script on my Mac runs them one after another.</p>
+            <div class="post-tags"><span class="pill mono">flutter</span><span class="pill mono">python</span><span class="pill mono">macos</span><span class="pill mono">automation</span></div>
+          </div>
+          <span class="post-row-go" aria-hidden="true">→</span>
+        </a>
+      </li>
+      <li>
+        <a class="post-row" href="/blog/abacus-view-counter/">
+          <span class="post-row-date mono" data-nosnippet>Oct 28, 2026</span>
+          <div class="post-row-main">
+            <h3 class="post-row-title">Adding a free view counter to an HTML and JS site with Abacus</h3>
+            <p class="post-row-summary">My portfolio is mainly HTML and JS with no backend. Abacus gives me a free view counter with one fetch call, here&#x27;s how I set it up.</p>
+            <div class="post-tags"><span class="pill mono">javascript</span><span class="pill mono">html</span><span class="pill mono">github-pages</span><span class="pill mono">web</span></div>
+          </div>
+          <span class="post-row-go" aria-hidden="true">→</span>
+        </a>
+      </li>
+        </ol>
+        <a class="btn btn-secondary" href="/blog/">All posts <span aria-hidden="true">→</span></a>
+      </section>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap footer-row">
+      <span>Atul Franklin Abraham · Hoboken, NJ, USA</span>
+      <a href="#top">Back to top ↑</a>
+    </div>
+  </footer>
+</body>
+</html>
