@@ -283,8 +283,19 @@ section[id] { scroll-margin-top: 0; }
 .contact { padding-bottom: 96px; overflow: hidden; background: var(--ink-1); }
 /* one band with education */
 .section-alt:has(+ .contact) { border-bottom: 0; }
-.contact-h { max-width: 16ch; }
-.contact-h span { color: var(--amber); }
+/* terminal headline */
+.contact-h.term { font-family: var(--mono); font-weight: 500; font-size: clamp(24px, 2.7vw, 38px); line-height: 1.25; letter-spacing: -0.02em; max-width: none; text-wrap: pretty; }
+.term-line { display: block; position: relative; padding-left: 1.4ch; }
+.term-line + .term-line { margin-top: .45em; }
+.term-p { position: absolute; left: 0; color: var(--amber); }
+.term-accent { color: var(--amber); }
+.term-cur { display: inline-block; width: .55em; height: .95em; margin-left: .2em; vertical-align: -0.1em; background: var(--amber); animation: blink 1.1s steps(1) infinite; }
+.contact-h.typed .tw { display: inline-block; opacity: 0; transform: translateX(-0.5em); transition: opacity .25s ease, transform .35s var(--ease); }
+.contact-h.typed .tw.on { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  .contact-h.typed .tw { transition: none; transform: none; }
+  .term-cur { animation: none; }
+}
 .contact-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 40px; position: relative; }
 .email-line { margin-top: 28px; color: var(--text-2); position: relative; }
 .email-line button { background: none; border: 0; color: var(--text-3); cursor: pointer; padding: 0 0 0 10px; }

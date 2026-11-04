@@ -110,11 +110,51 @@
     .join("");
 
   /* ---------------- 05 Contact ---------------- */
-  // contact headline
+  // contact headline, terminal prompt
   const C = S.contact || {};
-  if (C.headline || C.headlineAccent) {
-    const h = $("#contact-h");
-    if (h) h.innerHTML = esc(C.headline || "") + (C.headlineAccent ? ` <span>${esc(C.headlineAccent)}</span>` : "");
+  const termH = $("#contact-h");
+  if (termH) {
+    let lines = [C.headline, C.headlineAccent].map((t) => String(t || "").trim());
+    if (!lines.some(Boolean)) lines = $$(".term-line", termH).map((l) => l.textContent.replace(/^\s*>\s*/, "").trim());
+    termH.innerHTML = lines
+      .filter(Boolean)
+      .map((t, li) => {
+        const words = t.split(/\s+/).map((w) => `<span class="tw">${esc(w)}</span>`).join(" ");
+        return `<span class="term-line${li ? " term-accent" : ""}"><span class="term-p" aria-hidden="true">&gt;</span> ${words}</span>`;
+      })
+      .join(" ");
+    const cur = document.createElement("span");
+    cur.className = "term-cur";
+    cur.setAttribute("aria-hidden", "true");
+    const words = $$(".tw", termH);
+    const endCursor = () => { const ln = $$(".term-line", termH).pop(); if (ln) ln.appendChild(cur); };
+    // word by word, cursor follows
+    function type() {
+      let i = 0;
+      const step = () => {
+        const w = words[i];
+        if (!w) return endCursor();
+        w.classList.add("on");
+        w.after(cur);
+        const next = words[i + 1];
+        const gap = next && next.parentNode !== w.parentNode ? 420 : 120; // pause between lines
+        i++;
+        setTimeout(step, gap);
+      };
+      $$(".term-line", termH)[0].querySelector(".term-p").after(cur);
+      setTimeout(step, 350);
+    }
+    termH.classList.add("typed");
+    if (reduceMotion || !("IntersectionObserver" in window)) {
+      words.forEach((w) => w.classList.add("on"));
+      endCursor();
+    } else {
+      $$(".term-line", termH)[0].querySelector(".term-p").after(cur);
+      const io = new IntersectionObserver((en) => {
+        if (en.some((e) => e.isIntersecting)) { io.disconnect(); type(); }
+      }, { rootMargin: "0px 0px -15% 0px" });
+      io.observe(termH);
+    }
   }
   const CONTACT_LEAD = C.message || "Email is the quickest way to reach me. I am happy to talk about internships, projects or anything.";
   function contactActionsHTML() {

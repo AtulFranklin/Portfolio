@@ -2,8 +2,8 @@
 #
 # email, linkedin, github, studio:  my address and profile links (full https:// links)
 # resume:           path to the resume PDF from the website folder
-# headline:         the big contact line
-# headline accent:  the coloured words at the end of the headline
+# headline:         the big contact line, shown as a terminal prompt (> ...)
+# headline accent:  the second prompt line, in colour
 # message:          the first line in the Leave a message panel
 # form key:         Web3Forms access key - sends the Leave a message letter to my inbox.
 #                   New key: web3forms.com, sign up with my email, paste it on the form key line.
@@ -17,7 +17,7 @@ linkedin: https://www.linkedin.com/in/atulfranklin
 github: https://github.com/AtulFranklin
 studio: https://github.com/Clean-Spirit-Studios
 resume: assets/Atul_Abraham_Resume.pdf
-headline: Looking for an intern who ships?
-headline accent: Let's talk.
+headline: Wanna talk about exciting technologies or opportunities?
+headline accent: Contact me
 message: Email is the quickest way to reach me. I am happy to talk about internships, projects or anything.
 form key: af8d1c3f-62ad-4687-9d0a-c03c61057a88
