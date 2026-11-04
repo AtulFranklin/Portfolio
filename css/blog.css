@@ -89,12 +89,37 @@
 .code-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 40px; padding: 0 8px 0 18px; border-bottom: 1px solid var(--line); background: rgba(10, 12, 16, .35); }
 .code-lang { color: var(--text-3); font-size: 11px; }
 .code-copy {
-  height: 28px; padding: 0 12px; border-radius: var(--r-pill); border: 1px solid var(--line-2); background: transparent;
+  position: relative; height: 28px; padding: 0 12px; border-radius: var(--r-pill); border: 1px solid var(--line-2); background: transparent;
   color: var(--text-2); font-size: 10px; cursor: pointer; transition: color .2s, border-color .2s;
 }
 .code-copy:hover { color: var(--amber); border-color: var(--amber); }
-.code-copy.is-done { color: var(--up); border-color: rgba(61, 220, 151, .5); }
-.prose pre { margin: 0; padding: 18px 20px 20px; overflow-x: auto; font-size: 14px; line-height: 1.65; tab-size: 4; color: var(--text); }
+.code-copy.is-done { color: var(--text); border-color: rgba(236, 231, 221, .55); }
+/* spinning outline on copy */
+@property --cc-a { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+.code-copy::before {
+  content: ""; position: absolute; inset: -1px; padding: 1.5px; border-radius: inherit; pointer-events: none; opacity: 0;
+  background: conic-gradient(from var(--cc-a), rgba(236, 231, 221, 0) 0deg, rgba(236, 231, 221, 0) 200deg, var(--text) 330deg, rgba(236, 231, 221, 0) 360deg);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+}
+.code-copy.is-spin::before { animation: cc-spin 1.4s cubic-bezier(.3, 0, .3, 1) 1; }
+@keyframes cc-spin {
+  0% { --cc-a: 0deg; opacity: 1; }
+  85% { opacity: 1; }
+  100% { --cc-a: 720deg; opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) { .code-copy.is-spin::before { animation: none; } }
+.prose pre { margin: 0; padding: 18px 20px 20px; overflow-x: auto; font-size: 14px; line-height: 1.65; tab-size: 4; color: #D4D4D4; }
+/* code colours, vs code dark+ */
+.tk-k { color: #C586C0; }
+.tk-d { color: #569CD6; }
+.tk-s { color: #CE9178; }
+.tk-c { color: #6A9955; }
+.tk-n { color: #B5CEA8; }
+.tk-f { color: #DCDCAA; }
+.tk-t { color: #4EC9B0; }
+.tk-v { color: #9CDCFE; }
+.tk-y { color: #D7BA7D; }
 .prose pre code { padding: 0; border: 0; background: none; font-size: inherit; overflow-wrap: normal; white-space: pre; }
 @media (min-width: 1000px) {
   .prose .code { margin-left: -56px; margin-right: -56px; }

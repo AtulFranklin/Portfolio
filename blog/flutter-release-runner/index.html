@@ -67,8 +67,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/css/styles.css?v=91c79144" />
-  <link rel="stylesheet" href="/css/blog.css?v=f43b0033" />
-  <script src="/js/blog.js?v=d24cc059" defer></script>
+  <link rel="stylesheet" href="/css/blog.css?v=eb1f0e99" />
+  <script src="/js/blog.js?v=1784ec98" defer></script>
 </head>
 <body class="blog-page">
   <a class="skip" href="#main">Skip to content</a>
@@ -114,20 +114,20 @@
 <div class="code">
 <div class="code-bar"><span class="code-lang mono">python</span></div>
 <pre><code class="language-python">APPS = [
-    ("Bible Plus", "~/Documents/Projects/bible_plus"),
-    ("Productivity Plus", "~/Documents/Projects/Productivity-Plus-IOS"),
-    ("Trade on Paper", "~/Documents/Projects/trade_on_paper"),
+    (<span class="tk-s">"Bible Plus"</span>, <span class="tk-s">"~/Documents/Projects/bible_plus"</span>),
+    (<span class="tk-s">"Productivity Plus"</span>, <span class="tk-s">"~/Documents/Projects/Productivity-Plus-IOS"</span>),
+    (<span class="tk-s">"Trade on Paper"</span>, <span class="tk-s">"~/Documents/Projects/trade_on_paper"</span>),
 ]
 
-for name, path in APPS:
-    root = find_flutter_root(os.path.expanduser(path))
-    if not root:
-        print(f"skipping {name}, no pubspec.yaml")
-        continue
-    try:
-        subprocess.run(["flutter", "run", "--release"], cwd=root)
-    except KeyboardInterrupt:
-        print(f"{name} interrupted, moving on")</code></pre>
+<span class="tk-k">for</span> name, path <span class="tk-k">in</span> APPS:
+    root = <span class="tk-f">find_flutter_root</span>(os.path.<span class="tk-f">expanduser</span>(path))
+    <span class="tk-k">if</span> <span class="tk-k">not</span> root:
+        <span class="tk-f">print</span>(<span class="tk-s">f"skipping {name}, no pubspec.yaml"</span>)
+        <span class="tk-k">continue</span>
+    <span class="tk-k">try</span>:
+        subprocess.<span class="tk-f">run</span>([<span class="tk-s">"flutter"</span>, <span class="tk-s">"run"</span>, <span class="tk-s">"--release"</span>], cwd=root)
+    <span class="tk-k">except</span> <span class="tk-t">KeyboardInterrupt</span>:
+        <span class="tk-f">print</span>(<span class="tk-s">f"{name} interrupted, moving on"</span>)</code></pre>
 </div>
 <p><code>find_flutter_root</code> just checks the folder for <code>pubspec.yaml</code>, then each folder inside it, and returns the first match.</p>
 <h2 id="running-it-on-a-mac">Running it on a Mac</h2>

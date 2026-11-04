@@ -67,8 +67,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/css/styles.css?v=91c79144" />
-  <link rel="stylesheet" href="/css/blog.css?v=f43b0033" />
-  <script src="/js/blog.js?v=d24cc059" defer></script>
+  <link rel="stylesheet" href="/css/blog.css?v=eb1f0e99" />
+  <script src="/js/blog.js?v=1784ec98" defer></script>
 </head>
 <body class="blog-page">
   <a class="skip" href="#main">Skip to content</a>
@@ -109,16 +109,16 @@
 <p>This is all it takes to have a working counter:</p>
 <div class="code">
 <div class="code-bar"><span class="code-lang mono">html</span></div>
-<pre><code class="language-html">&lt;span id="views"&gt;&lt;/span&gt;
+<pre><code class="language-html"><span class="tk-d">&lt;span</span> <span class="tk-v">id</span>=<span class="tk-s">"views"</span><span class="tk-d">&gt;</span><span class="tk-d">&lt;/span</span><span class="tk-d">&gt;</span>
 
-&lt;script&gt;
-  fetch("https://abacus.jasoncameron.dev/hit/my-site.com/views")
-    .then((r) =&gt; r.json())
-    .then((d) =&gt; {
-      document.getElementById("views").textContent = d.value.toLocaleString() + " views";
+<span class="tk-d">&lt;script</span><span class="tk-d">&gt;</span>
+  <span class="tk-f">fetch</span>(<span class="tk-s">"https://abacus.jasoncameron.dev/hit/my-site.com/views"</span>)
+    .<span class="tk-f">then</span>((r) =&gt; r.<span class="tk-f">json</span>())
+    .<span class="tk-f">then</span>((d) =&gt; {
+      <span class="tk-v">document</span>.<span class="tk-f">getElementById</span>(<span class="tk-s">"views"</span>).textContent = d.value.<span class="tk-f">toLocaleString</span>() + <span class="tk-s">" views"</span>;
     })
-    .catch(() =&gt; {});
-&lt;/script&gt;</code></pre>
+    .<span class="tk-f">catch</span>(() =&gt; {});
+<span class="tk-d">&lt;/script</span><span class="tk-d">&gt;</span></code></pre>
 </div>
 <p>Every page load adds one and shows the total.</p>
 <h2 id="making-the-number-honest">Making the number honest</h2>
@@ -133,42 +133,42 @@
 <p>The core of it looks like this:</p>
 <div class="code">
 <div class="code-bar"><span class="code-lang mono">js</span></div>
-<pre><code class="language-js">const API = "https://abacus.jasoncameron.dev";
-const NS = "my-site.com";
-const KEY = "views";
+<pre><code class="language-js"><span class="tk-d">const</span> API = <span class="tk-s">"https://abacus.jasoncameron.dev"</span>;
+<span class="tk-d">const</span> NS = <span class="tk-s">"my-site.com"</span>;
+<span class="tk-d">const</span> KEY = <span class="tk-s">"views"</span>;
 
-const el = document.getElementById("views");
-const isLocal = /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
-const action = !isLocal &amp;&amp; !sessionStorage.getItem("views-hit") ? "hit" : "get";
+<span class="tk-d">const</span> el = <span class="tk-v">document</span>.<span class="tk-f">getElementById</span>(<span class="tk-s">"views"</span>);
+<span class="tk-d">const</span> isLocal = /^(localhost|<span class="tk-n">127</span>\.<span class="tk-n">0</span>\.<span class="tk-n">0</span>\.<span class="tk-n">1</span>)$/.<span class="tk-f">test</span>(location.hostname);
+<span class="tk-d">const</span> action = !isLocal &amp;&amp; !sessionStorage.<span class="tk-f">getItem</span>(<span class="tk-s">"views-hit"</span>) ? <span class="tk-s">"hit"</span> : <span class="tk-s">"get"</span>;
 
-function show(n) {
-  el.textContent = n.toLocaleString("en-US") + " views";
-  el.classList.add("ready");
+<span class="tk-d">function</span> <span class="tk-f">show</span>(n) {
+  el.textContent = n.<span class="tk-f">toLocaleString</span>(<span class="tk-s">"en-US"</span>) + <span class="tk-s">" views"</span>;
+  el.classList.<span class="tk-f">add</span>(<span class="tk-s">"ready"</span>);
 }
 
-const ctrl = new AbortController();
-setTimeout(() =&gt; ctrl.abort(), 4000);
+<span class="tk-d">const</span> ctrl = <span class="tk-k">new</span> <span class="tk-t">AbortController</span>();
+<span class="tk-f">setTimeout</span>(() =&gt; ctrl.<span class="tk-f">abort</span>(), <span class="tk-n">4000</span>);
 
-fetch(`${API}/${action}/${NS}/${KEY}`, { cache: "no-store", signal: ctrl.signal })
-  .then((r) =&gt; {
-    if (!r.ok) throw new Error(r.status);
-    return r.json();
+<span class="tk-f">fetch</span>(<span class="tk-s">`${API}/${action}/${NS}/${KEY}`</span>, { cache: <span class="tk-s">"no-store"</span>, signal: ctrl.signal })
+  .<span class="tk-f">then</span>((r) =&gt; {
+    <span class="tk-k">if</span> (!r.ok) <span class="tk-k">throw</span> <span class="tk-k">new</span> <span class="tk-t">Error</span>(r.status);
+    <span class="tk-k">return</span> r.<span class="tk-f">json</span>();
   })
-  .then((d) =&gt; {
-    if (action === "hit") sessionStorage.setItem("views-hit", "1");
-    localStorage.setItem("views-last", d.value);
-    show(d.value);
+  .<span class="tk-f">then</span>((d) =&gt; {
+    <span class="tk-k">if</span> (action === <span class="tk-s">"hit"</span>) sessionStorage.<span class="tk-f">setItem</span>(<span class="tk-s">"views-hit"</span>, <span class="tk-s">"1"</span>);
+    localStorage.<span class="tk-f">setItem</span>(<span class="tk-s">"views-last"</span>, d.value);
+    <span class="tk-f">show</span>(d.value);
   })
-  .catch(() =&gt; {
-    const last = +localStorage.getItem("views-last");
-    if (last) show(last);
+  .<span class="tk-f">catch</span>(() =&gt; {
+    <span class="tk-d">const</span> last = +localStorage.<span class="tk-f">getItem</span>(<span class="tk-s">"views-last"</span>);
+    <span class="tk-k">if</span> (last) <span class="tk-f">show</span>(last);
   });</code></pre>
 </div>
 <p>And the CSS for the fade:</p>
 <div class="code">
 <div class="code-bar"><span class="code-lang mono">css</span></div>
-<pre><code class="language-css">#views { opacity: 0; transition: opacity .4s; }
-#views.ready { opacity: .75; }</code></pre>
+<pre><code class="language-css"><span class="tk-y">#views</span> { <span class="tk-v">opacity</span>: <span class="tk-n">0</span>; <span class="tk-v">transition</span>: opacity <span class="tk-n">.4s</span>; }
+<span class="tk-y">#views.ready</span> { <span class="tk-v">opacity</span>: <span class="tk-n">.75</span>; }</code></pre>
 </div>
 <h2 id="things-to-know">Things to know</h2>
 <ul>

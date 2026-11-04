@@ -68,8 +68,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/css/styles.css?v=91c79144" />
-  <link rel="stylesheet" href="/css/blog.css?v=f43b0033" />
-  <script src="/js/blog.js?v=d24cc059" defer></script>
+  <link rel="stylesheet" href="/css/blog.css?v=eb1f0e99" />
+  <script src="/js/blog.js?v=1784ec98" defer></script>
 </head>
 <body class="blog-page">
   <a class="skip" href="#main">Skip to content</a>
@@ -127,26 +127,26 @@
 <h2 id="the-core-of-it">The core of it</h2>
 <div class="code">
 <div class="code-bar"><span class="code-lang mono">bash</span></div>
-<pre><code class="language-bash">#!/bin/bash
-cd "$(dirname "$0")" || exit 1
+<pre><code class="language-bash"><span class="tk-c">#!/bin/bash</span>
+<span class="tk-f">cd</span> <span class="tk-s">"</span><span class="tk-v">$(dirname "$0")</span><span class="tk-s">"</span> || <span class="tk-k">exit</span> <span class="tk-n">1</span>
 
-while true; do
-  read -r -p "Pick 1-8: " pick
-  case "$pick" in
-    1) MSG="New Features"; break ;;
-    2) MSG="Clean - Up"; break ;;
-    3) MSG="Full Revamp"; break ;;
-    4) MSG="Optimization"; break ;;
-    5) MSG="New Projects"; break ;;
-    6) MSG="Site Updation"; break ;;
-    7) MSG="New Blog"; break ;;
-    8) MSG="New Certifications / Experience"; break ;;
-    *) echo "Type a number from 1 to 8." ;;
-  esac
-done
+<span class="tk-k">while</span> <span class="tk-d">true</span>; <span class="tk-k">do</span>
+  <span class="tk-f">read</span> -r -p <span class="tk-s">"Pick 1-8: "</span> pick
+  <span class="tk-k">case</span> <span class="tk-s">"</span><span class="tk-v">$pick</span><span class="tk-s">"</span> <span class="tk-k">in</span>
+    <span class="tk-n">1</span>) <span class="tk-v">MSG</span>=<span class="tk-s">"New Features"</span>; <span class="tk-k">break</span> ;;
+    <span class="tk-n">2</span>) <span class="tk-v">MSG</span>=<span class="tk-s">"Clean - Up"</span>; <span class="tk-k">break</span> ;;
+    <span class="tk-n">3</span>) <span class="tk-v">MSG</span>=<span class="tk-s">"Full Revamp"</span>; <span class="tk-k">break</span> ;;
+    <span class="tk-n">4</span>) <span class="tk-v">MSG</span>=<span class="tk-s">"Optimization"</span>; <span class="tk-k">break</span> ;;
+    <span class="tk-n">5</span>) <span class="tk-v">MSG</span>=<span class="tk-s">"New Projects"</span>; <span class="tk-k">break</span> ;;
+    <span class="tk-n">6</span>) <span class="tk-v">MSG</span>=<span class="tk-s">"Site Updation"</span>; <span class="tk-k">break</span> ;;
+    <span class="tk-n">7</span>) <span class="tk-v">MSG</span>=<span class="tk-s">"New Blog"</span>; <span class="tk-k">break</span> ;;
+    <span class="tk-n">8</span>) <span class="tk-v">MSG</span>=<span class="tk-s">"New Certifications / Experience"</span>; <span class="tk-k">break</span> ;;
+    *) <span class="tk-f">echo</span> <span class="tk-s">"Type a number from 1 to 8."</span> ;;
+  <span class="tk-k">esac</span>
+<span class="tk-k">done</span>
 
-git add . &amp;&amp; git commit -m "$MSG" &amp;&amp; git push
-read -r -p "Press Return to close." _</code></pre>
+<span class="tk-f">git</span> add . &amp;&amp; <span class="tk-f">git</span> commit -m <span class="tk-s">"</span><span class="tk-v">$MSG</span><span class="tk-s">"</span> &amp;&amp; <span class="tk-f">git</span> push
+<span class="tk-f">read</span> -r -p <span class="tk-s">"Press Return to close."</span> _</code></pre>
 </div>
 <p><code>cd "$(dirname "$0")"</code> is the line that matters most. Finder starts the script from your home folder, so without it git would run in the wrong place.</p>
 <h2 id="setting-one-up-on-a-mac">Setting one up on a Mac</h2>

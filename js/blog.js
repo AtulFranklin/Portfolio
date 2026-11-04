@@ -29,8 +29,12 @@
         function () { b.textContent = "Copied"; b.classList.add("is-done"); },
         function () { b.textContent = "Select and copy"; }
       );
+      // restart the outline spin
+      b.classList.remove("is-spin");
+      void b.offsetWidth;
+      b.classList.add("is-spin");
       clearTimeout(timer);
-      timer = setTimeout(function () { b.textContent = "Copy"; b.classList.remove("is-done"); }, 1600);
+      timer = setTimeout(function () { b.textContent = "Copy"; b.classList.remove("is-done", "is-spin"); }, 1900);
     });
     bar.appendChild(b);
   });

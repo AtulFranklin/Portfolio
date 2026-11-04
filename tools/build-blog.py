@@ -134,6 +134,232 @@ LINK = re.compile(r'\[((?:[^\[\]]|\[[^\]]*\])+)\]\(\s*<?([^)\s>]+)>?(?:\s+"([^"]
 LONE_IMAGE = re.compile(r'^\s*!\[[^\]]*\]\([^)]*\)\s*$')
 
 
+# ---- code colours ----
+
+def _words(s):
+    return set(s.split())
+
+
+HL_LANGS = {
+    "python": {
+        "comment": r"#[^\n]*",
+        "string": r"(?:[rRbBfFuU]{1,2})?(?:\"\"\"[\s\S]*?\"\"\"|'''[\s\S]*?'''|\"(?:\\.|[^\"\\\n])*\"|'(?:\\.|[^'\\\n])*')",
+        "deco": r"@[A-Za-z_][\w.]*",
+        "control": _words("if elif else for while break continue return try except finally raise with as import from pass yield await async in not and or is del global nonlocal assert match case"),
+        "storage": _words("def class lambda True False None self cls"),
+        "builtin": _words("print len range open str int float list dict set tuple enumerate zip isinstance super sorted min max sum any all map filter input type bool abs round reversed"),
+        "fn_after": _words("def"),
+        "type_after": _words("class"),
+        "caps_type": True,
+    },
+    "bash": {
+        "comment": r"(?<![\w$#{])#[^\n]*",
+        "string": r"\"(?:\\.|\$\([^)\n]*\)|[^\"\\])*\"|'[^']*'",
+        "var": r"\$\{[^}\n]*\}|\$[A-Za-z_]\w*|\$[0-9@#?*!$-]",
+        "control": _words("if then else elif fi for in do done while until case esac function return local export select break continue exit"),
+        "storage": _words("true false"),
+        "builtin": set(),
+        "shell": True,
+    },
+    "js": {
+        "comment": r"//[^\n]*|/\*[\s\S]*?\*/",
+        "string": r"`(?:\\.|[^`\\])*`|\"(?:\\.|[^\"\\\n])*\"|'(?:\\.|[^'\\\n])*'",
+        "control": _words("if else for while do return break continue switch case default try catch finally throw import export from await yield new delete typeof instanceof in of as"),
+        "storage": _words("const let var function class extends async static get set this null undefined true false void interface type enum implements"),
+        "builtin": _words("console document window Math JSON Object Array Promise String Number Boolean Map Set Date"),
+        "fn_after": _words("function"),
+        "type_after": _words("class extends new implements"),
+        "caps_type": True,
+    },
+    "dart": {
+        "comment": r"//[^\n]*|/\*[\s\S]*?\*/",
+        "string": r"r?(?:\"\"\"[\s\S]*?\"\"\"|'''[\s\S]*?'''|\"(?:\\.|[^\"\\\n])*\"|'(?:\\.|[^'\\\n])*')",
+        "deco": r"@[A-Za-z_]\w*",
+        "control": _words("if else for while do return break continue switch case default try catch finally throw rethrow import export library part show hide as await yield new in is assert on"),
+        "storage": _words("var final const late required class extends implements with mixin enum abstract static void dynamic async sync this super null true false get set factory typedef"),
+        "builtin": _words("print"),
+        "type_after": _words("class extends implements with new"),
+        "caps_type": True,
+    },
+    "json": {
+        "string": r"\"(?:\\.|[^\"\\\n])*\"",
+        "control": set(),
+        "storage": _words("true false null"),
+        "builtin": set(),
+        "json": True,
+    },
+    "css": {
+        "comment": r"/\*[\s\S]*?\*/",
+        "string": r"\"(?:\\.|[^\"\\\n])*\"|'(?:\\.|[^'\\\n])*'",
+        "control": set(),
+        "storage": set(),
+        "builtin": set(),
+        "css": True,
+    },
+}
+HL_ALIAS = {
+    "py": "python", "python3": "python", "sh": "bash", "shell": "bash", "zsh": "bash", "console": "bash",
+    "command": "bash", "javascript": "js", "ts": "js", "typescript": "js", "jsx": "js", "tsx": "js",
+    "mjs": "js", "jsonc": "json", "scss": "css",
+}
+NUMBER = r"\b(?:0[xX][0-9a-fA-F_]+|\d[\d_]*\.?\d*(?:[eE][+-]?\d+)?)\b"
+_HL_CACHE = {}
+
+
+def _hl_regex(lang, spec):
+    if lang in _HL_CACHE:
+        return _HL_CACHE[lang]
+    parts = []
+    for name in ("comment", "string", "var", "deco"):
+        if spec.get(name):
+            parts.append(f"(?P<{name}>{spec[name]})")
+    if spec.get("css"):
+        parts.insert(1, r"(?P<sel>[^{}\s;/][^{};]*?)(?=\s*\{)")
+        parts.append(r"(?P<color>#[0-9a-fA-F]{3,8}\b)")
+        parts.append(r"(?P<prop>[A-Za-z-]+)(?=\s*:[^:{};]*[;}])")
+        parts.append(r"(?P<num>-?\d*\.?\d+(?:%|[a-zA-Z]+)?)")
+        parts.append(r"(?P<word>[A-Za-z_-][\w-]*)")
+    else:
+        parts.append(f"(?P<num>{NUMBER})")
+        word = r"[A-Za-z_][\w.-]*|\.{0,2}/[\w./-]+" if spec.get("shell") else r"[A-Za-z_]\w*"
+        parts.append(f"(?P<word>{word})")
+    parts.append(r"(?P<nl>\n)")
+    parts.append(r"(?P<op>&&|\|\||[|;(){}])")
+    rx = re.compile("|".join(parts))
+    _HL_CACHE[lang] = rx
+    return rx
+
+
+def _span(cls, text):
+    return f'<span class="tk-{cls}">{html.escape(text, quote=False)}</span>'
+
+
+SHELL_VAR = re.compile(r"\$\([^)\n]*\)|\$\{[^}\n]*\}|\$[A-Za-z_]\w*|\$[0-9@#?*!$-]")
+
+
+def _shell_str(text):
+    # vars inside double quotes
+    out, pos = [], 0
+    for m in SHELL_VAR.finditer(text):
+        if m.start() > pos:
+            out.append(_span("s", text[pos:m.start()]))
+        out.append(_span("v", m.group()))
+        pos = m.end()
+    if pos < len(text):
+        out.append(_span("s", text[pos:]))
+    return "".join(out)
+
+
+HTML_TOK = re.compile(r"(?P<c><!--[\s\S]*?-->)|(?P<tag></?[A-Za-z][\w-]*)(?P<attrs>[^>]*?)(?P<end>/?>)", re.S)
+HTML_ATTR = re.compile(r"(?P<a>[^\s=/]+)(?:(?P<eq>\s*=\s*)(?P<v>\"[^\"]*\"|'[^']*'|[^\s>]+))?")
+
+
+def _html(code):
+    out, pos, inner = [], 0, None
+    for m in HTML_TOK.finditer(code):
+        if inner and (not m.group("tag") or m.group("tag").lower() != "</" + inner):
+            continue
+        text = code[pos:m.start()]
+        out.append(highlight(text, "js" if inner == "script" else "css") if inner else html.escape(text, quote=False))
+        pos = m.end()
+        inner = None
+        if m.group("c"):
+            out.append(_span("c", m.group("c")))
+            continue
+        tag = m.group("tag")
+        out.append(_span("d", tag))
+        attrs, apos = m.group("attrs"), 0
+        for a in HTML_ATTR.finditer(attrs):
+            out.append(html.escape(attrs[apos:a.start()], quote=False))
+            out.append(_span("v", a.group("a")))
+            if a.group("eq"):
+                out.append(html.escape(a.group("eq"), quote=False) + _span("s", a.group("v")))
+            apos = a.end()
+        out.append(html.escape(attrs[apos:], quote=False))
+        out.append(_span("d", m.group("end")))
+        name = tag.lstrip("<").lower()
+        if name in ("script", "style") and not tag.startswith("</") and m.group("end") == ">":
+            inner = name
+    out.append(html.escape(code[pos:], quote=False))
+    return "".join(out)
+
+
+def highlight(code, lang):
+    # vs code dark+ style spans, plain text if unknown
+    lang = HL_ALIAS.get((lang or "").lower(), (lang or "").lower())
+    if lang in ("html", "xml", "svg"):
+        return _html(code)
+    spec = HL_LANGS.get(lang)
+    if not spec:
+        return html.escape(code, quote=False)
+    rx = _hl_regex(lang, spec)
+    out, pos, prev, cmd = [], 0, "", True
+    for m in rx.finditer(code):
+        out.append(html.escape(code[pos:m.start()], quote=False))
+        pos = m.end()
+        kind, text = m.lastgroup, m.group()
+        after = code[m.end():m.end() + 40]
+        if kind == "nl":
+            out.append(text)
+            cmd = True
+            continue
+        if kind == "op":
+            out.append(html.escape(text, quote=False))
+            if spec.get("shell"):
+                cmd = True
+            continue
+        if kind == "comment":
+            out.append(_span("c", text))
+        elif kind == "string" and spec.get("shell") and text.startswith('"'):
+            out.append(_shell_str(text))
+        elif kind == "string":
+            if spec.get("json") and re.match(r"\s*:", after):
+                out.append(_span("v", text))
+            else:
+                out.append(_span("s", text))
+        elif kind == "var":
+            out.append(_span("v", text))
+        elif kind == "deco":
+            out.append(_span("f", text))
+        elif kind in ("num", "color"):
+            out.append(_span("n" if kind == "num" else "s", text))
+        elif kind == "sel":
+            out.append(_span("y", text))
+        elif kind == "prop":
+            out.append(_span("v", text))
+        elif code[m.start() - 1:m.start()] == "." and re.match(r"\s*\(", after) and not spec.get("css"):
+            out.append(_span("f", text))
+        else:
+            if text in spec["control"]:
+                out.append(_span("k", text))
+                if spec.get("shell"):
+                    cmd = text in ("then", "do", "else", "elif", "if", "while", "until")
+                    prev = text
+                    continue
+            elif text in spec["storage"]:
+                out.append(_span("d", text))
+            elif prev in spec.get("fn_after", ()):
+                out.append(_span("f", text))
+            elif prev in spec.get("type_after", ()):
+                out.append(_span("t", text))
+            elif spec.get("shell") and re.match(r"=", after):
+                out.append(_span("v", text))
+            elif spec.get("shell") and cmd and not text.startswith("-"):
+                out.append(_span("f", text))
+            elif re.match(r"\s*\(", after) and not spec.get("css"):
+                out.append(_span("f", text))
+            elif text in spec["builtin"]:
+                out.append(_span("t" if text[:1].isupper() else "v", text))
+            elif spec.get("caps_type") and text[:1].isupper() and not text.isupper():
+                out.append(_span("t", text))
+            else:
+                out.append(html.escape(text, quote=False))
+        prev = text
+        cmd = False
+    out.append(html.escape(code[pos:], quote=False))
+    return "".join(out)
+
+
 def indent(line):
     return len(line) - len(line.lstrip(" "))
 
@@ -242,7 +468,7 @@ class Markdown:
     def code_block(self, lines, lang):
         while lines and not lines[-1].strip():
             lines.pop()
-        body = html.escape("\n".join(lines), quote=False)
+        body = highlight("\n".join(lines), lang)
         cls = f' class="language-{esc(lang.lower())}"' if lang else ""
         label = f'<span class="code-lang mono">{esc(lang)}</span>' if lang else '<span class="code-lang mono"></span>'
         return f'<div class="code">\n<div class="code-bar">{label}</div>\n<pre><code{cls}>{body}</code></pre>\n</div>'
