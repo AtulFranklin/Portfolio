@@ -164,6 +164,15 @@ li { list-style: none; }
   transition: opacity .8s var(--ease), visibility .8s;
 }
 .loader.done { opacity: 0; visibility: hidden; }
+/* loading terminal */
+.term-load { width: min(640px, calc(100% - 2 * var(--gutter))); font-size: 15px; line-height: 1.6; color: var(--text-2); text-transform: none; letter-spacing: 0; }
+.tl-line { position: relative; padding-left: 1.6ch; }
+.tl-line + .tl-line { margin-top: 10px; }
+.tl-fact { min-height: 4.8em; color: var(--text); }
+.tl-tag { color: var(--text-3); }
+.tl-dots::after { content: ""; animation: tlDots 1.2s steps(1) infinite; }
+@keyframes tlDots { 0% { content: ""; } 25% { content: "."; } 50% { content: ".."; } 75% { content: "..."; } }
+.term-load .term-cur { width: .6em; height: 1.05em; vertical-align: -0.18em; margin-left: .1em; }
 .scene-fallback {
   position: absolute; inset: 0; background:
     radial-gradient(60% 50% at 70% 60%, rgba(245, 176, 65, 0.22), rgba(245, 176, 65, 0) 70%),
@@ -439,6 +448,40 @@ body.modal-open { overflow: hidden; }
   .m-obj-blog { grid-column: 1 / -1; justify-self: center; width: calc(50% - 5px); margin-top: 14px; }
   .m-obj-blog img { width: 76%; margin: -4% 0 -6%; }
   .scroll-cue { position: relative; left: auto; bottom: auto; transform: none; margin: 30px auto 0; width: max-content; z-index: 2; }
+}
+
+/* ---------- lite desk, slow pcs ---------- */
+.lite-3d { display: none; }
+@media (min-width: 721px) {
+  .desk-lite .hero {
+    height: auto; min-height: 100vh; min-height: 100svh; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; gap: 40px 56px;
+    padding: 150px max(var(--gutter), calc((100% - var(--wrap)) / 2)) 120px; background: #07080B url("../assets/skyline.jpg") center 35% / cover no-repeat;
+  }
+  .desk-lite .hero::after {
+    background: radial-gradient(75% 85% at 0% 45%, rgba(7,8,11,.85), rgba(7,8,11,.35) 70%),
+                linear-gradient(to bottom, rgba(7,8,11,.7) 0, rgba(7,8,11,.3) 35%, rgba(7,8,11,.55) 80%, rgba(10,12,16,1) 100%);
+  }
+  .desk-lite .scene, .desk-lite .scene-label, .desk-lite .scene-fallback, .desk-lite .hero-hint, .desk-lite .loader { display: none !important; }
+  .desk-lite .hero-copy { position: relative; top: auto; left: auto; max-width: 600px; }
+  .desk-lite .m-desk { position: relative; z-index: 2; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px 14px; width: 100%; max-width: 640px; justify-self: end; }
+  .desk-lite .m-obj { background: none; border: 0; padding: 0; cursor: pointer; color: var(--text); display: flex; flex-direction: column; align-items: center; text-align: center; border-radius: var(--r-md); }
+  .desk-lite .m-obj img { width: 100%; height: auto; aspect-ratio: 1; object-fit: contain; margin: -6% 0 -6%; filter: drop-shadow(0 14px 18px rgba(0,0,0,.35)); transition: transform .25s var(--ease); }
+  .desk-lite .m-obj:hover img { transform: translateY(-4px) scale(1.03); }
+  .desk-lite .m-obj:hover span { color: var(--amber); }
+  .desk-lite .m-obj span { font-size: 16px; font-weight: 600; letter-spacing: -0.01em; margin-top: 2px; transition: color .2s; }
+  .desk-lite a.m-obj, .desk-lite a.m-obj:hover { text-decoration: none; }
+  /* crt big, rest around it */
+  .desk-lite .m-obj-wide { grid-column: span 2; grid-row: span 2; justify-content: center; }
+  .desk-lite .m-obj-wide img { width: 92%; margin: -4% 0 -6%; }
+  .desk-lite .lite-3d {
+    display: block; position: absolute; z-index: 3; left: max(var(--gutter), calc((100% - var(--wrap)) / 2)); bottom: 34px;
+    background: none; border: 0; border-bottom: 1px solid var(--line-2); padding: 4px 0; color: var(--text-3); cursor: pointer; transition: color .2s, border-color .2s;
+  }
+  .desk-lite .lite-3d:hover { color: var(--amber); border-color: var(--amber); }
+}
+@media (min-width: 721px) and (max-width: 1000px) {
+  .desk-lite .hero { grid-template-columns: 1fr; padding-top: 130px; }
+  .desk-lite .m-desk { justify-self: start; max-width: 560px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

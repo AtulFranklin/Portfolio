@@ -283,7 +283,8 @@
   const SRC = document.currentScript && document.currentScript.src;
   function mkCanvas(w, h) { const c = document.createElement("canvas"); c.width = w; c.height = h; return c; }
   function paint(cv, buf, y0, rows) { cv.getContext("2d").putImageData(new ImageData(buf, cv.width, rows), 0, y0); }
-  let started = null;
+  let started = null, stopFn = null;
+  function stop() { if (stopFn) stopFn(); }
   function start() {
     if (started) return started;
     const t0 = performance.now(), n = Math.max(2, (navigator.hardwareConcurrency || 4) - 1);
@@ -303,6 +304,7 @@
     started = new Promise((resolve) => {
       const pool = [], got = new Array(jobs.length);
       let next = 0, left = jobs.length, dead = false;
+      stopFn = () => { dead = true; pool.forEach((w) => w.terminate()); };
       const finish = () => {
         R.ms = Math.round(performance.now() - t0); R.done = performance.now(); R.jobs = log.join(", ");
         resolve(TX);
@@ -346,5 +348,5 @@
     });
     return started;
   }
-  window.DESK_TEX = { start };
+  window.DESK_TEX = { start, stop };
 })();

@@ -1,0 +1,29 @@
+# FUN FACTS - typed out on the 3D desk loading screen, one after another.
+# One fact per line. Blank lines and lines starting with # are skipped.
+# Keep each one to a sentence or two so it types out quickly.
+#
+# Example line:
+# The first website went live at CERN in 1991.
+
+The first logged "computer bug" was a real moth, taped into the Harvard Mark II logbook in 1947.
+Ada Lovelace published what's often called the first computer program in 1843, for Babbage's Analytical Engine.
+Python is named after Monty Python's Flying Circus, not the snake.
+Brendan Eich wrote the first version of JavaScript in about 10 days in 1995.
+The first website went live at CERN in 1991, and you can still visit it at info.cern.ch.
+The Apollo 11 guidance computer had about 4 KB of RAM.
+Margaret Hamilton led the team that wrote the Apollo on-board flight software.
+Grace Hopper's A-0 system from 1952 is often called the first compiler.
+FORTRAN, released in 1957, is still used for scientific computing today.
+Linus Torvalds announced Linux in 1991 as "just a hobby, won't be big and professional".
+Linus Torvalds also wrote Git, in 2005, for the Linux kernel's own source code.
+Unix time counts seconds since January 1, 1970, and 32-bit counters run out on January 19, 2038.
+The Y2K bug came from storing years as two digits to save memory.
+"Hello, world!" became famous through Brian Kernighan's C tutorials in the 1970s.
+The first .com domain ever registered was symbolics.com, on March 15, 1985.
+Ray Tomlinson picked the @ sign for email addresses in 1971.
+The first computer mouse, built for Douglas Engelbart in the 1960s, had a wooden shell.
+Dart, the language behind Flutter, was first shown by Google in 2011.
+Stack Overflow launched in 2008.
+US stocks traded in fractions like 1/16 of a dollar until decimal prices took over in 2001.
+A nibble is half a byte: 4 bits.
+"There are only two hard things in Computer Science: cache invalidation and naming things." - Phil Karlton

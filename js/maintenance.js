@@ -3,12 +3,97 @@
 (function () {
   "use strict";
 
+  /* ---- lite desk, slow pcs ---- */
+  var PERF_DAYS = 30;            // keep a gpu check this long
+  var BENCH_MS = 40;             // gpu test slower than this = flat desk
+  function store(kind) { try { return window[kind]; } catch (_) { return null; } }
+  function goLite() {
+    if (window.DESK_LITE) return;
+    window.DESK_LITE = true;
+    document.documentElement.classList.add("desk-lite");
+    var ss = store("sessionStorage"), ls = store("localStorage");
+    if (window.DESK_TEX && window.DESK_TEX.stop) window.DESK_TEX.stop();
+    var ld = document.getElementById("loader");
+    if (ld) ld.classList.add("done");
+    // way back to the 3d desk
+    var hero = document.getElementById("top");
+    if (hero && !hero.querySelector(".lite-3d")) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "lite-3d mono";
+      b.textContent = "Load the 3D desk";
+      b.addEventListener("click", function () {
+        try { if (ss) ss.setItem("desk-3d", "1"); if (ls) ls.setItem("desk-perf", "full:" + Date.now()); } catch (_) {}
+        location.reload();
+      });
+      hero.appendChild(b);
+    }
+    window.dispatchEvent(new CustomEvent("desk:lite"));
+  }
+  window.DESK_GO_LITE = goLite;
+
+  // gpu check: software renderers, tiny limits, slow fill rate
+  function slowGPU() {
+    var c = document.createElement("canvas"), gl = null, ms = 0;
+    c.width = c.height = 512;
+    try { gl = c.getContext("webgl", { failIfMajorPerformanceCaveat: true, antialias: false, depth: false }); } catch (_) {}
+    if (!gl) return "no fast webgl";
+    try {
+      var dbg = gl.getExtension("WEBGL_debug_renderer_info");
+      var name = String(gl.getParameter(dbg ? dbg.UNMASKED_RENDERER_WEBGL : gl.RENDERER) || "");
+      if (/swiftshader|llvmpipe|softpipe|software|basic render|mesa offscreen/i.test(name)) return "software gpu";
+      if (gl.getParameter(gl.MAX_TEXTURE_SIZE) < 4096) return "small textures";
+      var sh = function (type, src) { var s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); return s; };
+      var prog = gl.createProgram();
+      gl.attachShader(prog, sh(gl.VERTEX_SHADER, "attribute vec2 p;varying vec2 u;void main(){u=p;gl_Position=vec4(p,0.,1.);}"));
+      gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, "precision highp float;varying vec2 u;uniform float k;void main(){float v=u.x*k;for(int i=0;i<48;i++){v=sin(v*1.7+u.y)*cos(v+u.x)+.3;}gl_FragColor=vec4(v,v*.5,u,1.);}"));
+      gl.linkProgram(prog);
+      if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) return "";
+      gl.useProgram(prog);
+      gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+      gl.enableVertexAttribArray(0);
+      gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+      var px = new Uint8Array(4), k = gl.getUniformLocation(prog, "k");
+      var run = function (n) { for (var i = 0; i < n; i++) { gl.uniform1f(k, 1 + i); gl.drawArrays(gl.TRIANGLES, 0, 3); } gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); };
+      run(1); // warm up
+      var t0 = performance.now();
+      run(6);
+      ms = performance.now() - t0;
+      window.DESK_BENCH = { gpu: name, ms: Math.round(ms * 10) / 10 };
+    } catch (_) { return ""; } finally {
+      var lose = gl.getExtension("WEBGL_lose_context");
+      if (lose) lose.loseContext();
+    }
+    return ms > BENCH_MS ? "slow gpu" : "";
+  }
+
   /* ---- desk preload, desktop only ---- */
   // runs before the txt fetches
   (function preload() {
     try {
       var q = new URLSearchParams(location.search), snap = q.get("snap");
       if (!snap && window.matchMedia("(max-width: 720px)").matches) return;
+      var ss = store("sessionStorage"), ls = store("localStorage");
+      var force3d = q.get("desk") === "3d" || (ss && ss.getItem("desk-3d") === "1");
+      if (!snap && !force3d) {
+        // saved verdict, else check the machine now
+        var saved = String((ls && ls.getItem("desk-perf")) || "").split(":");
+        var fresh = saved[1] && Date.now() - +saved[1] < PERF_DAYS * 864e5;
+        var why = "";
+        if (q.get("desk") === "lite") why = "asked";
+        else if (fresh) why = saved[0] === "lite" ? "saved" : "";
+        else {
+          if (!window.WebGLRenderingContext) why = "no webgl";
+          else if (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 2) why = "2 cores";
+          else if (navigator.deviceMemory && navigator.deviceMemory <= 2) why = "low memory";
+          else why = slowGPU();
+          try { if (ls) ls.setItem("desk-perf", (why ? "lite" : "full") + ":" + Date.now()); } catch (_) {}
+        }
+        window.DESK_WHY = why;
+        if (q.has("debug")) console.log("[desk] perf check:", why || "ok", window.DESK_BENCH || "");
+        if (why) { goLite(); return; }
+      }
       if (!window.WebGLRenderingContext) return;
       var DP = window.DESK_PRELOAD = {};
       var imp = new Function("u", "return import(u)");
@@ -46,6 +131,42 @@
         });
       }
     } catch (_) { /* scene.js loads its own */ }
+  })();
+
+  /* ---- loading terminal: fun facts, one after another ---- */
+  (function funFacts() {
+    var box = document.getElementById("loader");
+    var text = box && box.querySelector(".tl-text"), tag = box && box.querySelector(".tl-tag");
+    if (!text || window.DESK_LITE || window.matchMedia("(max-width: 720px)").matches) return;
+    var facts = ((window.SITE && window.SITE.funFacts) || []).slice();
+    var order = [], n = 0, timer = 0;
+    var done = function () { return box.classList.contains("done"); };
+    fetch("assets/maintenance/loading/fun-facts.txt", { cache: "no-cache" })
+      .then(function (r) { return r.ok ? r.text() : ""; })
+      .then(function (t) {
+        var got = String(t || "").split(/\r\n|\r|\n/).map(function (l) { return l.trim(); })
+          .filter(function (l) { return l && l.charAt(0) !== "#"; });
+        if (got.length) { facts = got; order = []; }
+      })
+      .catch(function () {});
+    function pick() {
+      if (!order.length) order = facts.map(function (_, i) { return i; }).sort(function () { return Math.random() - 0.5; });
+      return facts[order.pop()];
+    }
+    // type a fact, hold, next one
+    function next() {
+      if (done() || !facts.length) return;
+      var f = pick(), i = 0;
+      n++;
+      tag.textContent = "fun fact #" + n + ": ";
+      text.textContent = "";
+      (function type() {
+        if (done()) return;
+        text.textContent = f.slice(0, ++i);
+        timer = setTimeout(i < f.length ? type : next, i < f.length ? 18 : 2600);
+      })();
+    }
+    timer = setTimeout(next, 250);
   })();
 
   var ROOT = "assets/maintenance/";

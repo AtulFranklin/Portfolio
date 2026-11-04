@@ -9,7 +9,10 @@
   const reduce = DESK.reduceMotion;
   const isFile = location.protocol === "file:";
 
+  // flat desk took over
+  const lite = () => !!window.DESK_LITE && !new URLSearchParams(location.search).get("snap");
   function fail() {
+    if (window.DESK_GO_LITE && !new URLSearchParams(location.search).get("snap")) return window.DESK_GO_LITE(false);
     document.getElementById("sceneFallback").hidden = false;
     const hint = document.getElementById("heroHint");
     if (hint) hint.hidden = true;
@@ -33,6 +36,7 @@
   // ?snap=<object> renders one object for export
   const SNAP = new URLSearchParams(location.search).get("snap");
   if (!SNAP && window.matchMedia("(max-width: 720px)").matches) { loader.classList.add("done"); return; }
+  if (lite()) return;
 
   const params = new URLSearchParams(location.search);
   const DEBUG = params.has("debug");
@@ -63,6 +67,7 @@
     return fail();
   }
   marks.three = performance.now();
+  if (lite()) return;
   // optional extras: area light + post fx
   let RectAreaLightUniformsLib = null, PP = null;
   const optional = [
@@ -103,9 +108,11 @@
 
   let TX;
   try { TX = await texP; } catch (e) { console.warn("Desk textures could not load", e); return fail(); }
+  if (lite()) return;
   if (DEBUG && window.DESK_TEX && DESK_TEX.stats) { const st = DESK_TEX.stats; console.log("[scene] textures", st.ms, "ms (" + st.mode + "):", st.jobs); }
   await Promise.all([fontsP].concat(optional));
   const skyPhoto = await skyPhotoP;
+  if (lite()) return;
 
   /* ---------------- renderer / scene / camera ---------------- */
   const mobile = window.matchMedia("(max-width: 720px)").matches;
@@ -1748,6 +1755,12 @@
     else renderer.compile(scene, camera);
   } catch (_) {}
   marks.compiled = performance.now();
+  if (lite()) {
+    renderer.dispose();
+    renderer.domElement.remove();
+    return;
+  }
+  window.DESK_READY = true;
   draw(0);
   ready = true;
   kick();

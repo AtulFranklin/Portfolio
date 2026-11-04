@@ -179,7 +179,12 @@
 
       <p class="hero-hint mono" id="heroHint">Click anything on the desk</p>
       <a class="scroll-cue mono" href="#projects">Scroll<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></a>
-      <div class="loader mono" id="loader" role="status">Loading…</div>
+      <div class="loader mono" id="loader" role="status" aria-label="Loading the 3D desk">
+        <div class="term-load">
+          <p class="tl-line"><span class="term-p" aria-hidden="true">&gt;</span> loading<span class="tl-dots" aria-hidden="true"></span></p>
+          <p class="tl-line tl-fact" aria-hidden="true"><span class="term-p">&gt;</span> <span class="tl-tag"></span><span class="tl-text"></span><span class="term-cur"></span></p>
+        </div>
+      </div>
     </section>
 
     <!-- ============ 01 PROJECTS ============ -->

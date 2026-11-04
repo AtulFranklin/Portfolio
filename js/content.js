@@ -16,6 +16,13 @@ window.SITE = {
 
   roles: ["Software Engineer", "Fintech Builder", "Trader", "Flutter Developer"],
 
+  // loading screen, real list in loading/fun-facts.txt
+  funFacts: [
+    "The first logged \"computer bug\" was a real moth, taped into the Harvard Mark II logbook in 1947.",
+    "Python is named after Monty Python's Flying Circus, not the snake.",
+    "The Apollo 11 guidance computer had about 4 KB of RAM.",
+  ],
+
   about: {
     lead:
       "I'm a Computer Science master's student at Stevens who trades the markets and builds the software behind them. Most of what I make started as a problem I had myself.",

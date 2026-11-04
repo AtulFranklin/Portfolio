@@ -19,6 +19,7 @@ Everything I update often lives in this folder as plain text files.
 | `why-hire-me/why-hire-me.txt` | The section title (`title:` in the first block - used on the desk links, the section heading, the retro computer document and the 3D computer screen), then the "why hire me" cards |
 | `why-hire-me/closing.txt` | The last paragraph of the why hire me letter, above "Thanks for reading" |
 | `contact/contact.txt` | Email, profile links, resume, contact headline and message, and the `form key` that lets the Leave a message letter send to my inbox |
+| `loading/fun-facts.txt` | The fun facts typed out on the 3D desk loading screen, one per line |
 | `location.txt` | Where I am: the place under my name (top-left), in the footer and on the retro computer letter, plus the weather and local time under my name |
 | `domain-linker.txt` | The website domain (just the name, e.g. `atulabraham.site`) - copied into every file that needs it |
 | `blog/<post>/post.md` | Blog posts: one folder per post, the folder name is the web address (`/blog/<post>/`). `blog/_new-post-template/` is a blank post to copy |
