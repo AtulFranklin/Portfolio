@@ -280,11 +280,9 @@ section[id] { scroll-margin-top: 0; }
 .certs .when { color: var(--text-3); white-space: nowrap; }
 
 /* ---------- Contact ---------- */
-.contact { padding-bottom: 96px; overflow: hidden; }
-.contact::before {
-  content: ""; position: absolute; left: 50%; top: 0; width: 900px; height: 600px; transform: translate(-50%, -30%);
-  background: radial-gradient(closest-side, rgba(245,176,65,.14), rgba(245,176,65,0)); pointer-events: none;
-}
+.contact { padding-bottom: 96px; overflow: hidden; background: var(--ink-1); }
+/* one band with education */
+.section-alt:has(+ .contact) { border-bottom: 0; }
 .contact-h { max-width: 16ch; }
 .contact-h span { color: var(--amber); }
 .contact-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 40px; position: relative; }

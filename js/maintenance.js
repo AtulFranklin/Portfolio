@@ -3,6 +3,51 @@
 (function () {
   "use strict";
 
+  /* ---- desk preload, desktop only ---- */
+  // runs before the txt fetches
+  (function preload() {
+    try {
+      var q = new URLSearchParams(location.search), snap = q.get("snap");
+      if (!snap && window.matchMedia("(max-width: 720px)").matches) return;
+      if (!window.WebGLRenderingContext) return;
+      var DP = window.DESK_PRELOAD = {};
+      var imp = new Function("u", "return import(u)");
+      var add = "three/addons/";
+      var quiet = function (p) { p.catch(function () {}); return p; };
+      DP.three = quiet(imp("three"));
+      DP.rbox = quiet(imp(add + "geometries/RoundedBoxGeometry.js"));
+      DP.merge = quiet(imp(add + "utils/BufferGeometryUtils.js"));
+      DP.area = quiet(imp(add + "lights/RectAreaLightUniformsLib.js"));
+      // gl probe once workers are going, post fx needs webgl2
+      var probe = function () {
+        try {
+          DP.gl2 = !!document.createElement("canvas").getContext("webgl2");
+          if (DP.gl2 && !snap && q.get("fx") !== "0") {
+            DP.fx = quiet(Promise.all(["EffectComposer", "RenderPass", "GTAOPass", "UnrealBloomPass", "OutputPass", "ShaderPass"].map(function (m) { return imp(add + "postprocessing/" + m + ".js"); })));
+          }
+        } catch (_) { /* scene.js probes again */ }
+      };
+      DP.tex = quiet(new Promise(function (res, rej) {
+        var s = document.createElement("script");
+        s.src = "js/desk-textures.js";
+        s.onload = function () {
+          try { res(window.DESK_TEX.start()); } catch (e) { rej(e); }
+          setTimeout(probe, 0);
+        };
+        s.onerror = function (e) { rej(e); probe(); };
+        document.head.appendChild(s);
+      }));
+      if (location.protocol !== "file:") {
+        DP.sky = new Promise(function (res) {
+          var im = new Image();
+          im.onload = function () { res(im); };
+          im.onerror = function () { res(null); };
+          im.src = "assets/skyline.jpg";
+        });
+      }
+    } catch (_) { /* scene.js loads its own */ }
+  })();
+
   var ROOT = "assets/maintenance/";
   var PROJECTS_DIR = ROOT + "projects/";
   var ABOUT_DIR = ROOT + "about-me/";

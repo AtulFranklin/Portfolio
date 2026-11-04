@@ -16,12 +16,17 @@
     loader.classList.add("done");
   }
 
+  const DP = window.DESK_PRELOAD || {};
+
   // webgl check
   let GL2 = false;
   try {
-    const c = document.createElement("canvas");
-    GL2 = !!c.getContext("webgl2");
-    if (!(GL2 || c.getContext("webgl"))) return fail();
+    if (DP.gl2) GL2 = true;
+    else {
+      const c = document.createElement("canvas");
+      GL2 = !!c.getContext("webgl2");
+      if (!(GL2 || c.getContext("webgl"))) return fail();
+    }
   } catch (_) { return fail(); }
 
   // phones use the flat grid instead
@@ -33,35 +38,48 @@
   const DEBUG = params.has("debug");
   const FXQ = params.get("fx");          // 0 = no fx, 1-4 = fixed quality
   const tStart = performance.now();
+  const marks = { start: tStart };
+
+  // procedural textures, workers started in maintenance.js
+  const texP = DP.tex || new Promise((res, rej) => {
+    if (window.DESK_TEX) return res(DESK_TEX.start());
+    const s = document.createElement("script");
+    s.src = "js/desk-textures.js";
+    s.onload = () => res(DESK_TEX.start());
+    s.onerror = rej;
+    document.head.appendChild(s);
+  });
+  texP.catch(() => {});
 
   let THREE, RoundedBoxGeometry, mergeGeometries;
   try {
-    THREE = await import("three");
-    [{ RoundedBoxGeometry }, { mergeGeometries }] = await Promise.all([
-      import("three/addons/geometries/RoundedBoxGeometry.js"),
-      import("three/addons/utils/BufferGeometryUtils.js"),
+    [THREE, { RoundedBoxGeometry }, { mergeGeometries }] = await Promise.all([
+      DP.three || import("three"),
+      DP.rbox || import("three/addons/geometries/RoundedBoxGeometry.js"),
+      DP.merge || import("three/addons/utils/BufferGeometryUtils.js"),
     ]);
   } catch (e) {
     console.warn("Three.js could not load", e);
     return fail();
   }
+  marks.three = performance.now();
   // optional extras: area light + post fx
   let RectAreaLightUniformsLib = null, PP = null;
   const optional = [
-    import("three/addons/lights/RectAreaLightUniformsLib.js")
+    (DP.area || import("three/addons/lights/RectAreaLightUniformsLib.js"))
       .then((m) => { RectAreaLightUniformsLib = m.RectAreaLightUniformsLib; })
       .catch(() => {}),
   ];
   // msaa targets need webgl2
   if (!SNAP && FXQ !== "0" && GL2) {
-    optional.push(Promise.all([
+    optional.push((DP.fx || Promise.all([
       import("three/addons/postprocessing/EffectComposer.js"),
       import("three/addons/postprocessing/RenderPass.js"),
       import("three/addons/postprocessing/GTAOPass.js"),
       import("three/addons/postprocessing/UnrealBloomPass.js"),
       import("three/addons/postprocessing/OutputPass.js"),
       import("three/addons/postprocessing/ShaderPass.js"),
-    ]).then((m) => {
+    ])).then((m) => {
       PP = { EffectComposer: m[0].EffectComposer, RenderPass: m[1].RenderPass, GTAOPass: m[2].GTAOPass, UnrealBloomPass: m[3].UnrealBloomPass, OutputPass: m[4].OutputPass, ShaderPass: m[5].ShaderPass };
     }).catch((e) => { console.warn("Post-processing unavailable, rendering directly", e); }));
   }
@@ -72,7 +90,7 @@
 
   // window view: skyline photo, else procedural city
   const SKY_PHOTO = "assets/skyline.jpg";
-  const skyPhotoP = Promise.race([loadImage(SKY_PHOTO), new Promise((r) => setTimeout(() => r(null), 5000))]);
+  const skyPhotoP = Promise.race([DP.sky || loadImage(SKY_PHOTO), new Promise((r) => setTimeout(() => r(null), 5000))]);
   // wait for fonts before drawing textures
   const fontsP = Promise.race([
     Promise.all([document.fonts.load('700 64px "Geist"'), document.fonts.load('500 32px "Geist Mono"')]),
@@ -83,216 +101,9 @@
   let seed = 7;
   const rnd = () => ((seed = (seed * 16807) % 2147483647) - 1) / 2147483646;
 
-  /* ---------------- procedural textures ---------------- */
-  let tseed = 20261031;
-  const trnd = () => ((tseed = (tseed * 16807) % 2147483647) - 1) / 2147483646;
-  const RT = new Float32Array(65536);
-  for (let i = 0; i < RT.length; i++) RT[i] = trnd();
-  const h2 = (x, y) => RT[((y & 255) << 8) | (x & 255)];
-  const n1 = (x) => { const i = Math.floor(x), f = x - i, u = f * f * (3 - 2 * f); return RT[i & 65535] * (1 - u) + RT[(i + 1) & 65535] * u; };
-  function vn(x, y, p) {               // value noise, tiles every p lattice cells
-    const xi = Math.floor(x), yi = Math.floor(y), xf = x - xi, yf = y - yi;
-    const u = xf * xf * (3 - 2 * xf), v = yf * yf * (3 - 2 * yf);
-    const x0 = ((xi % p) + p) % p, y0 = ((yi % p) + p) % p, x1 = (x0 + 1) % p, y1 = (y0 + 1) % p;
-    const a = h2(x0, y0), b = h2(x1, y0), c = h2(x0, y1), d = h2(x1, y1);
-    return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v;
-  }
-  function fbm2(x, y, p, oct) {
-    let s = 0, a = 0.5, f = 1, n = 0;
-    for (let o = 0; o < oct; o++) { s += a * vn(x * f, y * f, p * f); n += a; a *= 0.5; f *= 2; }
-    return s / n;
-  }
-  function mkCanvas(w, h) { const c = document.createElement("canvas"); c.width = w; c.height = h; return c; }
-  function pix(w, h) { const c = mkCanvas(w, h), g = c.getContext("2d"), id = g.createImageData(w, h); return { c, g, id, d: id.data }; }
-  function grayCanvas(arr, w, h) {
-    const P = pix(w, h), d = P.d;
-    for (let i = 0, n = w * h; i < n; i++) { const v = arr[i] * 255, j = i * 4; d[j] = d[j + 1] = d[j + 2] = v; d[j + 3] = 255; }
-    P.g.putImageData(P.id, 0, 0);
-    return P.c;
-  }
-  function normalCanvas(hf, w, h, k) {   // tangent-space normal map (opengl convention)
-    const P = pix(w, h), d = P.d;
-    for (let y = 0; y < h; y++) {
-      const ym = ((y - 1 + h) % h) * w, yp = ((y + 1) % h) * w, yr = y * w;
-      for (let x = 0; x < w; x++) {
-        const xm = x === 0 ? w - 1 : x - 1, xp = x === w - 1 ? 0 : x + 1;
-        const dx = (hf[yr + xp] - hf[yr + xm]) * k, dy = (hf[yp + x] - hf[ym + x]) * k;
-        const inv = 1 / Math.sqrt(dx * dx + dy * dy + 1), j = (yr + x) * 4;
-        d[j] = (0.5 - 0.5 * dx * inv) * 255; d[j + 1] = (0.5 + 0.5 * dy * inv) * 255; d[j + 2] = (0.5 + 0.5 * inv) * 255; d[j + 3] = 255;
-      }
-    }
-    P.g.putImageData(P.id, 0, 0);
-    return P.c;
-  }
-
-  /* smoked oak planks, 3 m tile, 16 planks */
-  function genFloor(N) {
-    const COLS = 16, PW = N / COLS;
-    const A = pix(N, N), d = A.d, R = new Float32Array(N * N), H = new Float32Array(N * N);
-    const warp = new Float32Array(N), tl = new Float32Array(N);
-    for (let c = 0; c < COLS; c++) {
-      const lens = []; let rem = N;
-      while (rem > 0) { let L = Math.round(N * (0.34 + trnd() * 0.4)); if (rem - L < N * 0.28) L = rem; lens.push(L); rem -= L; }
-      let y0 = (trnd() * N) | 0;
-      for (const L of lens) { plank(c * PW, y0, L); y0 = (y0 + L) % N; }
-    }
-    function plank(x0, y0, L) {
-      const tone = 0.78 + trnd() * 0.36, warm = (trnd() - 0.5) * 0.12, rb = 0.3 + trnd() * 0.14;
-      const cath = trnd() < 0.6, cu = PW * (0.15 + trnd() * 0.7);
-      const ca = (0.5 + trnd() * 1.4) / PW, cb = (trnd() < 0.5 ? -1 : 1) * (0.015 + trnd() * 0.035);
-      const freq = 1 / (4.5 + trnd() * 6);
-      const p1 = trnd() * 6.3, p2 = trnd() * 6.3, f1 = (0.5 + trnd() * 1.5) * 6.283 / L, f2 = (2 + trnd() * 4) * 6.283 / L;
-      const a1 = 2 + trnd() * 7, a2 = 0.5 + trnd() * 2, no = trnd() * 5000;
-      for (let v = 0; v < L; v++) {
-        warp[v] = a1 * Math.sin(v * f1 + p1) + a2 * Math.sin(v * f2 + p2) + 6 * n1(v * 0.012 + no);
-        tl[v] = 1 + 0.14 * (n1(v * 0.006 + no + 999) - 0.5);
-      }
-      const sx = (trnd() * 256) | 0, sy = (trnd() * 256) | 0;
-      for (let v = 0; v < L; v++) {
-        const row = ((y0 + v) % N) * N, w = warp[v], t1 = tone * tl[v], ev = Math.min(v, L - 1 - v);
-        const vf = (v >> 2) + sy, vp = (v >> 3) + sy * 3;
-        for (let u = 0; u < PW; u++) {
-          const du = u - cu;
-          const f = cath ? du * du * ca + v * cb + w * 0.6 : u + w;
-          let r = f * freq; r -= Math.floor(r);
-          const lw = r * r * r;
-          const fib = h2(u + sx, vf) - 0.5;
-          const pore = h2(u * 3 + sx + 77, vp) > 0.962 - 0.04 * (1 - lw);
-          const e = Math.min(u, PW - 1 - u, ev);
-          const bev = e >= 3 ? 1 : e === 2 ? 0.86 : e === 1 ? 0.5 : 0.08;
-          const k = t1 * (1 - 0.32 * lw) * (1 + 0.1 * fib) * (pore ? 0.7 : 1) * (e === 0 ? 0.32 : e === 1 ? 0.72 : 1);
-          const i = row + x0 + u, j = i * 4;
-          d[j] = 112 * k * (1 + warm); d[j + 1] = 86 * k; d[j + 2] = 64 * k * (1 - warm); d[j + 3] = 255;
-          H[i] = (0.6 + 0.08 * lw + 0.05 * fib - (pore ? 0.16 : 0)) * bev;
-          R[i] = rb + (pore ? 0.2 : 0) + (e < 2 ? 0.35 : 0) + 0.07 * (1 - lw);
-        }
-      }
-    }
-    A.g.putImageData(A.id, 0, 0);
-    return { map: A.c, normal: normalCanvas(H, N, N, 3), rough: grayCanvas(R, N, N) };
-  }
-
-  /* walnut top: glued staves, mixed grain */
-  function genDesk(W, Hh) {
-    const A = pix(W, Hh), d = A.d, R = new Float32Array(W * Hh), H = new Float32Array(W * Hh);
-    const warp = new Float32Array(W), tl = new Float32Array(W);
-    let y0 = 0;
-    while (y0 < Hh) {
-      let bh = Math.round(Hh * (0.13 + trnd() * 0.08));
-      if (Hh - (y0 + bh) < Hh * 0.1) bh = Hh - y0;
-      board(y0, bh); y0 += bh;
-    }
-    function board(b0, bh) {
-      const tone = 0.84 + trnd() * 0.3, cath = trnd() < 0.7, cv = bh * (0.2 + trnd() * 0.6);
-      const ca = (0.5 + trnd() * 1.6) / bh, cb = (trnd() < 0.5 ? -1 : 1) * (0.008 + trnd() * 0.02);
-      const freq = 1 / (5 + trnd() * 8), sap = trnd() < 0.3 ? (trnd() < 0.5 ? 0 : 1) : -1;
-      const p1 = trnd() * 6.3, f1 = (0.6 + trnd() * 1.2) * 6.283 / W, a1 = 3 + trnd() * 10, no = trnd() * 5000;
-      for (let x = 0; x < W; x++) {
-        warp[x] = a1 * Math.sin(x * f1 + p1) + 8 * n1(x * 0.01 + no) + 2 * n1(x * 0.05 + no);
-        tl[x] = 1 + 0.16 * (n1(x * 0.004 + no + 333) - 0.5);
-      }
-      const sx = (trnd() * 256) | 0, sy = (trnd() * 256) | 0;
-      for (let v = 0; v < bh; v++) {
-        const row = (b0 + v) * W, dv = v - cv;
-        const sapK = sap < 0 ? 0 : Math.max(0, 1 - ((sap === 0 ? v : bh - 1 - v) / bh) / 0.2);
-        const glue = v === 0 ? 0.8 : 1;
-        for (let x = 0; x < W; x++) {
-          const f = cath ? dv * dv * ca + x * cb + warp[x] * 0.6 : v + warp[x];
-          let r = f * freq; r -= Math.floor(r);
-          const lw = r * r * r;
-          const fib = h2((x >> 2) + sx, v + sy) - 0.5;
-          const pore = h2((x >> 3) + sx * 7, v * 3 + sy) > 0.962;
-          const m = 0.22 + 0.62 * lw;
-          let cr = 128 + (60 - 128) * m, cg = 82 + (37 - 82) * m, cbl = 52 + (23 - 52) * m;
-          if (sapK > 0) { const s = sapK * sapK * 0.75; cr += (168 - cr) * s; cg += (128 - cg) * s; cbl += (88 - cbl) * s; }
-          const k = tone * tl[x] * (1 + 0.1 * fib) * (pore ? 0.72 : 1) * glue;
-          const i = row + x, j = i * 4;
-          d[j] = cr * k; d[j + 1] = cg * k; d[j + 2] = cbl * k; d[j + 3] = 255;
-          H[i] = 0.6 + 0.05 * lw + 0.05 * fib - (pore ? 0.12 : 0);
-          R[i] = 0.56 + (pore ? 0.16 : 0) + 0.06 * lw;
-        }
-      }
-    }
-    A.g.putImageData(A.id, 0, 0);
-    return { map: A.c, normal: normalCanvas(H, W, Hh, 2.2), rough: grayCanvas(R, W, Hh) };
-  }
-
-  /* trowelled plaster, tiles seamlessly */
-  function genPlaster(N) {
-    const A = pix(N, N), d = A.d, R = new Float32Array(N * N), H = new Float32Array(N * N);
-    for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
-      const i = y * N + x, j = i * 4;
-      const hgt = fbm2((x / N) * 8, (y / N) * 8, 8, 5), m = fbm2((x / N) * 4 + 31, (y / N) * 4 + 17, 4, 4);
-      const a = 206 + 46 * (m - 0.5) + 22 * (hgt - 0.5) + 6 * (h2(x, y) - 0.5);
-      d[j] = a; d[j + 1] = a * 0.975; d[j + 2] = a * 0.95; d[j + 3] = 255;
-      H[i] = hgt + 0.012 * (h2(x + 91, y + 13) - 0.5);
-      R[i] = Math.min(1, 0.8 + 0.34 * (m - 0.5) + 0.05 * (hgt - 0.5));
-    }
-    A.g.putImageData(A.id, 0, 0);
-    return { map: A.c, normal: normalCanvas(H, N, N, 5), rough: grayCanvas(R, N, N) };
-  }
-
-  /* wool rug: albedo + tiling pile normal */
-  function genRug(W, Hh) {
-    const P = pix(W, Hh), g = P.g;
-    g.fillStyle = "#4A3A30"; g.fillRect(0, 0, W, Hh);
-    const band = (inset, lw, col) => { g.strokeStyle = col; g.lineWidth = lw; g.strokeRect(inset, inset, W - inset * 2, Hh - inset * 2); };
-    band(10, 20, "#33271F"); band(40, 6, "#A27840"); band(54, 2, "#7E6038"); band(66, 1.5, "#665036");
-    const id = g.getImageData(0, 0, W, Hh), d = id.data;
-    for (let y = 0; y < Hh; y++) for (let x = 0; x < W; x++) {
-      const j = (y * W + x) * 4;
-      const k = (0.8 + 0.4 * h2(x, y)) * (0.92 + 0.16 * fbm2(x / 37, y / 37, 256, 2)) * (1 + 0.05 * Math.sin(y * 2.2));
-      d[j] *= k; d[j + 1] *= k; d[j + 2] *= k;
-    }
-    g.putImageData(id, 0, 0);
-    const N = 256, H = new Float32Array(N * N);
-    for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
-      H[y * N + x] = 0.45 * h2(x, y) + 0.35 * h2(x >> 1, (y >> 1) + 101) + 0.2 * Math.abs(Math.sin((x * Math.PI) / 4) * Math.sin((y * Math.PI) / 4));
-    }
-    return { map: P.c, normal: normalCanvas(H, N, N, 1.4) };
-  }
-
-  /* pebbled leather pad, stitched border */
-  function genLeather(W, Hh) {
-    const A = pix(W, Hh), d = A.d, R = new Float32Array(W * Hh), H = new Float32Array(W * Hh);
-    const IN = 16;
-    for (let y = 0; y < Hh; y++) for (let x = 0; x < W; x++) {
-      const i = y * W + x, j = i * 4;
-      const p = 1 - Math.abs(vn(x * 0.16, y * 0.16, 256) - 0.5) * 2, q = fbm2(x / 90, y / 90, 256, 3);
-      const onLine = (Math.abs(x - IN) < 1.5 && y > IN && y < Hh - IN) || (Math.abs(x - (W - 1 - IN)) < 1.5 && y > IN && y < Hh - IN) ||
-        (Math.abs(y - IN) < 1.5 && x > IN && x < W - IN) || (Math.abs(y - (Hh - 1 - IN)) < 1.5 && x > IN && x < W - IN);
-      const along = Math.abs(y - IN) < 1.5 || Math.abs(y - (Hh - 1 - IN)) < 1.5 ? x : y;
-      const stitch = onLine && along % 11 < 7;
-      const edge = Math.min(x, y, W - 1 - x, Hh - 1 - y);
-      let k = (0.86 + 0.18 * p) * (0.92 + 0.16 * q) * (edge < 3 ? 0.7 : 1);
-      if (stitch) { d[j] = 120; d[j + 1] = 92; d[j + 2] = 66; } else { d[j] = 52 * k; d[j + 1] = 33 * k; d[j + 2] = 24 * k; }
-      d[j + 3] = 255;
-      H[i] = 0.5 + 0.18 * p + (stitch ? 0.25 : onLine ? -0.15 : 0) - (edge < 2 ? 0.2 : 0);
-      R[i] = stitch ? 0.8 : 0.4 + 0.2 * (1 - p) + 0.1 * q;
-    }
-    A.g.putImageData(A.id, 0, 0);
-    return { map: A.c, normal: normalCanvas(H, W, Hh, 1.6), rough: grayCanvas(R, W, Hh) };
-  }
-
-  function genMicro(N) {                // orange-peel texture for plastics
-    const H = new Float32Array(N * N);
-    for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) H[y * N + x] = 0.7 * vn(x / 3, y / 3, N / 3 | 0) + 0.3 * h2(x, y);
-    return normalCanvas(H, N, N, 0.9);
-  }
-  const idle = () => new Promise((r) => setTimeout(r, 0));
-  async function genTextures() {
-    const t0 = performance.now(), out = {}, log = [];
-    const step = async (name, fn) => { const t = performance.now(); out[name] = fn(); log.push(name + " " + Math.round(performance.now() - t)); await idle(); };
-    await step("floor", () => genFloor(1536));
-    await step("desk", () => genDesk(4096, 1536));   // sharper grain for the close-up
-    await step("plaster", () => genPlaster(512));
-    await step("rug", () => genRug(640, 400));
-    await step("leather", () => genLeather(1024, 424));
-    await step("micro", () => genMicro(129));
-    if (DEBUG) console.log("[scene] textures", Math.round(performance.now() - t0), "ms:", log.join(", "));
-    return out;
-  }
-  const TX = await genTextures();
+  let TX;
+  try { TX = await texP; } catch (e) { console.warn("Desk textures could not load", e); return fail(); }
+  if (DEBUG && window.DESK_TEX && DESK_TEX.stats) { const st = DESK_TEX.stats; console.log("[scene] textures", st.ms, "ms (" + st.mode + "):", st.jobs); }
   await Promise.all([fontsP].concat(optional));
   const skyPhoto = await skyPhotoP;
 
@@ -380,6 +191,7 @@
 
   /* ---------------- materials ---------------- */
   const FLOOR_TILE = 3;                  // metres per floor texture tile
+  function mkCanvas(w, h) { const c = document.createElement("canvas"); c.width = w; c.height = h; return c; }
   function half(cv) { const c = mkCanvas(cv.width >> 1, cv.height >> 1); c.getContext("2d").drawImage(cv, 0, 0, c.width, c.height); return c; }
   const T = {
     floor: tex(TX.floor.map, { repeat: [1, 1] }), floorN: tex(TX.floor.normal, { srgb: false, repeat: [1, 1] }), floorR: tex(half(TX.floor.rough), { srgb: false, repeat: [1, 1] }),
@@ -955,11 +767,10 @@
   // close-up layout: x, z from desk centre, turn
   const LAY = {
     crt: [0.2, -0.12, 0], kb: [0.2, 0.2, 0], frame: [0.64, -0.14, -0.35],
-    gear: [0.88, -0.1, -0.3], phone: [0.5, 0.22, -0.15],
-    envelope: [-0.33, 0.21, 0.12], books: [-0.4, -0.02, 0.3], lamp: [-0.47, -0.27, 0],
+    gear: [0.88, -0.1, -0.3], envelope: [-0.3, 0.14, 0.2], lamp: [-0.47, -0.27, 0],
   };
   // real-world scale per object
-  const SCALE = { crt: 0.63, kb: 0.9, gear: 0.66, phone: 0.85 };
+  const SCALE = { crt: 0.63, kb: 0.9, gear: 0.66 };
   const place = (g, k, y = TOP) => { const [x, z, ry] = LAY[k]; g.position.set(x, y, DESK_Z + z); g.rotation.y = ry; g.scale.setScalar(SCALE[k] || 1); };
   // walnut slab, 55 mm, soft edges
   const DESK_T = 0.055, UNDER = TOP - DESK_T;
@@ -1009,10 +820,10 @@
   {
     const y = TOP + 0.0006;
     // blob size per object, placed from LAY
-    const BLOB = { crt: [0.62, 0.56], kb: [0.62, 0.26], frame: [0.28, 0.16, 0, -0.02], gear: [0.24, 0.24], phone: [0.13, 0.22], envelope: [0.29, 0.15], books: [0.32, 0.24], lamp: [0.26, 0.26] };
+    const BLOB = { crt: [0.62, 0.56], kb: [0.62, 0.26], frame: [0.28, 0.16, 0, -0.02], gear: [0.24, 0.24], envelope: [0.29, 0.15], lamp: [0.26, 0.26] };
     const blobs = new THREE.Mesh(blobGeo(Object.keys(BLOB).map((k) => {
       const [x, z, ry] = LAY[k], [w, d, ox = 0, oz = 0] = BLOB[k], sc = SCALE[k] || 1;
-      return [x + ox, y + (k === "kb" || k === "phone" ? PAD_T : 0), DESK_Z + z + oz, w * sc, d * sc, ry];
+      return [x + ox, y + (k === "kb" ? PAD_T : 0), DESK_Z + z + oz, w * sc, d * sc, ry];
     })), blobMat);
     blobs.renderOrder = 1;
     scene.add(blobs);
@@ -1244,7 +1055,9 @@
     kbLegend = cap;
     place(kb, "kb", TOP + PAD_T);   // resting on the leather pad
   }
-  hotCrate(kb, "tools", "Tools & AI");
+  // not clickable, just on the pad
+  kb.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+  scene.add(kb);
   kbLegend.castShadow = false;
   aoHidden.push(kbLegend);
 
@@ -1364,46 +1177,6 @@
   }
   hotCrate(gearGroup, "engineering", "Engineering");
 
-  /* ---- phone with app icons ---- */
-  const phoneScreen = canvasTex(300, 620, () => {});
-  function drawPhone(icons) {
-    const g = phoneScreen.userData.ctx, w = 300, h = 620;
-    const bg = g.createLinearGradient(0, 0, 0, h);
-    bg.addColorStop(0, "#1A1F2E"); bg.addColorStop(1, "#0A0C10");
-    g.fillStyle = bg; g.fillRect(0, 0, w, h);
-    g.fillStyle = "#ECE7DD"; g.font = `600 56px ${FONT}`; g.textAlign = "center"; g.fillText("Apps", w / 2, 112);
-    g.font = `500 15px ${MONO}`; g.fillStyle = "#8C8679"; g.fillText("BY ATUL", w / 2, 140);
-    const apps = [
-      ["Productivity+", "#2563EB", "P+", "productivity-plus"], ["Bible+", "#7A4E2D", "B+", "bible-plus"],
-      ["Reminders+", "#06D6A0", "R+", "reminders-plus"], ["Transit", "#F5B041", "WT", null],
-      ["Roulette", "#B3261E", "GR", null], ["Trade", "#16A34A", "TP", null],
-    ];
-    apps.forEach(([name, col, ab, key], i) => {
-      const x = 40 + (i % 3) * 82, y = 190 + Math.floor(i / 3) * 120, s = 62;
-      g.save(); roundRect(g, x, y, s, s, 16); g.clip();
-      if (key && icons && icons[key]) g.drawImage(icons[key], x, y, s, s);
-      else { g.fillStyle = col; g.fillRect(x, y, s, s); g.fillStyle = "#fff"; g.font = `700 24px ${FONT}`; g.textAlign = "center"; g.fillText(ab, x + s / 2, y + s / 2 + 8); }
-      g.restore();
-      g.fillStyle = "#B3AC9F"; g.font = `500 13px ${FONT}`; g.textAlign = "center"; g.fillText(name, x + s / 2, y + s + 22);
-    });
-    g.fillStyle = "rgba(255,255,255,.5)"; roundRect(g, w / 2 - 50, h - 22, 100, 6, 3); g.fill();
-    phoneScreen.needsUpdate = true;
-  }
-  drawPhone(null);
-  Promise.all(["productivity-plus", "bible-plus", "reminders-plus"].map((k) => loadImage(`assets/icons/${k}.png`))).then((ims) => {
-    if (ims.some(Boolean)) drawPhone({ "productivity-plus": ims[0], "bible-plus": ims[1], "reminders-plus": ims[2] });
-  });
-  const phone = new THREE.Group();
-  {
-    const body = new THREE.Mesh(new RoundedBoxGeometry(0.085, 0.009, 0.175, 3, 0.004), M.black);
-    body.position.y = 0.0045;
-    const scr = new THREE.Mesh(new THREE.PlaneGeometry(0.077, 0.164), new THREE.MeshBasicMaterial({ map: phoneScreen, toneMapped: false }));
-    scr.rotation.x = -Math.PI / 2; scr.position.y = 0.0095;
-    phone.add(body, scr);
-    place(phone, "phone", TOP + PAD_T);   // on the pad
-  }
-  hotCrate(phone, "apps", "Mobile Apps");
-
   /* ---- envelope ---- */
   const envelope = new THREE.Group();
   {
@@ -1428,77 +1201,6 @@
     place(envelope, "envelope");
   }
   hot(envelope, "Leave a message", () => DESK.openPanel("contact"));
-
-  /* ---- project books, one per crate ---- */
-  const books = new THREE.Group();
-  const bookFoil = [];
-  {
-    const hex2hsl = (hex) => { const c = new THREE.Color(hex), o = {}; c.getHSL(o, THREE.SRGBColorSpace); return o; };
-    // cloth colour as in books.js
-    const cloth = (hex, dl = 0) => { const { h, s } = hex2hsl(hex); return `hsl(${(h * 360).toFixed(1)}, ${(Math.max(0.2, Math.min(0.46, s * 0.5)) * 100).toFixed(1)}%, ${((0.27 + dl) * 100).toFixed(1)}%)`; };
-    const FOIL = "#E8CD92";
-    // page edges, lines run along the book
-    const pages = canvasTex(512, 128, (g, w, h) => {
-      g.fillStyle = "#DCD0B4"; g.fillRect(0, 0, w, h);
-      for (let y = 0; y < h; y += 4) { g.fillStyle = `rgba(120,104,78,${0.1 + 0.1 * rnd()})`; g.fillRect(0, y + 1, w, 2); }
-      const sh = g.createLinearGradient(0, 0, 0, h);
-      sh.addColorStop(0, "rgba(60,48,30,.28)"); sh.addColorStop(0.18, "rgba(60,48,30,0)"); sh.addColorStop(0.82, "rgba(60,48,30,0)"); sh.addColorStop(1, "rgba(60,48,30,.28)");
-      g.fillStyle = sh; g.fillRect(0, 0, w, h);
-    });
-    const pageMat = new THREE.MeshStandardMaterial({ map: pages, roughness: 0.92 });
-    const list = (S.crates || []).slice(0, 5);
-    // hardcover parts: boards, spine, page block
-    const BOARD = 0.0024, OVER = 0.0026, SPINE = 0.0052, GAP = 0.0005;
-    let y = 0;
-    list.forEach((c, i) => {
-      const L = 0.24 - (i % 2) * 0.012, D = 0.16 + ((i + 1) % 3) * 0.006, T = 0.028 + (i % 3) * 0.003;   // hardcover size
-      const col = cloth(c.color || "#F5B041");
-      const coverMat = new THREE.MeshStandardMaterial({ color: new THREE.Color().setStyle(col), roughness: 0.82 });
-      const bd = D - SPINE / 2, parts = [];
-      for (const sy of [-1, 1]) {
-        const b = new RoundedBoxGeometry(L, BOARD, bd, 3, BOARD * 0.45);
-        b.translate(0, sy * (T - BOARD) / 2, -D / 2 + bd / 2);
-        parts.push(b);
-      }
-      const sp = new RoundedBoxGeometry(L - 0.0004, T, SPINE, 4, SPINE * 0.48);
-      sp.translate(0, 0, D / 2 - SPINE / 2);
-      parts.push(sp);
-      const bk = new THREE.Group();
-      bk.add(new THREE.Mesh(mergeGeometries(parts), coverMat));
-      const pg = new THREE.Mesh(new THREE.BoxGeometry(L - 2 * OVER, T - 2 * BOARD + 0.0006, D - OVER - SPINE / 2), pageMat);
-      pg.position.z = (OVER - SPINE / 2) / 2 - 0.0001;
-      bk.add(pg);
-      // foil title on the flat of the spine
-      const fh = T - SPINE * 0.96, fl = L - SPINE, fw = 1024, fhp = Math.round((fw * fh) / fl), k = (fhp / fh) * T;
-      const foilDraw = (bg, ink) => (g, w, h) => {
-        g.fillStyle = bg; g.fillRect(0, 0, w, h);
-        g.fillStyle = ink;
-        [[34, 42], [w - 42, w - 34]].forEach(([a, b]) => { g.fillRect(a, h / 2 - k * 0.32, 3, k * 0.64); g.fillRect(b, h / 2 - k * 0.32, 3, k * 0.64); });
-        g.font = `600 ${Math.round(k * 0.46)}px ${FONT}`; g.textBaseline = "middle"; g.textAlign = "left";
-        g.fillText(c.title || "", 76, h / 2 + 2, w - 160);
-      };
-      // g = roughness, b = metalness
-      const foilRM = canvasTex(fw, fhp, foilDraw("rgb(0,255,0)", "rgb(0,120,110)"));
-      foilRM.colorSpace = THREE.NoColorSpace;
-      const label = new THREE.Mesh(new THREE.PlaneGeometry(fl, fh), new THREE.MeshStandardMaterial({
-        map: canvasTex(fw, fhp, foilDraw(col, FOIL)), roughnessMap: foilRM, metalnessMap: foilRM, roughness: 0.82, metalness: 1,
-        polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2,
-      }));
-      label.position.z = D / 2;
-      bk.add(label);
-      bookFoil.push(label);
-      bk.position.set((rnd() - 0.5) * 0.02, y + T / 2, (rnd() - 0.5) * 0.016);
-      bk.rotation.y = (rnd() - 0.5) * 0.14;
-      y += T + GAP;
-      books.add(bk);
-    });
-    place(books, "books");
-  }
-  hot(books, "Projects", () => {
-    const sec = document.getElementById("projects");
-    if (sec) sec.scrollIntoView({ behavior: reduce ? "auto" : "smooth" });
-  });
-  bookFoil.forEach((m) => { m.castShadow = false; });
 
   /* ---- desk lamp (click to toggle) ---- */
   function rod(a, b, r, mat) {
@@ -1754,7 +1456,7 @@
     const aspect = W / H, v = portrait ? VIEWS.tall : aspect < 1.25 ? VIEWS.square : VIEWS.wide;
     camHome.fromArray(v.cam); lookHome.fromArray(v.look);
     const lines = heroLines(), pad = Math.max(12, W * 0.012);
-    const all = [crt, frame, lamp, kb, gearGroup, phone, envelope, books];
+    const all = [crt, frame, lamp, kb, gearGroup, envelope];
     let dx = 0, dy = 0;
     for (let i = 0, fov = v.fov; i < 6; i++, fov += 2) {
       camera.fov = fov; camera.clearViewOffset();
@@ -2036,6 +1738,7 @@
   // first frame, then reveal
   if (SNAP) return snapObject(SNAP);
 
+  marks.built = performance.now();
   applyLamp(lampLevel);
   camera.position.copy(reduce ? camHome : camStart);
   camera.lookAt(lookHome);
@@ -2044,11 +1747,17 @@
     if (renderer.extensions.has("KHR_parallel_shader_compile")) await Promise.race([renderer.compileAsync(scene, camera), new Promise((r) => setTimeout(r, 3000))]);
     else renderer.compile(scene, camera);
   } catch (_) {}
+  marks.compiled = performance.now();
   draw(0);
   ready = true;
   kick();
   setTimeout(() => loader.classList.add("done"), 150);
   if (DEBUG) console.log("[scene] first frame after", Math.round(performance.now() - tStart), "ms, quality level", fxLevel);
+  // load breakdown, ms since navigation
+  if (DEBUG) {
+    const r = (t) => Math.round(t || 0), st = (window.DESK_TEX && DESK_TEX.stats) || {};
+    console.log("[scene] timing: scene.js", r(marks.start), "| three ready", r(marks.three), "| textures ready", r(st.done), "| scene built", r(marks.built), "| compiled", r(marks.compiled), "| first frame", r(performance.now()));
+  }
 
   /* ---------------- snap mode: one object, transparent bg ---------------- */
   function buildNameplate() {
@@ -2201,7 +1910,7 @@
     return nb;
   }
   async function snapObject(name) {
-    const targets = { crt, roles, frame, envelope, gear: gearGroup, phone, lamp, books };
+    const targets = { crt, roles, frame, envelope, gear: gearGroup, lamp };
     const target = name === "nameplate" ? buildNameplate() : name === "notebook" ? await buildNotebook() : targets[name];
     if (!target) { window.__snap = "unknown"; return; }
     if (!target.parent) { target.traverse((o) => { if (o.isMesh) o.castShadow = o.receiveShadow = true; }); scene.add(target); }
@@ -2226,7 +1935,7 @@
     target.visible = true;
     target.position.y = TOP;
     // fixed snap angles
-    const SNAP_RY = { crt: 0.1, roles: 0.32, frame: -0.38, envelope: 0.18, gear: -0.25, phone: -0.5, books: -0.55, notebook: 0.16 };
+    const SNAP_RY = { crt: 0.1, roles: 0.32, frame: -0.38, envelope: 0.18, gear: -0.25, notebook: 0.16 };
     if (name in SNAP_RY) target.rotation.y = SNAP_RY[name];
     target.scale.setScalar(1);
     if (name === "envelope") { target.rotation.x = 0.55; target.position.y = TOP + 0.04; }

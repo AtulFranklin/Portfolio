@@ -6,6 +6,10 @@
   const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  // desktop reads projects inside the book
+  const useReader = () =>
+    !window.matchMedia("(max-width: 720px)").matches && !!window.BOOKS && typeof window.BOOKS.openReader === "function";
+  const readerOpen = () => !!(window.BOOKS && typeof window.BOOKS.isOpen === "function" && window.BOOKS.isOpen());
 
   const ICON = {
     mail: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.5 6.5l8.5 6 8.5-6"/></svg>',
@@ -152,7 +156,7 @@
   }
   [stackDlg, panelDlg].forEach((dlg) => {
     dlg.addEventListener("close", () => {
-      if (!stackDlg.open && !panelDlg.open) {
+      if (!stackDlg.open && !panelDlg.open && !readerOpen()) {
         document.body.classList.remove("modal-open");
         window.dispatchEvent(new CustomEvent("desk:modal", { detail: false }));
         if (lastFocus && document.contains(lastFocus)) lastFocus.focus({ preventScroll: true });
@@ -235,6 +239,11 @@
   const slug = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 
   function openCrate(id, focusProject, originRect) {
+    if (useReader()) {
+      if (panelDlg.open) panelDlg.close();
+      if (stackDlg.open) stackDlg.close();
+      return window.BOOKS.openReader(id, { project: focusProject || null, originRect: originRect || null });
+    }
     const idx = Math.max(0, S.crates.findIndex((c) => c.id === id));
     currentCrate = idx;
     const c = S.crates[idx];
@@ -328,7 +337,12 @@
   // delegated triggers
   document.addEventListener("click", (e) => {
     const crateBtn = e.target.closest("[data-crate]");
-    if (crateBtn) { e.preventDefault(); return openCrate(crateBtn.dataset.crate, crateBtn.dataset.project); }
+    if (crateBtn) {
+      e.preventDefault();
+      // reader flies in from the clicked row
+      const from = useReader() ? crateBtn.getBoundingClientRect() : undefined;
+      return openCrate(crateBtn.dataset.crate, crateBtn.dataset.project, from);
+    }
     const goBtn = e.target.closest("[data-goto]");
     if (goBtn) { e.preventDefault(); const t = document.getElementById(goBtn.dataset.goto); if (t) t.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" }); return; }
     const openBtn = e.target.closest("[data-open]");

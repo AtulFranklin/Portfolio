@@ -6,20 +6,28 @@
 
   const SRC = "assets/lounge_music.mp3";
   const MAX = 0.15;          // 15% volume in the lounge
-  const STORE = "lounge-muted";
+  const STORE = "lounge-on";   // tab session only
   const hero = document.getElementById("top");
   const topbar = document.getElementById("topbar");
   const resumeBtn = topbar && topbar.querySelector(".topnav [data-resume]");
   if (!hero || !topbar) return;
 
-  let muted = false;
-  try { muted = localStorage.getItem(STORE) === "1"; } catch (_) {}
+  let muted = true;
+  try { muted = sessionStorage.getItem(STORE) !== "1"; } catch (_) {}
+  try { localStorage.removeItem("lounge-muted"); } catch (_) {} // old key
 
   const audio = new Audio();
-  audio.src = SRC;
   audio.loop = true;
-  audio.preload = "auto";
+  audio.preload = "none";
   audio.volume = 0;
+  let loaded = false;
+  function load() {
+    // lazy src on first play
+    if (loaded) return;
+    loaded = true;
+    audio.preload = "auto";
+    audio.src = SRC;
+  }
 
   let started = false;   // played once
   let level = 0;         // volume factor 0..1, smoothed
@@ -83,9 +91,10 @@
     kick();
   }
 
-  /* ---- start on first gesture ---- */
+  /* ---- start ---- */
   function start() {
     if (started || muted) return Promise.resolve();
+    load();
     return audio.play().then(() => {
       started = true;
       paintButton();
@@ -93,6 +102,7 @@
       removeGestures();
     }, () => {});
   }
+  // resume on first gesture if on this session
   const gestureEvents = ["pointerdown", "keydown", "touchend"];
   function onGesture(e) {
     if (e.target && e.target.closest && e.target.closest(".sound-btn")) return; // button has its own handler
@@ -103,8 +113,12 @@
 
   btn.addEventListener("click", () => {
     muted = !muted;
-    try { localStorage.setItem(STORE, muted ? "1" : "0"); } catch (_) {}
-    if (!muted) start();
+    try {
+      if (muted) sessionStorage.removeItem(STORE);
+      else sessionStorage.setItem(STORE, "1");
+    } catch (_) {}
+    if (muted) removeGestures();
+    else start();
     paintButton();
     kick();
   });
@@ -119,6 +133,5 @@
   paintButton();
   placeButton();
   onScroll();
-  addGestures();
-  start(); // try autoplay
+  if (!muted) addGestures();
 })();
