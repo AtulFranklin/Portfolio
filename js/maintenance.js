@@ -139,7 +139,11 @@
     var text = box && box.querySelector(".tl-text"), tag = box && box.querySelector(".tl-tag");
     if (!text || window.DESK_LITE || window.matchMedia("(max-width: 720px)").matches) return;
     var facts = ((window.SITE && window.SITE.funFacts) || []).slice();
-    var order = [], n = 0, timer = 0;
+    var order = [], n = 0, timer = 0, readFirst;
+    // desk waits until the first fact is read
+    var READ_MS = 1500;
+    window.DESK_LOADER = { firstFact: new Promise(function (res) { readFirst = res; }) };
+    if (!facts.length) readFirst();
     var done = function () { return box.classList.contains("done"); };
     fetch("assets/maintenance/loading/fun-facts.txt", { cache: "no-cache" })
       .then(function (r) { return r.ok ? r.text() : ""; })
@@ -155,7 +159,7 @@
     }
     // type a fact, hold, next one
     function next() {
-      if (done() || !facts.length) return;
+      if (done() || !facts.length) return readFirst();
       var f = pick(), i = 0;
       n++;
       tag.textContent = "fun fact #" + n + ": ";
@@ -163,6 +167,7 @@
       (function type() {
         if (done()) return;
         text.textContent = f.slice(0, ++i);
+        if (i >= f.length && n === 1) setTimeout(readFirst, READ_MS);
         timer = setTimeout(i < f.length ? type : next, i < f.length ? 18 : 2600);
       })();
     }

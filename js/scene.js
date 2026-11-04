@@ -1762,9 +1762,13 @@
   }
   window.DESK_READY = true;
   draw(0);
-  ready = true;
-  kick();
-  setTimeout(() => loader.classList.add("done"), 150);
+  // first fun fact gets read before the reveal
+  const gate = (window.DESK_LOADER && window.DESK_LOADER.firstFact) || Promise.resolve();
+  gate.then(() => {
+    ready = true;
+    kick();
+    setTimeout(() => loader.classList.add("done"), 150);
+  });
   if (DEBUG) console.log("[scene] first frame after", Math.round(performance.now() - tStart), "ms, quality level", fxLevel);
   // load breakdown, ms since navigation
   if (DEBUG) {
