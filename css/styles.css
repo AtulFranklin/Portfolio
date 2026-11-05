@@ -109,13 +109,23 @@ li { list-style: none; }
 .brand-wx .wx-time { flex-basis: 100%; }
 .brand-views { display: block; min-height: 14px; margin-top: 1px; color: var(--text-3); font-size: 10px; line-height: 14px; opacity: 0; transition: opacity .4s var(--ease); }
 .brand-views.ready { opacity: .75; }
-.topbar-right { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
-.topmeta { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 2px 14px; }
-.topmeta .brand-meta, .topmeta .brand-wx, .topmeta .brand-views { margin-top: 0; }
-.topmeta .brand-wx .wx-time { flex-basis: auto; margin-left: 9px; }
-/* brighter meta over the sky */
-.topmeta .brand-meta, .topmeta .brand-wx, .topmeta .brand-views { color: var(--text-2); font-size: 12px; font-weight: 500; line-height: 16px; text-shadow: 0 1px 2px rgba(0,0,0,.7), 0 0 12px rgba(7,8,11,.8); }
-.topmeta .brand-views.ready { opacity: 1; }
+.topmeta { display: flex; flex-direction: column; }
+/* desktop, one meta row on the right */
+@media (min-width: 721px) {
+  .topbar-right { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
+  .topmeta { flex-direction: row; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 2px 14px; }
+  .topmeta .brand-name { display: none; }
+  .topmeta .brand-meta, .topmeta .brand-wx, .topmeta .brand-views { margin-top: 0; }
+  .topmeta .brand-wx .wx-time { flex-basis: auto; margin-left: 9px; }
+  .topmeta .brand-meta, .topmeta .brand-wx, .topmeta .brand-views { color: var(--text-2); font-size: 12px; font-weight: 500; line-height: 16px; text-shadow: 0 1px 2px rgba(0,0,0,.7), 0 0 12px rgba(7,8,11,.8); }
+  .topmeta .brand-views.ready { opacity: 1; }
+}
+/* phones, original stacked brand */
+@media (max-width: 720px) {
+  .topbar { align-items: center; justify-content: space-between; }
+  .topbar-right { display: contents; }
+  .topmeta .brand-name { color: var(--text); }
+}
 .topnav { display: flex; align-items: center; gap: 24px; }
 .topnav a:not(.btn) { color: var(--text-2); font-size: 15px; font-weight: 500; }
 .topnav a:not(.btn):hover { color: var(--text); text-decoration: none; }
@@ -438,7 +448,7 @@ body.modal-open { overflow: hidden; }
 /* ---------- phones: object grid ---------- */
 .m-desk { display: none; }
 @media (max-width: 720px) {
-  .hero { height: auto; min-height: 0; padding: 150px 0 28px; background: #07080B url("../assets/skyline.jpg") 42% 0 / auto 470px no-repeat; }
+  .hero { height: auto; min-height: 0; padding: 124px 0 28px; background: #07080B url("../assets/skyline.jpg") 42% 0 / auto 470px no-repeat; }
   .hero::after { background: linear-gradient(to bottom, rgba(7,8,11,.55) 0, rgba(7,8,11,.35) 120px, rgba(7,8,11,.55) 300px, rgba(10,12,16,1) 470px); }
   .scene, .scene-label, .scene-fallback, .hero-hint, .loader { display: none !important; }
   .hero-copy { position: relative; top: 0; left: 0; right: 0; padding: 0 var(--gutter); max-width: none; }
@@ -594,3 +604,11 @@ body.modal-open { overflow: hidden; }
 @keyframes soundWave { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
 .sound-btn.is-away { visibility: hidden; pointer-events: none; transition: opacity .25s linear, visibility 0s .25s; }
 @media (max-width: 720px) { .sound-btn { display: none; } }
+
+/* lite desk, copy up top */
+@media (min-width: 721px) {
+  .desk-lite .hero-copy { align-self: start; margin-top: -138px; }
+}
+@media (min-width: 721px) and (max-width: 1040px) {
+  .desk-lite .hero-copy { margin-top: 0; }
+}
