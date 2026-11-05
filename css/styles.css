@@ -608,14 +608,15 @@ body.modal-open { overflow: hidden; }
   /* crt, exp, about right; small objects under copy */
   .desk-lite .hero {
     grid-template-columns: repeat(6, minmax(0, 1fr));
-    grid-template-areas: "copy copy copy crt crt exp" "edu msg blog crt crt about";
-    column-gap: 14px; row-gap: 8px; align-items: start; padding-top: 110px;
+    grid-template-areas: "copy copy copy crt crt exp" "edu msg blog . . about";
+    column-gap: 14px; row-gap: 8px; align-items: start; padding-top: 12px;
   }
-  .desk-lite .hero-copy { grid-area: copy; align-self: start; margin-top: -98px; padding-right: 32px; }
+  .desk-lite .hero-copy { grid-area: copy; align-self: end; align-self: last baseline; margin-top: 0; padding-right: 32px; }
   .desk-lite .m-desk { display: contents; }
   .desk-lite .m-obj { position: relative; z-index: 2; }
-  .desk-lite .m-obj-wide { grid-area: crt; }
-  .desk-lite .m-obj[data-goto="experience"] { grid-area: exp; }
+  /* kicker level with crt label */
+  .desk-lite .m-obj-wide { grid-area: crt; align-self: end; align-self: last baseline; margin-top: 98px; }
+  .desk-lite .m-obj[data-goto="experience"] { grid-area: exp; margin-top: 98px; }
   .desk-lite .m-obj[data-open="about"] { grid-area: about; }
   .desk-lite .m-obj[data-goto="education"] { grid-area: edu; }
   .desk-lite .m-obj[data-open="contact"] { grid-area: msg; }
@@ -623,5 +624,5 @@ body.modal-open { overflow: hidden; }
 }
 @media (min-width: 721px) and (max-width: 1040px) {
   .desk-lite .hero { padding-top: 150px; }
-  .desk-lite .hero-copy { margin-top: 0; }
+  .desk-lite .m-obj-wide, .desk-lite .m-obj[data-goto="experience"] { margin-top: 0; }
 }
