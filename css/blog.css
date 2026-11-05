@@ -9,7 +9,7 @@
 .blog-page main:focus, .blog-page main:focus-visible { outline: none; }
 
 /* ---- top bar ---- */
-.topbar-blog { position: relative; inset: auto; }
+.topbar-blog { position: relative; inset: auto; justify-content: space-between; align-items: center; }
 .topbar-blog .topnav a.nav-home { display: none; }
 .topbar-blog .topnav a[aria-current] {
   color: var(--text); text-decoration: underline; text-decoration-color: var(--amber);

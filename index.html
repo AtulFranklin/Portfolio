@@ -84,7 +84,7 @@
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&family=Pacifico&display=swap" rel="stylesheet" />
   <!-- certificate fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Pinyon+Script&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
   <noscript><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Pinyon+Script&display=swap" rel="stylesheet" /></noscript>
@@ -106,18 +106,19 @@
 
   <!-- top bar -->
   <header class="topbar" id="topbar">
-    <a class="brand" href="#top" aria-label="Atul Abraham, back to top">
-      <span class="brand-name">Atul Abraham</span>
-      <span class="brand-meta mono" data-place>Hoboken, NJ, USA</span>
-      <span class="brand-wx mono" data-weather data-nosnippet></span>
-      <span class="brand-views mono" data-views data-nosnippet></span>
-    </a>
-    <nav class="topnav" aria-label="Main">
-      <a href="#projects">Projects</a>
-      <a href="#about">About</a>
-      <a href="blog/">Blog</a>
-      <a class="btn btn-secondary btn-sm" data-resume href="assets/Atul_Abraham_Resume.pdf" target="_blank" rel="noopener">Résumé</a>
-    </nav>
+    <div class="topbar-right">
+      <div class="topmeta" aria-label="Location, weather and views">
+        <span class="brand-meta mono" data-place>Hoboken, NJ, USA</span>
+        <span class="brand-wx mono" data-weather data-nosnippet></span>
+        <span class="brand-views mono" data-views data-nosnippet></span>
+      </div>
+      <nav class="topnav" aria-label="Main">
+        <a href="#projects">Projects</a>
+        <a href="#about">About</a>
+        <a href="blog/">Blog</a>
+        <a class="btn btn-secondary btn-sm" data-resume href="assets/Atul_Abraham_Resume.pdf" target="_blank" rel="noopener">Résumé</a>
+      </nav>
+    </div>
   </header>
 
   <!-- section dots, desktop -->
@@ -138,15 +139,9 @@
       <div class="scene-label mono" id="sceneLabel" aria-hidden="true"></div>
 
       <div class="hero-copy">
-        <p class="mono hero-kicker">Open to SWE &amp; fintech internships</p>
         <h1 class="hero-title" id="heroTitle">Atul's Portfolio</h1>
         <p class="hero-tagline" id="heroTagline"></p>
-        <ul class="hero-links">
-          <li><button type="button" class="hero-link" data-open="about">About me</button></li>
-          <li><button type="button" class="hero-link" data-open="why" data-why-title>Why hire Atul?</button></li>
-          <li><a class="hero-link" href="#projects">Projects</a></li>
-          <li><button type="button" class="hero-link" data-open="contact">Leave a message</button></li>
-        </ul>
+        <p class="mono hero-kicker">Open to SWE &amp; fintech internships</p>
       </div>
 
       <!-- mobile grid -->

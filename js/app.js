@@ -163,7 +163,13 @@
       <a class="btn btn-secondary" href="${esc(S.links.github)}" target="_blank" rel="noopener">${ICON.github}GitHub</a>
       <a class="btn btn-secondary" href="${esc(S.resume)}" target="_blank" rel="noopener">${ICON.doc}Résumé (PDF)</a>`;
   }
-  $("#contactActions").innerHTML = contactActionsHTML();
+  function contactLinksHTML() {
+    return `<a class="contact-link primary" href="mailto:${esc(S.links.email)}?subject=${encodeURIComponent("Hello Atul")}">${ICON.mail}Email me</a>
+      <a class="contact-link" href="${esc(S.links.linkedin)}" target="_blank" rel="noopener">${ICON.linkedin}LinkedIn</a>
+      <a class="contact-link" href="${esc(S.links.github)}" target="_blank" rel="noopener">${ICON.github}GitHub</a>
+      <a class="contact-link" href="${esc(S.resume)}" target="_blank" rel="noopener">${ICON.doc}Résumé (PDF)</a>`;
+  }
+  $("#contactActions").innerHTML = contactLinksHTML();
   $("#contactActions").insertAdjacentHTML(
     "afterend",
     `<p class="email-line">${esc(S.links.email)}<button type="button" class="mono" data-copy="${esc(S.links.email)}">Copy</button></p>`
