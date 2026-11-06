@@ -438,10 +438,10 @@
     WHY.forEach(function (w) { words += ((w.heading || w.label) + " " + w.text).split(/\s+/).length + 1; });
     if (S.about && S.about.lead) words += S.about.lead.split(/\s+/).length;
     return '<div class="rt-win rt-win-live">' +
-      '<div class="rt-titlebar">' + close +
+      '<div class="rt-titlebar"><span class="rt-tb-pad" aria-hidden="true"></span>' +
       '<span class="rt-title">' + DOC_NAME + "</span>" +
       '<span class="rt-wbtns" aria-hidden="true"><span class="rt-wbtn rt-min"><i></i></span><span class="rt-wbtn rt-max"><i></i></span></span>' +
-      "</div>" +
+      close + "</div>" +
       menusHTML(o) + toolbarHTML() + rulerHTML() +
       '<div class="rt-work" tabindex="0" role="region" aria-label="Document: ' + DOC_NAME + '">' +
       docHTML({ h: o.h }) + "</div>" +
@@ -476,7 +476,7 @@
     }).join("");
 
     var setup = '<div class="rt-setup" aria-hidden="true"><div class="rt-win rt-win-dialog">' +
-      '<div class="rt-titlebar"><span class="rt-wbtn rt-closebox">' + svgIcon("x", 10, closeGlyph) + '</span><span class="rt-title">Setup</span><span class="rt-wbtns"></span></div>' +
+      '<div class="rt-titlebar"><span class="rt-wbtns"></span><span class="rt-title">Setup</span><span class="rt-wbtn rt-closebox">' + svgIcon("x", 10, closeGlyph) + '</span></div>' +
       '<div class="rt-setup-body">' + svgIcon("monitor", 64, ICONS32.monitor, "rt-setup-icon") +
       '<div class="rt-setup-text"><p class="rt-setup-h">Setting up ATUL-OS...</p>' +
       '<p class="rt-setup-sub">Please wait while Setup copies ' + esc(firstName()) + "'s work to your desk.</p>" +
@@ -502,7 +502,7 @@
   /* ---- games window ---- */
   var GAME_TEXT = {
     fishing: {
-      help: ["Move the mouse to lower the hook.", "Tuna 10, Grouper 30.", "Sharks and swordfish cut the line. Eels, jellyfish and trash cans end the game."],
+      help: ["Move the mouse to lower the hook.", "Tuna 10, Grouper 30.", "Sharks and swordfish cut the line. Eels, jellyfish and trash cans end the game.", "Press M to mute or unmute."],
       reasons: { jelly: "A jellyfish zapped the line.", eel: "An eel got the hook.", trash: "You snagged a trash can.", worms: "Out of worms." },
     },
   };
@@ -523,6 +523,8 @@
 
   function gamesWinHTML(o) {
     var close = '<button type="button" class="rt-wbtn rt-closebox" data-rt-act="closegames" aria-label="Close Games">' + svgIcon("x", 10, closeGlyph) + "</button>";
+    var snd = true;
+    try { if (window.FISHSFX) snd = !!window.FISHSFX.enabled(); } catch (_) {}
     return '<div class="rt-win rt-win-games" role="region" aria-label="Games">' +
       '<div class="rt-titlebar"><span class="rt-tb-pad" aria-hidden="true"></span>' +
       '<span class="rt-title rt-gtitle">Games</span>' +
@@ -531,6 +533,7 @@
       '<div class="rt-menus rt-gmenus">' +
       '<button type="button" class="rt-menu rt-gm" data-rt-act="gamepick"><u>S</u>elect game</button>' +
       '<button type="button" class="rt-menu rt-gm rt-gm-new" data-rt-act="gamestart" hidden><u>N</u>ew game</button>' +
+      (window.FISHSFX ? '<button type="button" class="rt-menu rt-gm rt-gm-snd" data-rt-act="gamesound" aria-pressed="' + (snd ? "true" : "false") + '">S<u>o</u>und: ' + (snd ? "On" : "Off") + "</button>" : "") +
       '<span class="rt-menu" aria-hidden="true"><u>H</u>elp</span>' +
       "</div>" +
       '<div class="rt-gbody" data-h="' + (o.h || 3) + '"></div>' +
@@ -678,6 +681,20 @@
     el.textContent = "";
     setTimeout(function () { el.textContent = text; }, 30);
   };
+
+  /* sound label sync */
+  window.addEventListener("atulos-sound", function (e) {
+    var on = !!(e && e.detail && e.detail.on);
+    var btns = document.querySelectorAll(".rt-gm-snd");
+    for (var i = 0; i < btns.length; i++) {
+      btns[i].setAttribute("aria-pressed", on ? "true" : "false");
+      btns[i].innerHTML = "S<u>o</u>und: " + (on ? "On" : "Off");
+    }
+    var a = document.activeElement, pick = null;
+    machines.forEach(function (m) { if (!pick && m.root && a && m.root.contains(a)) pick = m; });
+    if (!pick) machines.forEach(function (m) { if (!pick && m.liveEl) pick = m; });
+    if (pick) pick.say(on ? "Sound on." : "Sound off.");
+  });
   MP.tickClock = function () { var c = this.q(".rt-clock"); if (c) c.textContent = clockText(); };
   MP.startClock = function () {
     var m = this;
@@ -724,6 +741,9 @@
     else if (act === "gameplay") this.playGame(actEl.getAttribute("data-game"));
     else if (act === "gamestart") this.startGame();
     else if (act === "gamepick") this.showPicker(true);
+    else if (act === "gamesound") {
+      try { if (window.FISHSFX) { window.FISHSFX.unlock(); window.FISHSFX.setEnabled(!window.FISHSFX.enabled()); } } catch (_) {}
+    }
   };
 
   /* full boot sequence */
@@ -1352,10 +1372,12 @@
     bevel(g, x, y, ww, wh, true);
     /* title bar */
     g.fillStyle = "#2f5076"; g.fillRect(x + 5, y + 5, ww - 10, 30);
-    bevel(g, x + 8, y + 8, 24, 24, true);
-    g.fillStyle = "#111214"; g.fillRect(x + 14, y + 18, 12, 4);
-    bevel(g, x + ww - 60, y + 8, 24, 24, true); g.fillStyle = "#111214"; g.fillRect(x + ww - 51, y + 17, 6, 6);
-    bevel(g, x + ww - 32, y + 8, 24, 24, true); g.fillRect(x + ww - 27, y + 13, 14, 14); g.fillStyle = "#c3c6cc"; g.fillRect(x + ww - 25, y + 15, 10, 10);
+    bevel(g, x + ww - 88, y + 8, 24, 24, true); g.fillStyle = "#111214"; g.fillRect(x + ww - 79, y + 17, 6, 6);
+    bevel(g, x + ww - 60, y + 8, 24, 24, true); g.fillRect(x + ww - 55, y + 13, 14, 14); g.fillStyle = "#c3c6cc"; g.fillRect(x + ww - 53, y + 15, 10, 10);
+    bevel(g, x + ww - 32, y + 8, 24, 24, true);
+    /* close x */
+    g.strokeStyle = "#111214"; g.lineWidth = 3; g.beginPath();
+    g.moveTo(x + ww - 25, y + 15); g.lineTo(x + ww - 15, y + 25); g.moveTo(x + ww - 15, y + 15); g.lineTo(x + ww - 25, y + 25); g.stroke();
     g.fillStyle = "#ffffff"; g.font = "700 19px " + UI_FONT; g.textAlign = "center";
     g.fillText(DOC_NAME, x + ww / 2, y + 21);
     g.textAlign = "left";

@@ -180,8 +180,8 @@
   var HERO_FILE = ROOT + "hero/hero.txt";
   var ABOUT_FILE = ABOUT_DIR + "about-me.txt";
   var LOCATION_FILE = ROOT + "location.txt";
-  var SCRIPTS_V = "20261106g"; // script cache version
-  var SCRIPTS = ["js/books.js", "js/fishing-art.js", "js/fishing.js", "js/retro.js", "js/app.js", "js/stats.js", "js/weather.js", "js/certificates.js", "js/letter.js", "js/lounge.js", "js/scene.js"];
+  var SCRIPTS_V = "20261106h"; // script cache version
+  var SCRIPTS = ["js/books.js", "js/fishing-art.js", "js/fishing-sfx.js", "js/fishing.js", "js/retro.js", "js/app.js", "js/stats.js", "js/weather.js", "js/certificates.js", "js/letter.js", "js/lounge.js", "js/scene.js"];
   var DEFAULT_COLOR = "#F5B041";
   var ICONS = ["fintech", "apps", "tools", "engineering", "star"];
   var FETCH_TIMEOUT_MS = 10000;

@@ -424,7 +424,7 @@ button.rt-wbtn:active { box-shadow: var(--rt-sunken); }
 .rt-status .rt-st-words { margin-left: auto; }
 
 /* ---------- games window ---------- */
-.rt-win-games .rt-tb-pad { flex: none; width: 75px; }
+.rt-tb-pad { flex: none; width: 75px; }
 .rt-gm { border: 0; background: none; font: inherit; color: var(--rt-ink); cursor: pointer; margin: 0; }
 .rt-gm:hover { background: var(--rt-title); color: #fff; }
 .rt-gm[hidden] { display: none; }

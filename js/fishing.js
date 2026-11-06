@@ -23,6 +23,13 @@
   function lerp(a, b, p) { return a + (b - a) * p; }
   function num(v, d) { return typeof v === "number" && isFinite(v) ? v : d; }
   function art() { return window.FISHART || null; }
+  function fx() { return window.FISHSFX || null; }
+  function sfx(name, o) {
+    try { var F = fx(); if (F) F.play(name, o); } catch (_) { /* no audio */ }
+  }
+  function fxc(m, a) {
+    try { var F = fx(); if (F) F[m](a); } catch (_) { /* no audio */ }
+  }
   function reducedMotion() {
     try { return window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (_) { return false; }
   }
@@ -180,7 +187,7 @@
     var reduced = reducedMotion();
     var view = { cw: 0, ch: 0, dpr: 1, s: 1, ox: 0, oy: 0 };
     var raf = 0, last = 0, userPaused = false, dead = false, ro = null, timers = [];
-    var keys = {}, auto = true;
+    var keys = {}, auto = true, reeling = false;
     var S = {
       phase: "ready", t: 0, elapsed: 0, score: 0, worms: MAX_WORMS, caught: 0,
       best: loadBest(), reason: null, newBest: false,
@@ -301,6 +308,7 @@
         if (busy) return false;
         dir = Math.random() < 0.5 ? 1 : -1;
         S.warns.push({ kind: kind, dir: dir, y: rand(ICE + 60, H - 50), t: 0.6, sp: speedIn(kind === "shark" ? [240, 320] : SPEED.swordfish) });
+        if (S.phase === "play") sfx("warn", { kind: kind });
         return true;
       }
       return false;
@@ -380,6 +388,7 @@
     function bite(f, i) {
       S.fish.splice(i, 1);
       S.hooked = { kind: f.kind, dir: f.dir };
+      sfx("bite");
       if (!reduced) S.fx.push({ type: "bubbles", x: S.hook.x, y: S.hook.y, age: 0, dur: 0.6 });
     }
     function land() {
@@ -391,6 +400,8 @@
       S.fx.push({ type: "splash", x: HOLE.x, y: HOLE.y, age: 0, dur: 0.6 });
       S.fx.push({ type: "pop", text: "+" + pts, x: HOLE.x, y: HOLE.y - 26, age: 0, dur: 0.9 });
       S.hooked = null;
+      stopReel();
+      sfx("land", { kind: k });
       S.hook.baited = false;
       S.rebaitT = 0.4;
       S.moodT = 0.8;
@@ -450,6 +461,8 @@
       var hk = S.hook, py = clamp(h.y, HOLE.y, hk.y);
       var px = hk.y > HOLE.y ? lerp(HOLE.x, hk.x, (py - HOLE.y) / (hk.y - HOLE.y)) : hk.x;
       h.cut = true;
+      stopReel();
+      sfx("cut");
       S.fx.push({ type: "snap", x: px, y: py, age: 0, dur: 0.6 });
       S.fx.push({ type: "pop", text: "-1", x: HOLE.x, y: HOLE.y - 26, age: 0, dur: 0.9 });
       S.worms = Math.max(0, S.worms - 1);
@@ -477,6 +490,7 @@
     function hitBy(h) {
       var hk = S.hook;
       S.fx.push({ type: h.kind === "trash" ? "snap" : "zap", x: hk.x, y: hk.y, age: 0, dur: 0.9 });
+      sfx(h.kind === "trash" ? "clank" : "zap");
       shake(6, 0.4);
       die(h.kind, 0.9);
     }
@@ -487,7 +501,14 @@
     }
 
     /* ---- phases ---- */
+    function stopReel() {
+      if (!reeling) return;
+      reeling = false;
+      fxc("reel", 0);
+    }
     function die(reason, delay) {
+      reeling = false;
+      fxc("reel", 0);
       S.phase = "dying";
       S.reason = reason;
       S.dieT = delay;
@@ -504,12 +525,20 @@
         S.newBest = true;
         saveBest(S.best);
       }
+      sfx(S.newBest ? "best" : "over");
+      fxc("ambient", false);
+      reeling = false;
+      fxc("reel", 0);
       emit();
     }
     function newGame() {
       if (dead) return;
       reduced = reducedMotion();
       S.phase = "play";
+      reeling = false;
+      fxc("unlock");
+      sfx("start");
+      fxc("ambient", true);
       S.elapsed = 0;
       S.score = 0;
       S.worms = MAX_WORMS;
@@ -539,18 +568,24 @@
 
     /* ---- update ---- */
     function update(dt) {
-      var ph = S.phase, wdt = ph === "dying" ? dt * 0.35 : dt, i, f;
+      var ph = S.phase, wdt = ph === "dying" ? dt * 0.35 : dt, i, f, py = S.hook.y, up;
       S.t += dt;
       if (ph === "play") S.elapsed += dt;
       if (S.moodT > 0) S.moodT -= dt;
       if (S.shake > 0) S.shake -= dt;
       if (S.rebaitT > 0) {
         S.rebaitT -= dt;
-        if (S.rebaitT <= 0 && ph === "play" && S.worms > 0) S.hook.baited = true;
+        if (S.rebaitT <= 0 && ph === "play" && S.worms > 0) {
+          if (!S.hook.baited) sfx("rebait");
+          S.hook.baited = true;
+        }
       }
       if (S.cutT > 0) {
         S.cutT -= dt;
-        if (S.cutT <= 0 && ph === "play" && S.worms > 0) S.hook.baited = true;
+        if (S.cutT <= 0 && ph === "play" && S.worms > 0) {
+          if (!S.hook.baited) sfx("rebait");
+          S.hook.baited = true;
+        }
       }
       moveHook(dt);
       if (auto) {
@@ -568,6 +603,11 @@
         if (S.hooked && S.hook.y <= ICE + 16) land();
         if (S.phase === "play") collide();
       }
+      if (S.phase === "play" && S.hooked && dt > 0 && py - S.hook.y > 0) {
+        up = (py - S.hook.y) / dt;
+        reeling = true;
+        fxc("reel", clamp(up / 420, 0.1, 1));
+      } else stopReel();
       for (i = S.fx.length - 1; i >= 0; i--) {
         f = S.fx[i];
         f.age += dt;
@@ -783,15 +823,22 @@
       try { if (canvas.hasPointerCapture(e.pointerId)) canvas.releasePointerCapture(e.pointerId); } catch (_) { /* no capture */ }
     }
     function onKey(e) {
-      var k = KEYMAP[e.key];
+      var k = KEYMAP[e.key], F;
+      if ((e.key === "m" || e.key === "M") && !e.altKey && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
+        e.preventDefault();
+        if (e.type === "keydown" && !e.repeat) {
+          try { F = fx(); if (F) F.setEnabled(!F.enabled()); } catch (_) { /* no audio */ }
+        }
+        return;
+      }
       if (!k || e.altKey || e.ctrlKey || e.metaKey) return;
       e.preventDefault();
       keys[k] = e.type === "keydown";
     }
     function onBlur() { keys = {}; }
     function onVis() {
-      if (document.hidden) stop();
-      else start();
+      if (document.hidden) { stop(); stopReel(); fxc("suspend"); }
+      else { start(); if (!userPaused && !dead) fxc("resume"); }
     }
 
     canvas.addEventListener("pointermove", onMove);
@@ -836,13 +883,14 @@
 
     return {
       newGame: newGame,
-      pause: function () { userPaused = true; stop(); },
-      resume: function () { if (dead) return; userPaused = false; start(); },
+      pause: function () { userPaused = true; stop(); stopReel(); fxc("suspend"); },
+      resume: function () { if (dead) return; userPaused = false; start(); fxc("resume"); },
       resize: fit,
       destroy: function () {
         if (dead) return;
         stop();
         dead = true;
+        fxc("stopAll");
         canvas.removeEventListener("pointermove", onMove);
         canvas.removeEventListener("pointerdown", onDown);
         canvas.removeEventListener("pointerup", onUp);
