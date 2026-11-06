@@ -17,6 +17,10 @@
   function reduced() {
     try { return window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (_) { return false; }
   }
+  var MOBILE_Q = "(max-width: 720px)";
+  function isMobile() {
+    try { return window.matchMedia(MOBILE_Q).matches; } catch (_) { return false; }
+  }
   function storeGet(k) { try { return window.sessionStorage.getItem(k); } catch (_) { return null; } }
   function storeSet(k, v) { try { window.sessionStorage.setItem(k, v); } catch (_) { /* private mode */ } }
   function slug(s) { return String(s).toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, ""); }
@@ -145,6 +149,29 @@
       P.r(6, 6, 20, 13, "c").b(6, 6, 20, 13, "k");
       P.r(8, 9, 7, 1, "Y").r(8, 11, 11, 1, "Y").r(8, 13, 5, 1, "Y");
       P.r(12, 23, 8, 2, "d").r(7, 25, 18, 4, "g").b(7, 25, 18, 4, "k").r(20, 26, 3, 1, "a");
+      return P;
+    },
+    games: function () {
+      var P = new Pix(32, 32), i, j, dx, dy;
+      /* base */
+      P.r(4, 19, 24, 9, "g").b(4, 19, 24, 9, "k").r(5, 20, 22, 1, "l").r(5, 20, 1, 7, "l");
+      P.r(16, 22, 9, 1, "d").r(16, 24, 9, 1, "d").r(7, 22, 5, 3, "k").r(8, 23, 3, 1, "a");
+      P.r(28, 20, 1, 9, "d").r(5, 28, 24, 1, "d");
+      /* fire button */
+      P.r(6, 16, 5, 3, "r").r(7, 15, 3, 1, "k").p(6, 16, "k").p(10, 16, "k").r(5, 17, 1, 2, "k").r(11, 17, 1, 2, "k");
+      P.r(7, 16, 2, 1, "Y").r(12, 17, 1, 2, "d");
+      /* stick + collar */
+      P.r(14, 11, 3, 7, "k").r(15, 11, 1, 7, "l").r(17, 13, 1, 5, "d");
+      P.r(12, 17, 7, 2, "d").r(12, 17, 7, 1, "k").p(11, 18, "k").p(19, 18, "k");
+      /* ball */
+      function inBall(x, y) { dx = x + 0.5 - 15.5; dy = y + 0.5 - 8; return dx * dx + dy * dy <= 33; }
+      for (j = 1; j < 17; j++) {
+        for (i = 8; i < 24; i++) {
+          if (inBall(i, j)) P.p(i, j, inBall(i - 1, j) && inBall(i + 1, j) && inBall(i, j - 1) && inBall(i, j + 1) ? "r" : "k");
+          else if (inBall(i - 1, j - 1) && !P.a[j * 32 + i]) P.p(i, j, "d");
+        }
+      }
+      P.r(12, 5, 2, 2, "w").p(14, 4, "Y").p(11, 7, "Y");
       return P;
     },
   };
@@ -431,13 +458,15 @@
       ["mail", "Mail", LINKS.email ? { href: mailHref() } : null],
       ["trash", "Trash", null],
     ];
+    var games = !isMobile();
+    if (games) icons.splice(4, 0, ["games", "Games", { act: "opengames" }]);
     var iconsHTML = icons.map(function (ic) {
       var svg = svgIcon(ic[0], 32, ICONS32[ic[0]], "rt-icon-img");
       var cls = "rt-icon rt-icon-" + ic[0];
       var label = '<span class="rt-icon-label">' + esc(ic[1]).replace(/_/g, "_<wbr>") + "</span>";
       var a = ic[2];
       if (a && a.act) {
-        return '<button type="button" class="' + cls + '" data-rt-act="' + a.act + '" title="Double-click to open" aria-label="Open ' + DOC_NAME + '">' + svg + label + "</button>";
+        return '<button type="button" class="' + cls + '" data-rt-act="' + a.act + '" title="Click to open" aria-label="Open ' + esc(ic[1]) + '">' + svg + label + "</button>";
       }
       if (a) {
         return '<a class="' + cls + '" href="' + esc(a.href) + '"' +
@@ -463,10 +492,100 @@
       '<span class="rt-clock" aria-hidden="true" data-nosnippet>' + esc(clockText()) + "</span></span>" +
       "</div>" +
       '<div class="rt-icons">' + iconsHTML + "</div>" +
-      (o.inline ? '<p class="rt-desk-hint" aria-hidden="true">Double-click (or tap) ' + DOC_NAME + " to open it.</p>" : "") +
+      (o.inline ? '<p class="rt-desk-hint" aria-hidden="true">Click ' + DOC_NAME + " to open it.</p>" : "") +
       setup +
       windowHTML(o) +
+      (games ? gamesWinHTML(o) : "") +
       "</div>";
+  }
+
+  /* ---- games window ---- */
+  var GAME_TEXT = {
+    fishing: {
+      help: ["Move the mouse to lower the hook.", "Tuna 10, Grouper 30.", "Sharks and swordfish cut the line. Eels, jellyfish and trash cans end the game."],
+      reasons: { jelly: "A jellyfish zapped the line.", eel: "An eel got the hook.", trash: "You snagged a trash can.", worms: "Out of worms." },
+    },
+  };
+  function gameList() {
+    var list = window.ATUL_GAMES;
+    if (!Array.isArray(list)) return [];
+    return list.filter(function (g) { return g && g.id && typeof g.create === "function"; });
+  }
+  function gameById(id) {
+    var list = gameList();
+    for (var i = 0; i < list.length; i++) if (list[i].id === id) return list[i];
+    return null;
+  }
+  function gameBest(g) {
+    try { return Math.max(0, Math.floor(Number(g.best()) || 0)); } catch (_) { return 0; }
+  }
+  function gameText(g) { return GAME_TEXT[g.id] || { help: g.help || [], reasons: g.reasons || {} }; }
+
+  function gamesWinHTML(o) {
+    var close = '<button type="button" class="rt-wbtn rt-closebox" data-rt-act="closegames" aria-label="Close Games">' + svgIcon("x", 10, closeGlyph) + "</button>";
+    return '<div class="rt-win rt-win-games" role="region" aria-label="Games">' +
+      '<div class="rt-titlebar"><span class="rt-tb-pad" aria-hidden="true"></span>' +
+      '<span class="rt-title rt-gtitle">Games</span>' +
+      '<span class="rt-wbtns" aria-hidden="true"><span class="rt-wbtn rt-min"><i></i></span><span class="rt-wbtn rt-max"><i></i></span></span>' +
+      close + "</div>" +
+      '<div class="rt-menus rt-gmenus">' +
+      '<button type="button" class="rt-menu rt-gm" data-rt-act="gamepick"><u>S</u>elect game</button>' +
+      '<button type="button" class="rt-menu rt-gm rt-gm-new" data-rt-act="gamestart" hidden><u>N</u>ew game</button>' +
+      '<span class="rt-menu" aria-hidden="true"><u>H</u>elp</span>' +
+      "</div>" +
+      '<div class="rt-gbody" data-h="' + (o.h || 3) + '"></div>' +
+      '<div class="rt-status rt-gstatus" aria-hidden="true"></div>' +
+      "</div>";
+  }
+
+  function pickerHTML(h) {
+    var list = gameList();
+    var body;
+    if (!list.length) body = '<p class="rt-gempty">No games installed.</p>';
+    else {
+      body = '<ul class="rt-glist" role="list">' + list.map(function (g) {
+        var name = esc(g.name || g.id);
+        return '<li class="rt-gtile" data-rt-act="gametile" data-game="' + esc(g.id) + '">' +
+          '<canvas class="rt-gthumb" width="320" height="200" aria-hidden="true"></canvas>' +
+          '<div class="rt-ginfo"><p class="rt-gname">' + name + "</p>" +
+          (g.blurb ? '<p class="rt-gblurb">' + esc(g.blurb) + "</p>" : "") +
+          '<p class="rt-gbest">Best: ' + gameBest(g) + "</p></div>" +
+          '<button type="button" class="rt-btn rt-gplay-btn" data-rt-act="gameplay" data-game="' + esc(g.id) + '" aria-label="Play ' + name + '">Play</button>' +
+          "</li>";
+      }).join("") + "</ul>";
+    }
+    return '<div class="rt-gpick"><h' + h + ' class="rt-gpick-h">Select game</h' + h + ">" + body + "</div>";
+  }
+
+  function playHTML(g) {
+    var name = esc(g.name || g.id);
+    return '<div class="rt-gplay"><div class="rt-game-stage">' +
+      '<div class="rt-game-box"><canvas tabindex="0" aria-label="' + name + ' game, move the mouse up and down to move the hook"></canvas></div>' +
+      '<div class="rt-game-dlg" hidden></div>' +
+      "</div></div>";
+  }
+
+  /* ready / over dialog */
+  function gameDlgHTML(g, s) {
+    var tx = gameText(g), title, lines, btns;
+    if (s.phase === "over") {
+      title = "Game over";
+      lines = '<p class="rt-gdlg-h">' + esc(tx.reasons[s.reason] || "The round is over.") + "</p>" +
+        '<p class="rt-gdlg-score"><span>Score ' + (s.score || 0) + "</span><span>Best " + (s.best || 0) + "</span></p>" +
+        (s.newBest ? '<p class="rt-gdlg-new">New high score!</p>' : "");
+      btns = '<button type="button" class="rt-btn rt-btn-def" data-rt-act="gamestart">Play again</button>' +
+        '<button type="button" class="rt-btn" data-rt-act="gamepick">Select game</button>';
+    } else {
+      title = esc(g.name || g.id);
+      lines = tx.help.map(function (l, i) { return '<p class="' + (i ? "" : "rt-gdlg-h") + '">' + esc(l) + "</p>"; }).join("");
+      btns = '<button type="button" class="rt-btn" data-rt-act="gamepick">Back</button>' +
+        '<button type="button" class="rt-btn rt-btn-def" data-rt-act="gamestart">Start</button>';
+    }
+    return '<div class="rt-win rt-win-dialog rt-gdlg" role="dialog" aria-label="' + title + '">' +
+      '<div class="rt-titlebar"><span class="rt-wbtns"></span><span class="rt-title">' + title + '</span><span class="rt-wbtns"></span></div>' +
+      '<div class="rt-gdlg-body">' + svgIcon("games", 32, ICONS32.games, "rt-gdlg-icon") +
+      '<div class="rt-gdlg-text">' + lines + "</div></div>" +
+      '<div class="rt-gdlg-btns">' + btns + "</div></div>";
   }
 
   function screenHTML(o) {
@@ -507,7 +626,7 @@
   function wait(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
 
   /* ---- machine: one per screen ---- */
-  var uidCount = 0;
+  var uidCount = 0, machines = [];
   function newUid(prefix) { uidCount++; return prefix + uidCount + "-" + Math.random().toString(36).slice(2, 6); }
 
   function Machine(root, opts) {
@@ -523,6 +642,8 @@
     this.busy = false;
     this.clockTimer = 0;
     this.lastPointer = "mouse";
+    this.game = null;
+    this.gamesFrom = "desk";
     this.isUp = function () { return true; };
     this.onShutdown = function () { m.powerOff(); };
     this.onCloseWin = function () { m.closeDoc(); };
@@ -533,13 +654,18 @@
         e.preventDefault(); e.stopPropagation();
         m.toggleFile(false);
         var b = m.q(".rt-menu-btn"); if (b) b.focus({ preventScroll: true });
+      } else if (e.key === "Escape" && m.stage() === "games" && !m.busy) {
+        e.preventDefault(); e.stopPropagation();
+        m.gamesBack();
       }
     });
+    machines.push(this);
   }
   var MP = Machine.prototype;
   MP.q = function (sel) { return this.screen ? this.screen.querySelector(sel) : null; };
   MP.opts = function () { return { uid: this.uid, inline: this.inline, h: this.h }; };
   MP.render = function (stage) {
+    this.destroyGame();
     this.screen.innerHTML = screenHTML(this.opts());
     this.screen.classList.remove("rt-poweroff");
     this.setStage(stage);
@@ -587,11 +713,17 @@
     else if (act === "power") this.power();
     else if (act === "shutdown") this.onShutdown();
     else if (act === "closewin") this.onCloseWin();
-    else if (act === "opendoc") {
-      /* click selects, double-click opens */
-      if (e.detail === 0 || e.detail >= 2 || this.lastPointer !== "mouse") this.openDoc();
-      else actEl.classList.add("rt-sel");
+    else if (act === "opengames" || act === "opendoc" || act === "gametile") {
+      /* single click opens */
+      if (e.detail >= 2) return;
+      if (act === "opengames") this.openGames();
+      else if (act === "opendoc") this.openDoc();
+      else this.playGame(actEl.getAttribute("data-game"));
     }
+    else if (act === "closegames") this.closeGames();
+    else if (act === "gameplay") this.playGame(actEl.getAttribute("data-game"));
+    else if (act === "gamestart") this.startGame();
+    else if (act === "gamepick") this.showPicker(true);
   };
 
   /* full boot sequence */
@@ -685,11 +817,11 @@
     });
   };
 
-  MP.zoom = function (run, dur) {
+  MP.zoom = function (run, dur, fromSel, toSel) {
     var m = this;
     var desk = this.q(".rt-desk");
-    var from = this.q(".rt-icon-doc .rt-icon-img");
-    var to = this.q(".rt-win-live");
+    var from = this.q(fromSel || ".rt-icon-doc .rt-icon-img");
+    var to = this.q(toSel || ".rt-win-live");
     if (!desk || !from || !to) return Promise.resolve();
     var D = desk.getBoundingClientRect(), A = from.getBoundingClientRect(), B = to.getBoundingClientRect();
     if (!A.width || A.left > D.right || A.top > D.bottom) {
@@ -757,6 +889,7 @@
     if (hadFocus) { var ic = this.q(".rt-icon-doc"); if (ic) ic.focus({ preventScroll: true }); }
   };
   MP.openDoc = function () {
+    if (this.stage() === "games" && !this.busy) this.closeGames(true);
     var st = this.stage();
     if (st === "doc") { var w = this.q(".rt-work"); if (w) w.focus({ preventScroll: true }); return; }
     if (st !== "desk" || this.busy) return;
@@ -775,8 +908,10 @@
     this.busy = true;
     this.runId++;
     this.toggleFile(false);
+    this.gameCall("pause");
     this.root.classList.remove("rt-on");
     function done() {
+      m.destroyGame();
       m.screen.classList.remove("rt-poweroff");
       m.setStage("off");
       m.busy = false;
@@ -805,6 +940,187 @@
     this.boot(false);
   };
   MP.power = function () { if (this.stage() === "off") this.powerOn(); else this.powerOff(); };
+
+  /* ---- games ---- */
+  function drawThumb(g, c) {
+    if (!c) return;
+    try {
+      if (g && typeof g.thumb === "function") { g.thumb(c); return; }
+    } catch (_) { /* fallback thumb */ }
+    var x = c.getContext("2d");
+    if (!x) return;
+    x.setTransform(1, 0, 0, 1, 0, 0);
+    x.fillStyle = "#7d8088"; x.fillRect(0, 0, c.width, c.height);
+    var s = Math.max(1, Math.floor(Math.min(c.width, c.height) / 48));
+    ICONS32.games().paint(x, Math.round((c.width - 32 * s) / 2), Math.round((c.height - 32 * s) / 2), s);
+  }
+  MP.gwin = function () { return this.q(".rt-win-games"); };
+  MP.gamesView = function () { var w = this.gwin(); return w ? w.getAttribute("data-view") || "picker" : ""; };
+  MP.gameCall = function (name) {
+    var I = this.game && this.game.inst;
+    if (!I || typeof I[name] !== "function") return;
+    try { I[name](); } catch (_) { /* engine error */ }
+  };
+  MP.destroyGame = function () {
+    if (!this.game) return;
+    this.gameCall("destroy");
+    this.game = null;
+  };
+  MP.setGameStatus = function (items) {
+    var el = this.q(".rt-gstatus"), key = items.join("|");
+    if (!el || el.__k === key) return;
+    el.__k = key;
+    el.innerHTML = items.map(function (t, i) {
+      return "<span" + (i === items.length - 1 ? ' class="rt-st-r"' : "") + ">" + esc(t) + "</span>";
+    }).join("");
+  };
+
+  MP.openGames = function () {
+    var st = this.stage();
+    if (st === "games") { this.focusGames(); return; }
+    if ((st !== "desk" && st !== "doc") || this.busy || !this.gwin() || isMobile()) return;
+    var m = this, run = ++this.runId;
+    this.skipped = false;
+    this.toggleFile(false);
+    this.gamesFrom = st;
+    this.showPicker(false);
+    if (reduced()) { this.showGames(); return; }
+    this.zoom(run, 260, ".rt-icon-games .rt-icon-img", ".rt-win-games").then(function () { if (m.alive(run)) m.showGames(); });
+  };
+  MP.showGames = function () {
+    if (!this.screen) return;
+    this.screen.querySelectorAll(".rt-zoom").forEach(function (z) { z.remove(); });
+    this.screen.querySelectorAll(".rt-icon.rt-sel").forEach(function (z) { z.classList.remove("rt-sel"); });
+    this.setStage("games");
+    this.say("Games is open.");
+    this.focusGames();
+  };
+  MP.focusGames = function () {
+    var win = this.gwin();
+    if (!win) return;
+    var el = this.gamesView() === "play"
+      ? win.querySelector(".rt-game-dlg:not([hidden]) .rt-btn-def") || win.querySelector(".rt-game-box canvas")
+      : win.querySelector(".rt-gplay-btn") || win.querySelector(".rt-closebox");
+    if (el) el.focus({ preventScroll: true });
+  };
+  MP.closeGames = function (quiet) {
+    if (this.stage() !== "games") return;
+    var a = document.activeElement, win = this.gwin();
+    var hadFocus = !!(a && (a === this.root || (win && win.contains(a))));
+    this.destroyGame();
+    if (win) {
+      win.querySelector(".rt-gbody").innerHTML = "";
+      win.setAttribute("data-view", "picker");
+      win.classList.remove("rt-gdlg-on");
+    }
+    this.setStage(this.gamesFrom === "doc" ? "doc" : "desk");
+    if (quiet) return;
+    this.say("Games closed.");
+    if (!hadFocus) return;
+    var ic = this.q(".rt-icon-games"), w = this.q(".rt-work");
+    if (ic && !isHidden(ic)) ic.focus({ preventScroll: true });
+    else if (w && this.stage() === "doc") w.focus({ preventScroll: true });
+  };
+  /* escape: play to picker, picker to closed */
+  MP.gamesBack = function () {
+    if (this.gamesView() === "play") this.showPicker(true);
+    else this.closeGames();
+  };
+
+  MP.showPicker = function (focus) {
+    var win = this.gwin();
+    if (!win) return;
+    var prev = this.game ? this.game.def.id : "";
+    var body = win.querySelector(".rt-gbody");
+    if (focus && !prev && this.gamesView() === "picker" && body.firstChild) { this.focusGames(); return; }
+    this.destroyGame();
+    body.innerHTML = pickerHTML(+body.getAttribute("data-h") || 3);
+    win.setAttribute("data-view", "picker");
+    win.classList.remove("rt-gdlg-on");
+    win.querySelector(".rt-gtitle").textContent = "Games";
+    win.querySelector(".rt-gm-new").hidden = true;
+    var n = gameList().length;
+    this.setGameStatus([n + (n === 1 ? " game" : " games"), "Ready"]);
+    var btn = null;
+    body.querySelectorAll(".rt-gtile").forEach(function (t) {
+      var id = t.getAttribute("data-game");
+      drawThumb(gameById(id), t.querySelector("canvas"));
+      if (id === prev) btn = t.querySelector(".rt-gplay-btn");
+    });
+    if (focus && this.stage() === "games") {
+      btn = btn || body.querySelector(".rt-gplay-btn");
+      if (btn) btn.focus({ preventScroll: true });
+      this.say("Select game.");
+    }
+  };
+
+  MP.playGame = function (id) {
+    var g = gameById(id), win = this.gwin();
+    if (!g || !win || this.stage() !== "games") return;
+    this.destroyGame();
+    var body = win.querySelector(".rt-gbody");
+    body.innerHTML = playHTML(g);
+    win.setAttribute("data-view", "play");
+    win.querySelector(".rt-gtitle").textContent = "Games - " + (g.name || g.id);
+    win.querySelector(".rt-gm-new").hidden = false;
+    var m = this, canvas = body.querySelector("canvas");
+    var G = { def: g, inst: null, phase: "", paused: false, state: { phase: "ready", score: 0, worms: 0, caught: 0, best: gameBest(g) } };
+    this.game = G;
+    try {
+      G.inst = g.create(canvas, { onState: function (s) { if (m.game === G) m.gameState(s); } }) || null;
+    } catch (_) { G.inst = null; }
+    if (this.game !== G) return;
+    if (!G.phase) this.gameState({});
+    this.syncGame();
+    this.say((g.name || g.id) + ". Press Start to play.");
+  };
+  MP.startGame = function () {
+    var G = this.game;
+    if (!G || this.stage() !== "games") return;
+    if (G.paused) { G.paused = false; this.gameCall("resume"); }
+    this.gameCall("newGame");
+    if (this.game === G && G.inst && G.phase !== "play") this.gameState({ phase: "play" });
+  };
+  MP.gameState = function (s) {
+    var G = this.game;
+    if (!G || !s) return;
+    var st = G.state;
+    for (var k in s) if (Object.prototype.hasOwnProperty.call(s, k)) st[k] = s[k];
+    this.setGameStatus(["Score " + (st.score || 0), "Worms " + (st.worms || 0), "Caught " + (st.caught || 0), "Best " + (st.best || 0)]);
+    if (st.phase === G.phase) return;
+    G.phase = st.phase;
+    this.gameDlg(st.phase === "play" ? null : st);
+    var name = G.def.name || G.def.id;
+    if (st.phase === "over") this.say("Game over. Score " + (st.score || 0) + "." + (st.newBest ? " New high score!" : ""));
+    else if (st.phase === "play") this.say(name + ". Score " + (st.score || 0) + ".");
+  };
+  MP.gameDlg = function (s) {
+    var G = this.game, win = this.gwin(), box = win && win.querySelector(".rt-game-dlg");
+    if (!G || !box) return;
+    var a = document.activeElement;
+    var steal = this.stage() === "games" && (!a || a === document.body || a === this.root || win.contains(a));
+    if (!s) {
+      box.hidden = true;
+      box.innerHTML = "";
+      win.classList.remove("rt-gdlg-on");
+      var c = win.querySelector(".rt-game-box canvas");
+      if (steal && c) c.focus({ preventScroll: true });
+      return;
+    }
+    box.innerHTML = gameDlgHTML(G.def, s);
+    box.hidden = false;
+    win.classList.add("rt-gdlg-on");
+    var b = box.querySelector(".rt-btn-def");
+    if (steal && b) b.focus({ preventScroll: true });
+  };
+  /* pause when hidden or covered */
+  MP.syncGame = function () {
+    var G = this.game;
+    if (!G) return;
+    var hold = this.busy || this.stage() !== "games" || (this.inline && (this.visible === false || !!this.covered));
+    if (hold && !G.paused) { G.paused = true; this.gameCall("pause"); }
+    else if (!hold && G.paused && (G.phase === "play" || G.phase === "ready")) { G.paused = false; this.gameCall("resume"); }
+  };
 
   /* boot log: [text, delay, suffix] */
   function bootLines(fast) {
@@ -865,6 +1181,7 @@
         entries.forEach(function (en) {
           m.visible = en.isIntersecting;
           if (en.isIntersecting && m.stage() !== "off") m.startClock(); else m.stopClock();
+          m.syncGame();
         });
       });
       io.observe(root);
@@ -872,6 +1189,7 @@
       m.visible = true;
       m.startClock();
     }
+    window.addEventListener("desk:modal", function (e) { m.covered = !!(e && e.detail); m.syncGame(); });
     return m;
   }
   /* mount any unmounted inline monitors */
@@ -880,6 +1198,18 @@
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", function () { setTimeout(autoMount, 0); });
   else setTimeout(autoMount, 0);
+
+  /* no games on mobile */
+  (function () {
+    var mq;
+    try { mq = window.matchMedia(MOBILE_Q); } catch (_) { return; }
+    function onChange(e) {
+      if (!e.matches) return;
+      machines.forEach(function (m) { if (m.stage() === "games") m.closeGames(); });
+    }
+    if (mq.addEventListener) mq.addEventListener("change", onChange);
+    else if (mq.addListener) mq.addListener(onChange);
+  })();
 
   /* ---- full screen ---- */
   var dlg = null, dm = null, lastFocus = null, closing = false;
@@ -933,6 +1263,7 @@
     if (!dlg || !dlg.open || closing) return;
     closing = true;
     dm.runId++;
+    dm.destroyGame();
     dlg.classList.remove("rt-on");
     if (reduced()) { dlg.close(); return; }
     dm.screen.classList.add("rt-poweroff");
@@ -945,6 +1276,7 @@
 
   function onClosed() {
     dm.runId++;
+    dm.destroyGame();
     closing = false;
     dm.stopClock();
     dlg.classList.remove("rt-on");
@@ -1004,7 +1336,7 @@
     ["Desk", "File", "Edit", "View"].forEach(function (m) { g.fillText(m, mx, 16); mx += g.measureText(m).width + 20; });
 
     /* desktop icons */
-    [["folder", "Projects", 76], ["resume", "Resume", 172], ["trash", "Trash", 380]].forEach(function (ic) {
+    [["folder", "Projects", 76], ["resume", "Resume", 172], ["games", "Games", 276], ["trash", "Trash", 380]].forEach(function (ic) {
       ICONS32[ic[0]]().paint(g, 572, ic[2], 1.6);
       g.font = "700 13px " + UI_FONT; g.textAlign = "center";
       var tw = g.measureText(ic[1]).width + 8;
