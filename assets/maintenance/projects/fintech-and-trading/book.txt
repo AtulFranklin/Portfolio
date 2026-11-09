@@ -7,11 +7,11 @@
 #
 # Example:
 # title: Fintech & Trading
-# blurb: Trading simulators, option chains, a markets website.
+# blurb: Trading simulators, a backtester, an order book, SEC data.
 # color: #F5B041
 # icon: fintech
 
 title: Fintech & Trading
-blurb: Trading simulators, option chains, a markets website.
+blurb: Trading simulators, a backtester, an order book, SEC data.
 color: #F5B041
 icon: fintech

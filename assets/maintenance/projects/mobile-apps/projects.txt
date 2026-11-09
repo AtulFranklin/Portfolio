@@ -43,7 +43,7 @@ tags: Flutter, Offline-first, Android widget
 ---
 
 title: Reminders Plus
-year: 2026
+year: 2025
 image: reminders-plus.jpg
 blurb: My first Flutter app: a reminder and task manager rebuilt from an HTML / Capacitor version into pure Flutter, with native notifications, sound and vibration.
 points:
@@ -63,7 +63,7 @@ tags: Flutter, Riverpod, Game
 ---
 
 title: Grand Roulette
-year: 2026
+year: 2025
 image: grand-roulette.jpg
 blurb: A roulette game that started as a single HTML file and went through several HTML versions before I rebuilt it in Flutter with a custom-painted board, sound and a dealer.
 tags: Flutter, CustomPainter, Game

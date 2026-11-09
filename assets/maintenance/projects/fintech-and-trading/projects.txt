@@ -31,6 +31,46 @@ tags: Flutter, Dart, Firebase, Quant
 
 ---
 
+title: Pairs Trading Backtester
+year: 2026
+image: pairs-trading-backtester.jpg
+blurb: An open source contribution. I forked a Java backtesting engine that runs a Kalman filter pairs trading strategy on GLD vs GDX, got it running again and fixed two bugs in how it reported risk and returns.
+points:
+- Fixed a max drawdown bug (the peak started at Double.MIN_VALUE) and a commission bug that overstated returns 2x (64.4% vs 32.9%)
+- Added win rate, profit factor and Calmar ratio, plus a CSV loader for 10 years of GLD/GDX prices
+- 34 new JUnit tests; opened a pull request and resolved the original author's review
+tags: Java, Gradle, JUnit, Quant
+link: View on GitHub | https://github.com/AtulFranklin/trading-backtest
+link: Pull request | https://github.com/lukstei/trading-backtest/pull/3
+
+---
+
+title: Trade Order Matching Simulator
+year: 2025
+image: order-matching-simulator.jpg
+blurb: A tiny stock exchange core in plain Java. Buy and sell orders go in, trades come out, matched by price-time priority.
+points:
+- Limit and market orders, partial fills, cancels, and trades at the resting order's price
+- Each side of the book is a sorted array with the best order first; prices are int cents so there are no float errors
+- 60 plain-Java test checks covering FIFO priority, market sweeps and bad input
+tags: Java, Order book, Market microstructure
+link: View on GitHub | https://github.com/AtulFranklin/Trade-Order-Matching-Simulator
+
+---
+
+title: Company Financial Analyzer
+year: 2024
+image: company-financial-analyzer.jpg
+blurb: Type a stock ticker and it pulls the last eight quarters of revenue and operating income from SEC EDGAR, works out growth and margins, and flags anything that looks wrong.
+points:
+- QoQ and YoY growth, operating margin and margin change straight from official filings
+- Works out Q4 from the annual 10-K, detects restatements and flags missing quarters
+- No API key, one dependency, CSV export and 78 unit tests
+tags: Python, SEC EDGAR, Data
+link: View on GitHub | https://github.com/AtulFranklin/Company-Financial-Analyzer
+
+---
+
 title: INVA Capital Markets
 year: 2024
 image: inva-capital.jpg
