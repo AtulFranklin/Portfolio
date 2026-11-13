@@ -607,8 +607,11 @@ body.modal-open { overflow: hidden; }
 @media (min-width: 721px) {
   /* crt, exp, about right; small objects under copy */
   .desk-lite .hero {
-    grid-template-columns: repeat(6, minmax(0, 1fr));
-    grid-template-areas: "copy copy copy crt crt exp" "edu msg blog . . about";
+    grid-template-columns: repeat(24, minmax(0, 1fr));
+    /* small objects spread, blog under crt */
+    grid-template-areas:
+      "copy copy copy copy copy copy copy copy copy copy copy copy crt crt crt crt crt crt crt crt exp exp exp exp"
+      "edu edu edu edu . . . msg msg msg msg . . . blog blog blog blog . . about about about about";
     column-gap: 14px; row-gap: 8px; align-items: start; padding-top: 12px;
   }
   .desk-lite .hero-copy { grid-area: copy; align-self: end; align-self: last baseline; margin-top: 0; padding-right: 32px; }

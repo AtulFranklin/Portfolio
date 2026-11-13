@@ -26,7 +26,7 @@ points:
 - fl_chart analytics (line, bar, pie, scatter) for sleep, habits and expenses with selectable ranges
 - Real OS-level notifications and full XML backup / restore; ported from Android to iOS
 tags: Flutter, Kotlin, iOS, UI/UX
-link: Try the web demo | https://atulfranklin.github.io/Productivity-Plus-Demo/
+link: Launch website | https://atulfranklin.github.io/Productivity-Plus-Demo/
 
 ---
 

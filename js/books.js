@@ -565,7 +565,7 @@
       '<div class="bk-pc-scroll bk-scroll">' +
       '<figure class="bk-print"><span class="bk-print-ph">' + emblem(inf.crate, "bk-print-emb") + "</span>" + img +
       '<i class="bk-tape bk-tape-a"></i><i class="bk-tape bk-tape-b"></i></figure>' +
-      '<p class="bk-pk">No. ' + pad(i + 1) + (p.year ? " · " + esc(p.year) : "") + "</p>" +
+      (p.year ? '<p class="bk-pk">' + esc(p.year) + "</p>" : "") +
       '<h3 class="bk-pt">' + esc(p.title) + "</h3>" +
       (tags ? '<ul class="bk-tags" aria-label="Tags">' + tags + "</ul>" : "") +
       "</div>" +

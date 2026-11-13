@@ -38,10 +38,10 @@ blurb: An open source contribution. I forked a Java backtesting engine that runs
 points:
 - Fixed a max drawdown bug (the peak started at Double.MIN_VALUE) and a commission bug that overstated returns 2x (64.4% vs 32.9%)
 - Added win rate, profit factor and Calmar ratio, plus a CSV loader for 10 years of GLD/GDX prices
-- 34 new JUnit tests; opened a pull request and resolved the original author's review
+- 34 new JUnit tests; the original author reviewed my pull request and merged it upstream
 tags: Java, Gradle, JUnit, Quant
 link: View on GitHub | https://github.com/AtulFranklin/trading-backtest
-link: Pull request | https://github.com/lukstei/trading-backtest/pull/3
+link: Merged pull request | https://github.com/lukstei/trading-backtest/pull/3
 
 ---
 

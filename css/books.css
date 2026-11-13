@@ -459,6 +459,8 @@
   font-family: var(--mono, monospace); font-size: max(10px, calc(var(--bk-u) * 2.3)); letter-spacing: 0.18em; text-transform: uppercase; color: #8A4F00;
 }
 .bk-pt { margin-top: calc(var(--bk-u) * 1.8) !important; font-size: max(22px, calc(var(--bk-u) * 6.6)); line-height: 1.04; font-weight: 700; letter-spacing: -0.03em; text-wrap: balance; }
+/* no year label */
+.bk-print + .bk-pt { margin-top: calc(var(--bk-u) * 6.5) !important; }
 .bk-tags { list-style: none; display: flex; flex-wrap: wrap; gap: calc(var(--bk-u) * 1.4); margin-top: calc(var(--bk-u) * 4) !important; }
 .bk-tag {
   padding: calc(var(--bk-u) * 0.8) calc(var(--bk-u) * 2.4); border-radius: var(--r-pill, 999px);
