@@ -30,7 +30,14 @@ title: Why hire Atul?
 heading: I've already built a trading engine
 stat: Black-Scholes
 label: option pricing in my own simulator
-text: Trade on Paper prices options, tracks margin on 5x leverage, squares off positions on time and switches data sources when one fails. It's the kind of system where a small bug means a wrong P&L, so I built it to keep working when a part of it doesn't.
+text: As co-founder of INVA Capital Markets I built Trade on Paper, its F&O testbed. It prices options, tracks margin on 5x leverage, squares off positions on time and switches data sources when one fails. It's the kind of system where a small bug means a wrong P&L, so I built it to keep working when a part of it doesn't.
+
+---
+
+heading: I check the numbers before I trust them
+stat: 2x
+label: return bug fixed in a merged open-source PR
+text: A Java pairs trading backtester was reporting 64.4% returns when the real figure was 32.9%, because of a commission bug. I fixed it along with a max drawdown bug, and the PR was merged upstream with 34 JUnit tests.
 
 ---
 
@@ -58,11 +65,4 @@ text: I use AI-assisted development every day and I'm experienced with the top f
 heading: I've already made a real team faster
 stat: >50%
 label: less time on BOM upkeep at Whirlpool
-text: I automated bill-of-materials price tracking with Google Apps Script and cut the monthly work by more than half. I also learned how changes get approved across marketing, process and quality teams, which is a big part of shipping inside a company.
-
----
-
-heading: Efficient engineering principles
-stat: ME + CS
-label: mechanical engineering, then computer science
-text: Mechanical engineering trained me to model systems, find where they fail and validate before anything ships. I bring that to software: think about edge cases early, test against reality and keep things simple enough to maintain.
+text: At Whirlpool I built a Google Apps Script ETL on SAP ERP exports and cut monthly bill-of-materials upkeep by more than half. I also drove 30+ corrective actions across 3 cross-functional teams, which taught me how changes actually get approved inside a company.

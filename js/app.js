@@ -336,8 +336,11 @@
     about: () => ({
       title: "About me",
       html: `<div class="panel panel-about">
-        <img src="${esc(S.photo)}" alt="Portrait of Atul Abraham" width="853" height="1280">
-        <h3>${esc(ABOUT_GREETING)}</h3><p class="lead">${esc(S.about.lead)}</p>${S.about.body.map((p) => `<p>${esc(p)}</p>`).join("")}
+        <div class="about-top">
+          <img src="${esc(S.photo)}" alt="Portrait of Atul Abraham" width="853" height="1280">
+          <div class="about-head"><h3>${esc(ABOUT_GREETING)}</h3><p class="lead">${esc(S.about.lead)}</p></div>
+        </div>
+        ${S.about.body.map((p) => `<p>${esc(p)}</p>`).join("")}
         ${rolesHTML}
         <div class="contact-actions" style="margin-top:22px">
           <a class="btn btn-primary btn-sm" href="${esc(S.resume)}" target="_blank" rel="noopener">${ICON.doc}Résumé</a>

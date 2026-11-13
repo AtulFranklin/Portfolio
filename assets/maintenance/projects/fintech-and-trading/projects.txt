@@ -20,14 +20,15 @@
 title: Trade on Paper
 year: 2026
 image: trade-on-paper.jpg
-blurb: I wanted to practise trading Indian markets without risking money, so I built a full paper-trading simulator for NSE/BSE equities and F&O.
+blurb: I co-founded INVA Capital Markets and built this as our strategy testbed, a full paper-trading simulator for NSE/BSE equities and F&O, so I could practise without risking money.
 points:
 - 5x intraday leverage, margin tracking, stop loss / target and auto square-off at 3:20 PM
 - Yahoo, Stooq and NSE data fallback chain so prices keep flowing when a source fails
 - Black-Scholes option chain with delta, PCR and max pain for NIFTY, BANKNIFTY and FINNIFTY
 - Automated scalping engine with RSI / volume confirmation, tick-based reversal detection and daily stop limits
-- Google Sign-In with per-user data and Excel trade-log export
-tags: Flutter, Dart, Firebase, Quant
+- Momentum models (weighted 1W-6M score, regime classifier needing 3 of 5 signals) screen 50 F&O stocks, with dashboards for scans and P&L
+- SQL databases to analyze 100+ simulated option trades, Excel trade-log export and Google Sign-In with per-user data
+tags: Flutter, Dart, Firebase, SQL, Quant
 
 ---
 
@@ -37,8 +38,8 @@ image: pairs-trading-backtester.jpg
 blurb: An open source contribution. I forked a Java backtesting engine that runs a Kalman filter pairs trading strategy on GLD vs GDX, got it running again and fixed two bugs in how it reported risk and returns.
 points:
 - Fixed a max drawdown bug (the peak started at Double.MIN_VALUE) and a commission bug that overstated returns 2x (64.4% vs 32.9%)
-- Added win rate, profit factor and Calmar ratio, plus a CSV loader for 10 years of GLD/GDX prices
-- 34 new JUnit tests; the original author reviewed my pull request and merged it upstream
+- Added win rate, profit factor and Calmar ratio (489 trades, 67.3% win rate), plus a CSV loader for 10 years of GLD/GDX prices
+- 34 new JUnit tests validating the risk / return analytics; my pull request was merged upstream after maintainer review
 tags: Java, Gradle, JUnit, Quant
 link: View on GitHub | https://github.com/AtulFranklin/trading-backtest
 link: Merged pull request | https://github.com/lukstei/trading-backtest/pull/3
@@ -64,9 +65,11 @@ image: company-financial-analyzer.jpg
 blurb: Type a stock ticker and it pulls the last eight quarters of revenue and operating income from SEC EDGAR, works out growth and margins, and flags anything that looks wrong.
 points:
 - QoQ and YoY growth, operating margin and margin change straight from official filings
-- Works out Q4 from the annual 10-K, detects restatements and flags missing quarters
-- No API key, one dependency, CSV export and 78 unit tests
-tags: Python, SEC EDGAR, Data
+- Works out Q4 from the annual 10-K, handles restatements and fiscal-quarter edge cases
+- Data validation and anomaly detection that flag bad data and missing quarters
+- FastAPI REST API with a PostgreSQL cache and SQL queries, covered by unit and integration tests
+- No API key needed, CSV export and 78 unit tests on the CLI pipeline
+tags: Python, FastAPI, PostgreSQL, SEC EDGAR
 link: View on GitHub | https://github.com/AtulFranklin/Company-Financial-Analyzer
 
 ---

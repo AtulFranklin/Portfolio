@@ -17,6 +17,6 @@ dates: Sep 2026 - May 2028 (expected)
 ---
 
 school: Vellore Institute of Technology
-degree: Bachelor of Technology in Mechanical Engineering
+degree: Bachelor of Technology in Mechanical Engineering · GPA 3.89/4.00
 place: Chennai, India
 dates: Jul 2021 - Jul 2025

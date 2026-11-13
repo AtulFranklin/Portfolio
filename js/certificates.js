@@ -173,7 +173,9 @@
     else if (d) when = ` since <strong>${esc(d.from)}</strong>`;
     else when = e.dates ? ` (${esc(e.dates)})` : "";
     const role = e.role ? ` in the position of <strong>${esc(e.role)}</strong>` : "";
-    return `has been employed by ${org}${when}${role}.`;
+    // custom opener, else employed
+    const intro = String(e.intro || "").trim() || "has been employed by";
+    return `${esc(intro)} ${org}${when}${role}.`;
   }
   function jobHTML(e, i) {
     const points = (e.points || []).filter(Boolean);

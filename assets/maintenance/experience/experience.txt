@@ -4,6 +4,8 @@
 # org:     company name        role:  job title
 # place:   city, country       dates: for example Mar 2025 - Sep 2025
 # points:  then one line per point, each starting with "- "
+# intro:   optional, the words before the company name on the card
+#          (default: has been employed by)
 #
 # Copy-paste example (remove the # at the start of each line):
 # org: Company Name
@@ -13,14 +15,27 @@
 # points:
 # - What I did and the result
 
+org: INVA Capital Markets
+intro: co-founded and developed trading systems for
+role: Co-Founder & Software Developer - Trading Systems
+place: Remote
+dates: Oct 2025 - Aug 2026
+points:
+- Designed and built a cross-platform F&O trading automation and strategy testbed for NSE/BSE with 5x intraday leverage, margin tracking and auto square-off, plus SQL databases to analyze 100+ simulated option trades.
+- Added a 3-source market data pipeline (Yahoo, Stooq, NSE) and a Black-Scholes option chain with delta and PCR.
+- Built an automated scalping engine with RSI/volume confirmation, reversal detection and daily stop limits.
+- Built predictive momentum models (a weighted 1W-6M score and a regime classifier needing 3 of 5 signals to agree) that screen 50 F&O stocks, with dashboards for scan results and P&L.
+
+---
+
 org: Whirlpool Corporation
 role: Intern - Cost, Quality & Product Development
 place: Pune, India
 dates: Mar 2025 - Sep 2025
 points:
-- Automated bill-of-materials (BOM) tracking for component and material pricing with Google Apps Script, reducing monthly maintenance and BOM work time by more than 50%.
-- Led corrective actions, reworks and validation testing with a focus on lean principles, risk mitigation and continuous improvement.
-- Coordinated cross-functional teams (marketing, process, quality) and ran meetings for budget planning, ECR processes and safety audits.
+- Built a Google Apps Script (JavaScript) ETL tool that pulls SAP ERP component price CSVs for multiple product SKUs, cleans and groups the data by SKU and formats it into standard cost spec sheets, cutting BOM upkeep time by over 50%.
+- The tool's output became the cost spec source for managers, analysts and senior engineers, giving them automated reporting for component cost optimization.
+- Led 30+ corrective actions and validation tests and worked with 3 cross-functional teams on budget planning and Engineering Change Requests (ECRs).
 
 ---
 

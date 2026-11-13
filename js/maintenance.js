@@ -180,7 +180,7 @@
   var HERO_FILE = ROOT + "hero/hero.txt";
   var ABOUT_FILE = ABOUT_DIR + "about-me.txt";
   var LOCATION_FILE = ROOT + "location.txt";
-  var SCRIPTS_V = "20261106h"; // script cache version
+  var SCRIPTS_V = "20261113a"; // script cache version
   var SCRIPTS = ["js/books.js", "js/fishing-art.js", "js/fishing-sfx.js", "js/fishing.js", "js/retro.js", "js/app.js", "js/stats.js", "js/weather.js", "js/certificates.js", "js/letter.js", "js/lounge.js", "js/scene.js"];
   var DEFAULT_COLOR = "#F5B041";
   var ICONS = ["fintech", "apps", "tools", "engineering", "star"];
@@ -191,7 +191,7 @@
   var FORMATS = {
     book: { keys: ["title", "blurb", "color", "icon"] },
     projects: { keys: ["title", "year", "image", "blurb", "points", "tags", "link"], list: "points", repeat: ["link"] },
-    experience: { keys: ["org", "role", "place", "dates", "points"], list: "points" },
+    experience: { keys: ["org", "role", "place", "dates", "intro", "points"], list: "points" },
     education: { keys: ["school", "degree", "place", "dates"] },
     certifications: { keys: ["name", "issuer", "date"] },
     whyHire: { keys: ["title", "heading", "stat", "label", "text"] },
@@ -400,7 +400,7 @@
     };
   }
   function buildExperience(e) {
-    return { org: str(e.org), place: str(e.place), role: str(e.role), dates: str(e.dates), points: (e.points || []).filter(Boolean) };
+    return { org: str(e.org), place: str(e.place), role: str(e.role), dates: str(e.dates), intro: str(e.intro), points: (e.points || []).filter(Boolean) };
   }
   function buildEducation(e) {
     return { school: str(e.school), place: str(e.place), degree: str(e.degree), dates: str(e.dates) };

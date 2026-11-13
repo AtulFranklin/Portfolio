@@ -22,9 +22,10 @@ year: 2026
 image: clean-spirit-ai.jpg
 blurb: A fully offline, privacy-first AI chat app for Android. The models run on the phone itself, so nothing you type leaves the device. No server, no account, no subscription.
 points:
-- Gemma 4 E2B / E4B on GPU through Google LiteRT, Qwen3 4B on CPU through llama.cpp, plus an Auto mode
+- Gemma 4 E2B / E4B on GPU through Google LiteRT, Qwen3 4B on CPU through llama.cpp
+- Dual-engine layer with automatic model selection (Auto mode), lazy loading and GPU-to-CPU fallback
 - Image understanding from camera or gallery; PDF, DOCX and text attachments added as chat context
-- Lazy model loading, resumable downloads, incognito chats, markdown replies
+- Resumable downloads, incognito chats, markdown replies
 tags: Flutter, On-device LLM, LiteRT, llama.cpp
 link: View on GitHub | https://github.com/Clean-Spirit-Studios/Clean-Spirit-AI
 

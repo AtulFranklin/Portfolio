@@ -8,9 +8,11 @@
 # Databases: PostgreSQL, SQLite
 
 Trading: Experienced in stock, intraday, and futures & derivatives (F&O) trading
-Languages: Python, Java, Dart, SQL, HTML/CSS, Google Apps Script
-Mobile & cloud: Flutter, Firebase, Kotlin (Android), Riverpod
+Languages: Python, Java, Dart, SQL, JavaScript, HTML/CSS
+Frameworks & Libraries: FastAPI, Flutter, Firebase (Auth), JUnit, unittest
+Tools: Git, GitHub, Gradle, Android Studio, PostgreSQL, Google Apps Script, LLMs, Linux
+Concepts: Data Structures, OOP, Unit Testing, API Integration, Database Design & Data Modeling, Query Optimization, ETL & Data Pipelines, Data Validation, Statistical Analysis, Risk Analytics, Backtesting, Options Pricing (Black-Scholes, Greeks)
+Mobile: Kotlin (Android), Riverpod
 Platforms: Windows, macOS, Linux, Android, iOS
-Tools: Git, Microsoft 365, Google Workspace
 Ways of working: Agile, UI/UX design, technical documentation, AI-assisted development
-Engineering: SOLIDWORKS, ANSYS Workbench, quality management
+Engineering: SOLIDWORKS, ANSYS Workbench
